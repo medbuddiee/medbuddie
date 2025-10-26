@@ -1,0 +1,165 @@
+.dashboard {
+    display: flex;
+    font-family: sans-serif;
+}
+.sidebar {
+    width: 240px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-right: 1px solid #ddd;
+}
+.logo-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.logo {
+    width: 32px;
+    height: 32px;
+}
+.search-bar {
+    flex: 1;
+    padding: 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+.nav-links a {
+    display: block;
+    margin: 12px 0;
+    color: #333;
+    text-decoration: none;
+}
+.feed {
+    flex: 1;
+    padding: 20px;
+}
+.post-box textarea {
+    width: 100%;
+    height: 60px;
+    margin: 10px 0;
+    padding: 8px;
+    resize: none;
+}
+.toggle-post button {
+    margin-right: 10px;
+    padding: 5px 10px;
+}
+.toggle-post .selected {
+    background: #00695c;
+    color: white;
+    border: none;
+}
+.post-card {
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 8px;
+    background: #fff;
+}
+.post-header {
+    display: flex;
+    justify-content: space-between;
+}
+.tags .tag {
+    background: #e0f7fa;
+    padding: 3px 6px;
+    margin-right: 5px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+.post-footer {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #555;
+}
+.right-sidebar {
+    width: 240px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-left: 1px solid #ddd;
+}
+.widget {
+    margin-bottom: 20px;
+}
+.second-opinion img {
+    border-radius: 50%;
+    margin-bottom: 10px;
+}
+
+.dashboard-container {
+    font-family: sans-serif;
+    background-color: #f7f9fb;
+}
+
+.top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    border-bottom: 1px solid #ddd;
+    background: white;
+}
+
+.brand {
+    font-weight: bold;
+    font-size: 20px;
+}
+
+.top-search {
+    flex: 1;
+    margin: 0 20px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    max-width: 400px;
+}
+
+.profile-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.profile-pic {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+}
+
+.dashboard-body {
+    display: flex;
+}
+
+/* rest of your sidebar/feed/right-sidebar styles stay */
+
+
+.search-bar-wrapper {
+    position: relative;
+    flex: 1;
+}
+
+.search-icon {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #aaa;
+}
+
+.search-bar {
+    width: 100%;
+    padding: 6px 6px 6px 28px; /* padding-left adjusted for icon */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.nav-links a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 12px 0;
+    color: #333;
+    text-decoration: none;
+}
