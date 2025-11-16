@@ -68,15 +68,15 @@ app.post('/api/auth/facebook', async (req, res) => {
 
 // Signup endpoint
 app.post('/api/signup', async (req, res) => {
-    const { name, email, password, username, dob } = req.body;
+    const { name, email, password, username, dob, isCaregiver } = req.body;
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
         const result = await pool.query(
-            `INSERT INTO users (name, email, password, username, dob)
-             VALUES ($1, $2, $3, $4, $5)
-             RETURNING id, name, email, username, dob`,
-            [name, email, hashedPassword, username, dob]
+            `INSERT INTO users (name, email, password, username, dob, is_caregiver)
+             VALUES ($1, $2, $3, $4, $5, $6)
+                 RETURNING id, name, email, username, dob, is_caregiver AS "isCaregiver"`,
+            [name, email, hashedPassword, username, dob, isCaregiver]
         );
 
         res.status(201).json({ user: result.rows[0] });
@@ -89,6 +89,8 @@ app.post('/api/signup', async (req, res) => {
         }
     }
 });
+
+
 
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);

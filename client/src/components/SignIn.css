@@ -16,6 +16,10 @@ body {
     background-color: #f6f9fc;
 }
 
+.signup-conditions {
+    display:  none;
+}
+
 .signin-card {
     background: white;
     padding: 2rem 3rem;
@@ -28,6 +32,14 @@ body {
 
 .signin-header {
     display: inline-block;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    font-weight: bold;
+    font-size: 1.5rem;
+    color: #006B6B; /* match the teal logo */
 }
 
 .signin-header .logo-icon {
@@ -59,18 +71,13 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.25rem;
 }
 
 .forgot-link {
     font-size: 0.85rem;
     color: #006b6b;
     text-decoration: none;
-}
-
-.checkbox-group {
-    text-align: left;
-    margin-bottom: 1rem;
+    margin-top: 10px;
 }
 
 .primary-btn {
@@ -211,30 +218,16 @@ body {
     margin-bottom: 0.5rem;
 }
 
-.logo {
-    display: flex;
-    align-items: center;
-    font-weight: bold;
-    font-size: 1.5rem;
-    color: #006B6B; /* match the teal logo */
-    gap: 8px;
-}
-
 /* Checkbox group */
 .checkbox-group {
-    text-align: left;
-    margin-top: 1rem;
     margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
 }
 
 .checkbox-style {
     background: red;
-}
-
-.checkbox-group label {
-    display: block;
-    font-size: 0.9rem;
-    margin-bottom: 0.75rem;
 }
 
 .checkbox-group a {
@@ -244,10 +237,14 @@ body {
     display: flex;
 }
 
+.checkbox-group span {
+    padding-left: 10px;
+}
+
 input[type="checkbox"] {
     appearance: none;
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
     background-color: #fff; /* Set to white or your preferred background */
     border: 1px solid #ccc;
     border-radius: 4px;

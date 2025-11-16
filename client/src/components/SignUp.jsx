@@ -36,12 +36,18 @@ export default function SignUp() {
     };
 
     const handleSubmit = async (e) => {
+        debugger
         e.preventDefault();
+        const dob = `${form.dob.year}-${form.dob.month.padStart(2, '0')}-${form.dob.day.padStart(2, '0')}`;
 
         const payload = {
             name: form.username,
             email: form.email,
-            password: form.password
+            username: form.username,
+            password: form.password,
+            dob,
+            isCaregiver: form.isCaregiver,
+            acceptedTerms: form.acceptedTerms
         };
 
         try {
@@ -56,6 +62,7 @@ export default function SignUp() {
             let data;
             try {
                 data = await response.json();
+                // eslint-disable-next-line no-unused-vars
             } catch (e) {
                 return alert("Signup successful!");
             }
@@ -127,18 +134,27 @@ export default function SignUp() {
                             </select>
                         </div>
 
-                        <div className="checkbox-group">
+                        <div className="signup-condition checkbox-groups">
                             <label>
                                 <input type="checkbox" name="isCaregiver" checked={form.isCaregiver} onChange={handleChange} className='checkbox-style' />
                                 I am joining as a caregiver for someone else
                             </label>
                             <label>
-                                <input type="checkbox" name="acceptedTerms" checked={form.acceptedTerms} onChange={handleChange} required />
+                                <input type="checkbox"
+                                       name="acceptedTerms"
+                                       checked={form.acceptedTerms}
+                                       onChange={handleChange}
+                                       required
+                                />
                                 <span>I agree to the MedBuddie <a href="/terms">terms & conditions of use</a> <a href="/privacy"> and privacy policy</a></span>
                             </label>
                         </div>
-
-                        <button type="submit" className="primary-btn">Create account</button>
+                        <button
+                            type="submit"
+                            disabled={!form.acceptedTerms}
+                            className={!form.acceptedTerms ? 'button-disabled' : 'button-active'}
+                        >    Create Account
+                        </button>
                     </form>
 
                     <div className="or-divider"><span>or</span></div>

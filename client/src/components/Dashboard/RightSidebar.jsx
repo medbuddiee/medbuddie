@@ -1,33 +1,46 @@
-import React from 'react';
-import './Dashboard.css';
-import { useUser } from '../../context/UserContext.jsx';
+// RightSidebar.jsx
+import { FaChevronDown } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
-export default function RightSidebar() {
-    const { user } = useUser();
+export default function RightSidebar({ metrics }) {
+    const navigate = useNavigate();
 
+    const handleStatsClick = () => {
+        debugger
+        const hasProfile = metrics?.weight && metrics?.height;
+        if (hasProfile) {
+            navigate('/profile');
+        } else {
+            navigate('/edit-profile');
+        }
+    };
     return (
-        <div className="right-sidebar">
-            <div className="widget">
-                <h4>Current Guidelines</h4>
-                <ul>
-                    <li>Article aefialestansi</li>
-                    <li>Article affiaillous</li>
-                    <li>Article an refiating</li>
-                    <li>Article cansyfieology</li>
-                    <li>Article scientific anere</li>
-                </ul>
+        <aside className="right-sidebar">
+            <div className="stats-card" onClick={handleStatsClick} style={{ cursor: 'pointer' }}>
+                <h4>Personal Stats</h4>
+                <p>Weight: {metrics.weight}</p>
+                <p>Height: {metrics.height}</p>
+                <p>BMI: {metrics.bmi}</p>
+                <p>{metrics.bloodPressure}</p>
             </div>
-
             <div className="widget">
-                <h4>Second Opinion</h4>
-                <div className="second-opinion">
-                    <img src="https://via.placeholder.com/80" alt="Doctor" />
-                    <p>Weight: {user?.weight || '172 lbs'}</p>
-                    <p>Height: {user?.height || `5'11"`}</p>
-                    <p>BMI: {user?.bmi || '24.0'}</p>
-                    <p>BP: {user?.bloodPressure || '122/80 mmHg'}</p>
-                </div>
+                <h4>
+                    Activity <FaChevronDown />
+                </h4>
+                {/* details go here when expanded */}
             </div>
-        </div>
+            <div className="widget">
+                <h4>
+                    Diet <FaChevronDown />
+                </h4>
+                {/* details go here */}
+            </div>
+            <div className="widget">
+                <h4>
+                    Medications <FaChevronDown />
+                </h4>
+                {/* details go here */}
+            </div>
+        </aside>
     );
 }

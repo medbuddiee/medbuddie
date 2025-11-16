@@ -5,7 +5,8 @@ import HomePage from './components/HomePage';
 import SignIn from './components/SignIn';
 import SignUp from './components/SignUp';
 import Dashboard from './components/Dashboard/Dashboard';
-
+import ProfilePage from './components/Profile/ProfilePage';
+import EditProfilePage from './components/Profile/EditProfilePage';
 import { UserProvider, useUser } from './context/UserContext.jsx';
 
 // Only allow access to route if user is logged in
@@ -25,6 +26,8 @@ function App() {
                     <Route path="/dashboard" element={
                         <PrivateRoute element={<Dashboard />} />
                     } />
+                    <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/edit-profile" element={<EditProfilePage />} />
                 </Routes>
             </Router>
         </UserProvider>

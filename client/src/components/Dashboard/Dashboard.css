@@ -13,10 +13,12 @@
     align-items: center;
     gap: 10px;
 }
+
 .logo {
     width: 32px;
     height: 32px;
 }
+
 .search-bar {
     flex: 1;
     padding: 6px;
@@ -162,4 +164,9 @@
     margin: 12px 0;
     color: #333;
     text-decoration: none;
+}
+
+.stats-card:hover {
+    background-color: #f0f8f8;
+    transition: 0.3s;
 }
