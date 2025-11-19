@@ -22,26 +22,52 @@ export default function SignIn() {
         setForm({ ...form, [name]: type === 'checkbox' ? checked : value });
     };
 
-    const handleSubmit = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
 
         const { identifier, password } = form;
 
-        if (identifier === 'kshitijkaushik14@gmail.com' && password === '123456') {
-            // Mock user details
-            login({
-                name: 'Kshitij Kaushik',
-                email: identifier,
-                // weight: 172,
-                // height: `5'11"`,
-                // bmi: 24.0,
-                // bloodPressure: '122/80 mmHg'
+        try {
+            // ✔ Try backend login
+            const res = await fetch("http://localhost:5000/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email: identifier,
+                    password: password,
+                }),
             });
-            navigate('/dashboard');
-        } else {
-            alert('Invalid email or password');
+
+            const data = await res.json();
+
+            if (res.ok) {
+                // ✔ Successful backend login
+                login(data.user); // store in context
+                localStorage.setItem("user", JSON.stringify(data.user));
+                return navigate("/dashboard");
+            }
+
+            // ❗ If backend login failed, fallback to mock
+            if (
+                identifier === "kshitijkaushik14@gmail.com" &&
+                password === "123456"
+            ) {
+                login({
+                    name: "Kshitij Kaushik",
+                    email: identifier,
+                });
+                return navigate("/dashboard");
+            }
+
+            // ❌ Otherwise: invalid credentials
+            alert("Invalid email or password");
+
+        } catch (err) {
+            console.error("Login error:", err);
+            alert("Server error");
         }
     };
+
 
     return (
         <>
@@ -54,7 +80,7 @@ export default function SignIn() {
                         </div>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="signin-form">
+                    <form onSubmit={handleLogin} className="signin-form">
                         <label>Username or Email</label>
                         <input
                             type="text"

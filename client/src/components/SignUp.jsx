@@ -4,6 +4,7 @@ import logo from '../../assets/medbuddie_logo.png';
 import appleIcon from '../../assets/signup/apple_logo.png';
 import facebookIcon from '../../assets/signup/facebook_logo.png';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import { useNavigate } from 'react-router-dom';
 
 const GOOGLE_CLIENT_ID = '369701342975-ntoanlmiauclime0ketc2csdp7r299q6.apps.googleusercontent.com';
 
@@ -16,6 +17,8 @@ export default function SignUp() {
         isCaregiver: false,
         acceptedTerms: false,
     });
+
+    const navigate = useNavigate();
 
     const handleGoogleSuccess = (credentialResponse) => {
         console.log('Google Login Success:', credentialResponse);
@@ -36,7 +39,6 @@ export default function SignUp() {
     };
 
     const handleSubmit = async (e) => {
-        debugger
         e.preventDefault();
         const dob = `${form.dob.year}-${form.dob.month.padStart(2, '0')}-${form.dob.day.padStart(2, '0')}`;
 
@@ -64,7 +66,7 @@ export default function SignUp() {
                 data = await response.json();
                 // eslint-disable-next-line no-unused-vars
             } catch (e) {
-                return alert("Signup successful!");
+                return alert("Signup error!");
             }
 
             if (response.ok) {
@@ -72,6 +74,7 @@ export default function SignUp() {
             } else {
                 alert(`Error: ${data.error}`);
             }
+            return navigate("/dashboard");
         } catch (err) {
             console.error('Network error:', err);
             alert('Something went wrong. Please try again.');

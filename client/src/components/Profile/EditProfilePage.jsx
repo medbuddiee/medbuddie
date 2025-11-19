@@ -1,56 +1,64 @@
 import React, { useEffect, useState } from 'react';
 import { useUser } from '../../context/UserContext';
 import './Profile.css';
+import logo from "../../../assets/medbuddie_logo.png";
+import 'material-icons/iconfont/material-icons.css';
+
 
 export default function EditProfilePage() {
     const { user, updateUser } = useUser();
     const initialMedication = { name: '', frequency: '' };
+    const [form, setForm] = useState(null);
 
-    const [form, setForm] = useState({
-        name: user?.name || '',
-        bio: user?.bio || '',
-        weight: user?.weight || '',
-        height: user?.height || '',
-        bmi: user?.bmi || '',
-        bloodPressure: user?.bloodPressure || '',
-        lipidPanel: user?.lipidPanel || '',
-        medications: user?.medications?.length
-            ? user.medications
-            : [
-                { ...initialMedication },
-                { ...initialMedication },
-                { ...initialMedication },
-            ],
-    });
-
-    // Fetch only if context is empty
     useEffect(() => {
-        if (!user) {
-            fetch('/api/profile')
-                .then((res) => res.json())
-                .then((data) => {
-                    setForm({
-                        name: data.name || '',
-                        bio: data.bio || '',
-                        weight: data.weight || '',
-                        height: data.height || '',
-                        bmi: data.bmi || '',
-                        bloodPressure: data.bloodPressure || '',
-                        lipidPanel: data.lipidPanel || '',
-                        medications:
-                            data.medications?.length
-                                ? data.medications
-                                : [
-                                    { ...initialMedication },
-                                    { ...initialMedication },
-                                    { ...initialMedication },
-                                ],
-                    });
-                    updateUser(data); // ✅ Store fetched data globally
-                })
-                .catch(console.error);
+        if (user) {
+            setForm({
+                name: user.name || '',
+                bio: user.bio || '',
+                weight: user.weight || '',
+                height: user.height || '',
+                bmi: user.bmi || '',
+                bloodPressure: user.bloodPressure || '',
+                lipidPanel: user.lipidPanel || '',
+                medications: user.medications?.length
+                    ? user.medications
+                    : [
+                        { name: "", frequency: "" },
+                        { name: "", frequency: "" },
+                        { name: "", frequency: "" },
+                    ],
+            });
         }
     }, [user]);
+
+    // // Fetch only if context is empty
+    // useEffect(() => {
+    //     if (!user) {
+    //         fetch('http://localhost:5000/profile')
+    //             .then((res) => res.json())
+    //             .then((data) => {
+    //                 setForm({
+    //                     name: data.name || '',
+    //                     bio: data.bio || '',
+    //                     weight: data.weight || '',
+    //                     height: data.height || '',
+    //                     bmi: data.bmi || '',
+    //                     bloodPressure: data.bloodPressure || '',
+    //                     lipidPanel: data.lipidPanel || '',
+    //                     medications:
+    //                         data.medications?.length
+    //                             ? data.medications
+    //                             : [
+    //                                 { ...initialMedication },
+    //                                 { ...initialMedication },
+    //                                 { ...initialMedication },
+    //                             ],
+    //                 });
+    //                 updateUser(data); // ✅ Store fetched data globally
+    //             })
+    //             .catch(console.error);
+    //     }
+    // }, [user]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -66,31 +74,53 @@ export default function EditProfilePage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!user || !user.id) {
+            alert("User not loaded yet");
+            return;
+        }
         try {
-            const res = await fetch('/api/profile', {
+            const response = await fetch('http://localhost:5000/api/profile', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(form),
+                body: JSON.stringify({
+                    userId: user.id,
+                    ...form,
+                }),
             });
-            if (res.ok) {
-                const updatedProfile = await res.json();
-                updateUser(updatedProfile); // ✅ sync with context
-                window.location.href = '/profile';
-            } else {
-                alert('Failed to save changes');
+            const data = await response.json();
+            if (!response.ok) {
+                alert(data.error || "Failed to update profile");
+                return;
             }
+
+            updateUser(data);      // Update context
+            alert("Profile updated successfully!");
+            window.location.href = "/profile";
+
         } catch (err) {
-            console.error(err);
+            console.error("Profile update error:", err);
+            alert("Server error");
         }
     };
 
     return (
+        <>
         <div className="edit-profile-page">
-            <h2>Edit Profile</h2>
+            <div className="medbuddie-header">
+                <div className="medbuddie-logo-row">
+                    <div className="logo">
+                        <img src={logo} alt="MedBuddie Logo" width="40" height="40" />
+                        <span>MedBuddie</span>
+                    </div>
+                </div>
+                <button className="settings-button">
+                    <span className="material-icons">settings</span>
+                </button>
+            </div>
             <form className="edit-profile-form" onSubmit={handleSubmit}>
                 <div className="avatar-container">
                     <img
-                        src="https://via.placeholder.com/120"
+                        src="https://placehold.co/400"
                         alt="Profile"
                         className="avatar"
                     />
@@ -98,34 +128,34 @@ export default function EditProfilePage() {
                 </div>
 
                 <label>
-                    Name
+                    <h4 className={"header_label"}>Name</h4>
                     <input
                         type="text"
                         name="name"
-                        value={form.name}
+                        value={form?.name || ""}
                         onChange={handleChange}
                         required
                     />
                 </label>
 
                 <label>
-                    Bio
+                    <h4 className={"header_label"}>Bio</h4>
                     <input
                         type="text"
                         name="bio"
-                        value={form.bio}
+                        value={form?.bio || ""}
                         onChange={handleChange}
                     />
                 </label>
 
-                <h4>Personal Information</h4>
+                <h4 className={"header_label"}>Personal Information</h4>
                 <div className="grid-3">
                     <div>
                         <label>Weight</label>
                         <input
                             type="text"
                             name="weight"
-                            value={form.weight}
+                            value={form?.weight || ""}
                             onChange={handleChange}
                         />
                     </div>
@@ -134,7 +164,7 @@ export default function EditProfilePage() {
                         <input
                             type="text"
                             name="height"
-                            value={form.height}
+                            value={form?.height || ""}
                             onChange={handleChange}
                         />
                     </div>
@@ -143,20 +173,20 @@ export default function EditProfilePage() {
                         <input
                             type="text"
                             name="bmi"
-                            value={form.bmi}
+                            value={form?.bmi || ""}
                             onChange={handleChange}
                         />
                     </div>
                 </div>
 
-                <h4>Health Data</h4>
+                <h4 className={"header_label"}>Health Data</h4>
                 <div className="grid-3">
                     <div>
                         <label>Blood Pressure</label>
                         <input
                             type="text"
                             name="bloodPressure"
-                            value={form.bloodPressure}
+                            value={form?.bloodPressure || ""}
                             onChange={handleChange}
                         />
                     </div>
@@ -165,18 +195,18 @@ export default function EditProfilePage() {
                         <input
                             type="text"
                             name="lipidPanel"
-                            value={form.lipidPanel}
+                            value={form?.lipidPanel || ""}
                             onChange={handleChange}
                         />
                     </div>
                 </div>
 
-                <h4>Medications</h4>
-                {form.medications.map((med, index) => (
+                <h4 className={"header_label"}>Medications</h4>
+                {form?.medications.map((med, index) => (
                     <div key={index} className="med-row">
                         <input
                             type="text"
-                            value={med.name}
+                            value={med.name || ""}
                             placeholder="Medication name"
                             onChange={(e) =>
                                 handleMedicationChange(index, 'name', e.target.value)
@@ -211,5 +241,6 @@ export default function EditProfilePage() {
                 </div>
             </form>
         </div>
+        </>
     );
 }
