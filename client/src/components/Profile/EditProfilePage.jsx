@@ -7,7 +7,6 @@ import 'material-icons/iconfont/material-icons.css';
 
 export default function EditProfilePage() {
     const { user, updateUser } = useUser();
-    const initialMedication = { name: '', frequency: '' };
     const [form, setForm] = useState(null);
 
     useEffect(() => {
@@ -31,34 +30,6 @@ export default function EditProfilePage() {
         }
     }, [user]);
 
-    // // Fetch only if context is empty
-    // useEffect(() => {
-    //     if (!user) {
-    //         fetch('http://localhost:5000/profile')
-    //             .then((res) => res.json())
-    //             .then((data) => {
-    //                 setForm({
-    //                     name: data.name || '',
-    //                     bio: data.bio || '',
-    //                     weight: data.weight || '',
-    //                     height: data.height || '',
-    //                     bmi: data.bmi || '',
-    //                     bloodPressure: data.bloodPressure || '',
-    //                     lipidPanel: data.lipidPanel || '',
-    //                     medications:
-    //                         data.medications?.length
-    //                             ? data.medications
-    //                             : [
-    //                                 { ...initialMedication },
-    //                                 { ...initialMedication },
-    //                                 { ...initialMedication },
-    //                             ],
-    //                 });
-    //                 updateUser(data); // ✅ Store fetched data globally
-    //             })
-    //             .catch(console.error);
-    //     }
-    // }, [user]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;

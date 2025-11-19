@@ -1,5 +1,5 @@
 // LeftNav.jsx
-import { FaHome, FaBookOpen, FaStar, FaUserFriends, FaUserMd, FaUsers, FaComments } from 'react-icons/fa';
+import { FaHome } from 'react-icons/fa';
 export default function LeftNav() {
     return (
         <aside className="left-nav">

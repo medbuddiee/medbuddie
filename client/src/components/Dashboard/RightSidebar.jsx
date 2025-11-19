@@ -6,7 +6,6 @@ export default function RightSidebar({ metrics }) {
     const navigate = useNavigate();
 
     const handleStatsClick = () => {
-        debugger
         const hasProfile = metrics?.weight && metrics?.height;
         if (hasProfile) {
             navigate('/profile');

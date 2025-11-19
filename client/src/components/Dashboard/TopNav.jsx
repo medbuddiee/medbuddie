@@ -1,6 +1,6 @@
 // TopNav.jsx
 import logo from '../../../assets/medbuddie_logo.png';
-import { FaCog, FaBell } from 'react-icons/fa';
+import { FaCog } from 'react-icons/fa';
 
 export default function TopNav() {
     return (
