@@ -49,11 +49,11 @@ export default function SignIn() {
 
             // ❗ If backend login failed, fallback to mock
             if (
-                identifier === "kshitijkaushik14@gmail.com" &&
+                identifier === "abcdef@gmail.com" &&
                 password === "123456"
             ) {
                 login({
-                    name: "Kshitij Kaushik",
+                    name: "Lalit Wadhwani",
                     email: identifier,
                 });
                 return navigate("/dashboard");

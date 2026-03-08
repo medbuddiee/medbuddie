@@ -51,6 +51,12 @@
     /*padding: 0.25rem 0;*/
 }
 
+.edit-button {
+    background: #ffffff;
+    color: #333;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
 .edit-profile-form {
     padding-top: 10px;
 }
@@ -223,9 +229,9 @@
 .card {
     background: #fff;
     border-radius: 12px;
-    padding: 20px;
     margin-bottom: 10px;
     border: 1px solid #e5e5e5;
+    padding: 1em;
 }
 
 /* Stats Grid */
@@ -244,17 +250,50 @@
     margin-top: 5px;
 }
 
-/* Medications */
-/*.medications-list {*/
-/*    list-style: none;*/
-/*    padding: 0;*/
-/*}*/
+/* Divider under section titles */
+.divider {
+    height: 1px;
+    background: #e5e5e5;
+    margin: 10px 0 20px 0;
+}
 
+/* Stats side-by-side layout */
+.stats-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+
+.stat-item {
+    display: flex;
+    gap: 8px;
+    width: 48%;
+}
+
+.stat-label {
+    font-weight: 600;
+    color: #113;
+}
+
+.stat-value {
+    color: #222;
+}
+
+/* Medications */
 .med-item {
     display: flex;
     justify-content: space-between;
     padding: 10px 0;
     /*border-bottom: 1px solid #eee;*/
+}
+
+.med-name {
+    font-weight: 500;
+}
+
+.med-value {
+    color: #444;
 }
 
 

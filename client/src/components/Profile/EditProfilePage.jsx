@@ -84,9 +84,9 @@ export default function EditProfilePage() {
                         <span>MedBuddie</span>
                     </div>
                 </div>
-                <button className="settings-button">
-                    <span className="material-icons">settings</span>
-                </button>
+                {/*<button className="settings-button">*/}
+                {/*    <span className="material-icons">settings</span>*/}
+                {/*</button>*/}
             </div>
             <form className="edit-profile-form" onSubmit={handleSubmit}>
                 <div className="avatar-container">

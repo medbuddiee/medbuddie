@@ -1,72 +1,3 @@
-// // client/src/components/Profile/ProfilePage.jsx
-// import React, { useEffect, useState } from 'react';
-// import './Profile.css';
-//
-// export default function ProfilePage() {
-//     const [profile, setProfile] = useState(null);
-//
-//     useEffect(() => {
-//         fetch('http://localhost:5000/api/profile')
-//             .then((res) => res.json())
-//             .then(setProfile)
-//             .catch(console.error);
-//     }, []);
-//
-//     if (!profile) return <div className="loading">Loading…</div>;
-//
-//     return (
-//         <div className="profile-page">
-//             <div className="profile-header">
-//                 <div className="profile-name">
-//                     <h1>{profile.name}</h1>
-//                     <p>{profile.bio}</p>
-//                 </div>
-//                 <button onClick={() => (window.location.href = '/edit-profile')}>
-//                     Edit Profile
-//                 </button>
-//             </div>
-//
-//             <h3>Personal Stats</h3>
-//             <div className="stats-grid">
-//                 <div className="stat-card">
-//                     <h4>Weight</h4>
-//                     <p>{profile.weight || '—'} lbs</p>
-//                 </div>
-//                 <div className="stat-card">
-//                     <h4>Height</h4>
-//                     <p>{profile.height || '—'}</p>
-//                 </div>
-//                 <div className="stat-card">
-//                     <h4>BMI</h4>
-//                     <p>{profile.bmi || '—'}</p>
-//                 </div>
-//                 <div className="stat-card">
-//                     <h4>Blood Pressure</h4>
-//                     <p>{profile.bloodPressure || '—'}</p>
-//                 </div>
-//                 <div className="stat-card">
-//                     <h4>Lipid Panel</h4>
-//                     <p>{profile.lipidPanel || '—'}</p>
-//                 </div>
-//             </div>
-//
-//             <h3>Medications</h3>
-//             <ul className="medications-list">
-//                 {profile.medications && profile.medications.length > 0 ? (
-//                     profile.medications.map((med, idx) => (
-//                         <li key={idx}>
-//                             {med.name} – {med.frequency}
-//                         </li>
-//                     ))
-//                 ) : (
-//                     <li>No medications listed.</li>
-//                 )}
-//             </ul>
-//         </div>
-//     );
-// }
-
-
 import React from 'react';
 import { useUser } from '../../context/UserContext';
 import './Profile.css';
@@ -87,7 +18,7 @@ export default function ProfilePage() {
                         className="profile-avatar"
                     />
                     <div>
-                        <h1>{user.name}</h1>
+                        <h2>{user.name}</h2>
                         <p className="profile-subtitle">{user.bio}</p>
                     </div>
                 </div>
@@ -110,40 +41,50 @@ export default function ProfilePage() {
 
             {/* PERSONAL STATS CARD */}
             <div className="card">
-                <h3>Personal Stats</h3>
-                <div className="stats-grid">
-                    <div>
-                        <h4>Weight</h4>
-                        <p>{user.weight || "—"} lbs</p>
+                <h4>Personal Stats</h4>
+                <div className="divider" />
+
+                <div className="stats-row">
+                    <div className="stat-item">
+                        <span className="stat-label">Weight:</span>
+                        <span className="stat-value">{user.weight || "—"} lbs</span>
                     </div>
-                    <div>
-                        <h4>Height</h4>
-                        <p>{user.height || "—"}</p>
+                    <div className="stat-item">
+                        <span className="stat-label">Height:</span>
+                        <span className="stat-value">{user.height || "—"}</span>
                     </div>
-                    <div>
-                        <h4>BMI</h4>
-                        <p>{user.bmi || "—"}</p>
+                </div>
+
+                <div className="stats-row">
+                    <div className="stat-item">
+                        <span className="stat-label">BMI:</span>
+                        <span className="stat-value">{user.bmi || "—"}</span>
                     </div>
-                    <div>
-                        <h4>Blood Pressure</h4>
-                        <p>{user.bloodPressure || "—"}</p>
+                    <div className="stat-item">
+                        <span className="stat-label">Blood Pressure:</span>
+                        <span className="stat-value">{user.bloodPressure || "—"}</span>
                     </div>
-                    <div>
-                        <h4>Lipid Panel</h4>
-                        <p>{user.lipidPanel || "—"}</p>
+                </div>
+
+                <div className="stats-row">
+                    <div className="stat-item">
+                        <span className="stat-label">Lipid Panel:</span>
+                        <span className="stat-value">{user.lipidPanel || "—"}</span>
                     </div>
                 </div>
             </div>
 
             {/* MEDICATIONS CARD */}
             <div className="card">
-                <h3>Medications</h3>
+                <h4>Medications</h4>
+                <div className="divider" />
+
                 {user.medications?.length > 0 ? (
                     <ul className="medications-list">
                         {user.medications.map((med, idx) => (
                             <li key={idx} className="med-item">
-                                <span>{med.name}</span>
-                                <span className="med-freq">{med.frequency}</span>
+                                <span className="med-name">{med.name}</span>
+                                <span className="med-value">{med.frequency}</span>
                             </li>
                         ))}
                     </ul>
