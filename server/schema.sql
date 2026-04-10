@@ -63,6 +63,21 @@ CREATE INDEX IF NOT EXISTS idx_comments_post_id     ON comments(post_id);
 CREATE INDEX IF NOT EXISTS idx_comments_created_at  ON comments(created_at ASC);
 CREATE INDEX IF NOT EXISTS idx_post_likes_post_id   ON post_likes(post_id);
 
--- ─── Migration: add post_likes to existing databases ─────────────────────────
--- (safe to run even if the table already exists — CREATE TABLE IF NOT EXISTS
---  handles that; the CREATE INDEX IF NOT EXISTS lines above handle indexes)
+-- ─── Guidelines ──────────────────────────────────────────────────────────────
+-- Stores curated evidence-based medical guidelines, grouped by specialty.
+-- Seed data is inserted automatically by routes/guidelines.js on first run.
+CREATE TABLE IF NOT EXISTS guidelines (
+    id               SERIAL PRIMARY KEY,
+    title            TEXT NOT NULL,
+    specialty        VARCHAR(100) NOT NULL,   -- 'Cardiovascular', 'Neurology', etc.
+    source           VARCHAR(200) DEFAULT '', -- e.g. 'AHA/ACC 2024', 'WHO'
+    summary          TEXT DEFAULT '',         -- one-line description shown in cards
+    tags             TEXT[] DEFAULT '{}',
+    bookmark_count   INTEGER DEFAULT 0,
+    community_recs   INTEGER DEFAULT 0,
+    published_at     TIMESTAMPTZ DEFAULT NOW(),
+    created_at       TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_guidelines_specialty   ON guidelines(specialty);
+CREATE INDEX IF NOT EXISTS idx_guidelines_published   ON guidelines(published_at DESC);
