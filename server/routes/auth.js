@@ -50,16 +50,33 @@ router.post('/login', async (req, res) => {
         return res.status(400).json({ error: 'Email and password are required' });
     }
     try {
-        const { rows } = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        // Fetch password hash separately, then return camelCase profile
+        const { rows } = await pool.query(
+            'SELECT id, password FROM users WHERE email = $1',
+            [email]
+        );
         if (rows.length === 0) {
             return res.status(400).json({ error: 'Invalid credentials' });
         }
-        const user = rows[0];
-        const valid = await bcrypt.compare(password, user.password);
+        const valid = await bcrypt.compare(password, rows[0].password);
         if (!valid) {
             return res.status(400).json({ error: 'Invalid credentials' });
         }
-        delete user.password;
+
+        // Return full camelCase profile (same shape as GET /api/profile)
+        const { rows: profile } = await pool.query(
+            `SELECT id, name, email, username, dob,
+                    is_caregiver   AS "isCaregiver",
+                    bio, weight, height, bmi,
+                    blood_pressure AS "bloodPressure",
+                    hba1c,
+                    lipid_panel    AS "lipidPanel",
+                    medications
+             FROM users WHERE id = $1`,
+            [rows[0].id]
+        );
+        const user = profile[0];
+        user.medications = user.medications || [];
         const token = makeToken(user);
         res.json({ message: 'Login successful', user, token });
     } catch (err) {

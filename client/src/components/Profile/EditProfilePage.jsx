@@ -11,19 +11,23 @@ export default function EditProfilePage() {
     const { user, updateUser } = useUser();
     const navigate = useNavigate();
     const [form, setForm] = useState(null);
+    const [saving, setSaving] = useState(false);
+    const [saveError, setSaveError] = useState(null);
+    const [saveSuccess, setSaveSuccess] = useState(false);
 
     useEffect(() => {
         if (user) {
             setForm({
-                name: user.name || '',
-                bio: user.bio || '',
-                weight: user.weight || '',
-                height: user.height || '',
-                bmi: user.bmi || '',
-                bloodPressure: user.bloodPressure || '',
-                hba1c: user.hba1c || '',
-                lipidPanel: user.lipidPanel || '',
-                medications: user.medications?.length
+                name:          user.name          || '',
+                bio:           user.bio           || '',
+                weight:        user.weight        || '',
+                height:        user.height        || '',
+                bmi:           user.bmi           || '',
+                // Support both camelCase (from API) and snake_case (legacy localStorage)
+                bloodPressure: user.bloodPressure || user.blood_pressure || '',
+                hba1c:         user.hba1c         || '',
+                lipidPanel:    user.lipidPanel    || user.lipid_panel    || '',
+                medications:   user.medications?.filter(m => m.name || m.frequency).length
                     ? user.medications
                     : [
                           { name: '', frequency: '' },
@@ -50,23 +54,52 @@ export default function EditProfilePage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!user?.id) return alert('User not loaded');
+        if (!user?.id) return setSaveError('User session not found — please sign in again.');
+
+        setSaving(true);
+        setSaveError(null);
+        setSaveSuccess(false);
+
         try {
+            const token = localStorage.getItem('token');
+
             const res = await fetch('/api/profile', {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: user.id, ...form }),
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Always send JWT — this is the authoritative way to identify the user
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                body: JSON.stringify({
+                    userId: user.id,   // fallback for dev without token
+                    ...form,
+                    // Filter out empty medication rows before saving
+                    medications: form.medications.filter(m => m.name.trim()),
+                }),
             });
+
             const data = await res.json();
-            if (!res.ok) return alert(data.error || 'Update failed');
+
+            if (!res.ok) {
+                setSaveError(data.error || 'Update failed — please try again.');
+                return;
+            }
+
+            // Merge saved data back into context (preserves email, username, token etc.)
             updateUser(data);
-            navigate('/profile');
+            setSaveSuccess(true);
+
+            // Navigate back after a short delay so user sees the success message
+            setTimeout(() => navigate('/profile'), 800);
+
         } catch {
-            alert('Server error');
+            setSaveError('Cannot reach the server. Make sure the backend is running.');
+        } finally {
+            setSaving(false);
         }
     };
 
-    if (!form) return <div className="loading">Loading...</div>;
+    if (!form) return <div className="loading">Loading profile…</div>;
 
     return (
         <div className="edit-page-shell">
@@ -90,6 +123,10 @@ export default function EditProfilePage() {
                         <button type="button" className="change-photo-btn">Change Photo</button>
                     </div>
 
+                    {/* Status messages */}
+                    {saveError   && <p className="form-error">{saveError}</p>}
+                    {saveSuccess && <p className="form-success">Profile saved!</p>}
+
                     {/* Name */}
                     <h4 className="field-section-label">Name</h4>
                     <input
@@ -109,6 +146,7 @@ export default function EditProfilePage() {
                         value={form.bio}
                         onChange={handleChange}
                         className="full-input"
+                        placeholder="Tell us a bit about yourself…"
                     />
 
                     {/* Personal Information */}
@@ -116,15 +154,15 @@ export default function EditProfilePage() {
                     <div className="grid-3">
                         <div className="field-col">
                             <label>Weight</label>
-                            <input type="text" name="weight" value={form.weight} onChange={handleChange} />
+                            <input type="text" name="weight" value={form.weight} onChange={handleChange} placeholder="e.g. 172 lbs" />
                         </div>
                         <div className="field-col">
                             <label>Height</label>
-                            <input type="text" name="height" value={form.height} onChange={handleChange} />
+                            <input type="text" name="height" value={form.height} onChange={handleChange} placeholder="e.g. 5'7&quot;" />
                         </div>
                         <div className="field-col">
                             <label>BMI</label>
-                            <input type="text" name="bmi" value={form.bmi} onChange={handleChange} />
+                            <input type="text" name="bmi" value={form.bmi} onChange={handleChange} placeholder="e.g. 26.9" />
                         </div>
                     </div>
 
@@ -133,11 +171,11 @@ export default function EditProfilePage() {
                     <div className="grid-3">
                         <div className="field-col">
                             <label>Blood Pressure</label>
-                            <input type="text" name="bloodPressure" value={form.bloodPressure} onChange={handleChange} placeholder="e.g. 135/85 mmHg" />
+                            <input type="text" name="bloodPressure" value={form.bloodPressure} onChange={handleChange} placeholder="e.g. 122/78" />
                         </div>
                         <div className="field-col">
                             <label>HbA1c %</label>
-                            <input type="text" name="hba1c" value={form.hba1c} onChange={handleChange} placeholder="e.g. 7.1" />
+                            <input type="text" name="hba1c" value={form.hba1c} onChange={handleChange} placeholder="e.g. 6.8" />
                         </div>
                         <div className="field-col">
                             <label>Lipid Panel</label>
@@ -173,8 +211,15 @@ export default function EditProfilePage() {
 
                     {/* Action buttons */}
                     <div className="buttons-row">
-                        <button type="submit" className="save-button">Save Changes</button>
-                        <button type="button" className="cancel-button" onClick={() => navigate('/profile')}>
+                        <button type="submit" className="save-button" disabled={saving}>
+                            {saving ? 'Saving…' : 'Save Changes'}
+                        </button>
+                        <button
+                            type="button"
+                            className="cancel-button"
+                            onClick={() => navigate('/profile')}
+                            disabled={saving}
+                        >
                             Cancel
                         </button>
                     </div>
