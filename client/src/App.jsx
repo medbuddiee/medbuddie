@@ -9,10 +9,27 @@ import ProfilePage from './components/Profile/ProfilePage';
 import EditProfilePage from './components/Profile/EditProfilePage';
 import { UserProvider, useUser } from './context/UserContext.jsx';
 
-// Redirect to /signin if not logged in
+/**
+ * PrivateRoute — waits for the auth session to be restored from localStorage
+ * before deciding whether to render or redirect. Without the `loading` guard,
+ * a hard refresh causes user === null for one render tick, which incorrectly
+ * sends the user to /signin even though they have a valid stored session.
+ */
 function PrivateRoute({ element }) {
-    const { user } = useUser();
+    const { user, loading } = useUser();
+    if (loading) return null;            // session not yet hydrated — render nothing
     return user ? element : <Navigate to="/signin" replace />;
+}
+
+/**
+ * SmartRedirect — used as the catch-all for unknown paths.
+ * Logged-in users who click an unimplemented sidebar link land back on
+ * the dashboard; unauthenticated visitors see the home page.
+ */
+function SmartRedirect() {
+    const { user, loading } = useUser();
+    if (loading) return null;
+    return <Navigate to={user ? '/dashboard' : '/'} replace />;
 }
 
 function AppRoutes() {
@@ -23,12 +40,12 @@ function AppRoutes() {
             <Route path="/signup" element={<SignUp />} />
 
             {/* Protected routes */}
-            <Route path="/dashboard" element={<PrivateRoute element={<Dashboard />} />} />
-            <Route path="/profile" element={<PrivateRoute element={<ProfilePage />} />} />
+            <Route path="/dashboard"    element={<PrivateRoute element={<Dashboard />} />} />
+            <Route path="/profile"      element={<PrivateRoute element={<ProfilePage />} />} />
             <Route path="/edit-profile" element={<PrivateRoute element={<EditProfilePage />} />} />
 
-            {/* Catch-all */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            {/* Any unknown path: logged-in → dashboard, logged-out → home */}
+            <Route path="*" element={<SmartRedirect />} />
         </Routes>
     );
 }

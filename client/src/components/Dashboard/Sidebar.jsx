@@ -46,9 +46,15 @@ export default function Sidebar() {
 
     return (
         <aside className="sidebar">
-            {/* Logo + search */}
+            {/* Logo + search — logo navigates to dashboard */}
             <div className="sidebar-header">
-                <img src={logo} alt="MedBuddie" className="sidebar-logo" />
+                <img
+                    src={logo}
+                    alt="MedBuddie"
+                    className="sidebar-logo"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => navigate('/dashboard')}
+                />
                 <div className="sidebar-search-wrap">
                     <FaSearch className="sidebar-search-icon" />
                     <input type="text" placeholder="Search" className="sidebar-search" />

@@ -105,7 +105,11 @@ export default function EditProfilePage() {
         <div className="edit-page-shell">
             {/* ── Header ── */}
             <header className="edit-header">
-                <div className="edit-header-logo">
+                <div
+                    className="edit-header-logo"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => navigate('/dashboard')}
+                >
                     <img src={logo} alt="MedBuddie" width="32" height="32" />
                     <span className="edit-brand">MedBuddie</span>
                 </div>

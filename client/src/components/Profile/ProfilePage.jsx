@@ -90,7 +90,11 @@ export default function ProfilePage() {
         <div className="profile-shell">
             {/* ── Top Navigation ── */}
             <header className="profile-topnav">
-                <div className="profile-topnav-left">
+                <div
+                    className="profile-topnav-left"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => navigate('/dashboard')}
+                >
                     <img src={logo} alt="MedBuddie" width="32" height="32" />
                     <span className="profile-topnav-brand">MedBuddie</span>
                 </div>

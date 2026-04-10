@@ -112,8 +112,8 @@ export default function TopNav({ searchQuery, onSearch }) {
 
     return (
         <header className="topnav">
-            {/* ── Brand ── */}
-            <div className="topnav-left">
+            {/* ── Brand — clicking navigates to the dashboard ── */}
+            <div className="topnav-left" style={{ cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>
                 <img src={logo} alt="MedBuddie" width="28" height="28" />
                 <span className="topnav-brand">MedBuddie</span>
             </div>
