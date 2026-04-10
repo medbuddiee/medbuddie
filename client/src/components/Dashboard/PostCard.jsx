@@ -122,7 +122,8 @@ export default function PostCard({ post, currentUserId, onLike, onDelete, onComm
                 body: JSON.stringify({ content: commentText.trim() }),
             });
             if (res.ok) {
-                setComments(prev => [...prev, await res.json()]);
+                const newComment = await res.json();
+                setComments(prev => [...prev, newComment]);
                 setCommentText('');
                 if (onCommentCountChange) onCommentCountChange(post.id, +1);
             }
