@@ -634,4 +634,181 @@
 
 /* Feed states */
 .feed-loading { color: #aaa; font-size: 0.85rem; text-align: center; padding: 1rem 0; }
-.feed-empty { color: #aaa; font-size: 0.9rem; text-align: center; padding: 2rem 0; }
+.feed-empty   { color: #aaa; font-size: 0.9rem;  text-align: center; padding: 2rem 0; }
+
+/* Post error (shown below textarea) */
+.post-error {
+    color: #b91c1c;
+    font-size: 0.82rem;
+    margin-top: 0.4rem;
+    padding: 0.3rem 0.5rem;
+    background: #fff5f5;
+    border-radius: 4px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   POST MENU (overflow "…" dropdown)
+   ══════════════════════════════════════════════════════════════════════════ */
+.post-menu-container {
+    position: relative;
+}
+
+.post-menu-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    min-width: 150px;
+    z-index: 200;
+    overflow: hidden;
+    animation: dropdownFadeIn 0.12s ease;
+}
+
+@keyframes dropdownFadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.post-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 0.55rem 0.9rem;
+    background: none;
+    border: none;
+    text-align: left;
+    font-size: 0.85rem;
+    color: #444;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.post-menu-item:hover { background: #f5f7fa; }
+
+.post-menu-delete { color: #c0392b; }
+.post-menu-delete:hover { background: #fff5f5; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMMENTS PANEL
+   ══════════════════════════════════════════════════════════════════════════ */
+.comments-panel {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #f0f0f0;
+}
+
+.comments-loading,
+.comments-empty,
+.comments-signin-prompt {
+    font-size: 0.82rem;
+    color: #aaa;
+    text-align: center;
+    padding: 0.5rem 0;
+}
+
+/* Individual comment */
+.comment-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f8f8f8;
+    position: relative;
+}
+.comment-item:last-of-type { border-bottom: none; }
+
+.comment-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #b2dfdb;
+    color: #004d40;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.comment-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.comment-author {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #0a2a33;
+    margin-right: 6px;
+}
+
+.comment-text {
+    font-size: 0.88rem;
+    color: #333;
+    line-height: 1.45;
+    word-break: break-word;
+    margin: 2px 0 3px;
+}
+
+.comment-time {
+    font-size: 0.74rem;
+    color: #bbb;
+}
+
+.comment-delete-btn {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #ccc;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    transition: color 0.15s;
+    align-self: center;
+}
+.comment-delete-btn:hover { color: #c0392b; }
+
+/* Comment input row */
+.comment-form {
+    display: flex;
+    gap: 6px;
+    margin-top: 0.6rem;
+}
+
+.comment-input {
+    flex: 1;
+    padding: 0.45rem 0.7rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 20px;
+    font-size: 0.86rem;
+    background: #f5f7fa;
+    color: #333;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+.comment-input:focus {
+    outline: none;
+    border-color: #005c55;
+    background: #fff;
+}
+
+.comment-submit-btn {
+    padding: 0.4rem 0.9rem;
+    background: #005c55;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s, opacity 0.2s;
+}
+.comment-submit-btn:hover:not(:disabled) { background: #004040; }
+.comment-submit-btn:disabled { opacity: 0.5; cursor: default; }
