@@ -1,0 +1,301 @@
+{
+  "id": "esh-hypertension-2023",
+  "title": "2023 ESH Guidelines for the Management of Arterial Hypertension",
+  "specialty": "Cardiovascular",
+  "source": "European Society of Hypertension (ESH)",
+  "version": "2023",
+  "published": "2023-06-01",
+  "doi": "10.1097/HJH.0000000000003480",
+  "authors": [
+    "Mancia G", "Kreutz R", "Brunström M", "Burnier M", "Grassi G",
+    "Januszewicz A", "Muiesan ML", "Tsioufis K", "Agabiti-Rosei E",
+    "Algharably EAE"
+  ],
+  "keyHighlights": [
+    "Hypertension defined as office BP ≥140/90 mmHg or out-of-office BP ≥130/80 mmHg (ambulatory) / ≥135/85 mmHg (home)",
+    "Treatment target: <140/90 mmHg for most adults; consider <130/80 mmHg if well-tolerated",
+    "Single-pill combination (SPC) therapy now recommended as preferred initial treatment strategy",
+    "Cardiovascular risk stratification guides treatment intensity and urgency",
+    "Lifestyle interventions remain foundational at all stages"
+  ],
+  "sections": [
+    {
+      "id": "definition",
+      "title": "Definition and Classification",
+      "content": "Hypertension is defined as persistently elevated office blood pressure ≥140 mmHg systolic and/or ≥90 mmHg diastolic, confirmed on repeated measurements. Out-of-office measurements: ambulatory BP monitoring (ABPM) ≥130/80 mmHg (24-hour mean) or ≥135/85 mmHg (daytime); home BP monitoring (HBPM) ≥135/85 mmHg.",
+      "table": {
+        "caption": "BP Classification (office measurements)",
+        "headers": ["Category", "Systolic (mmHg)", "", "Diastolic (mmHg)"],
+        "rows": [
+          ["Optimal",          "<120",       "and", "<80"],
+          ["Normal",           "120–129",    "and/or", "80–84"],
+          ["High-normal",      "130–139",    "and/or", "85–89"],
+          ["Grade 1 HTN",      "140–159",    "and/or", "90–99"],
+          ["Grade 2 HTN",      "160–179",    "and/or", "100–109"],
+          ["Grade 3 HTN",      "≥180",       "and/or", "≥110"],
+          ["Isolated Systolic","≥140",       "and",    "<90"]
+        ]
+      }
+    },
+    {
+      "id": "diagnosis",
+      "title": "Diagnosis and Measurement",
+      "content": "Diagnosis should be based on at least two BP measurements per visit, on at least two separate visits. White-coat hypertension and masked hypertension should be excluded using ABPM or HBPM where possible.",
+      "recommendations": [
+        {
+          "id": "D1",
+          "text": "Office BP measurement is the standard method for screening and diagnosis of hypertension.",
+          "class": "I",
+          "level": "C"
+        },
+        {
+          "id": "D2",
+          "text": "Out-of-office BP measurement (ABPM or HBPM) is recommended to confirm the diagnosis before initiating treatment in most patients.",
+          "class": "I",
+          "level": "B"
+        },
+        {
+          "id": "D3",
+          "text": "Automated office BP (AOBP) is recommended as the preferred method in clinical practice to reduce white-coat effect.",
+          "class": "I",
+          "level": "B"
+        }
+      ]
+    },
+    {
+      "id": "cvd-risk",
+      "title": "Cardiovascular Risk Stratification",
+      "content": "Total cardiovascular risk assessment is essential to guide treatment decisions. Risk is classified as low, moderate, high, or very high based on BP grade, presence of risk factors, target organ damage (TOD), and established cardiovascular or renal disease.",
+      "recommendations": [
+        {
+          "id": "R1",
+          "text": "Total cardiovascular risk should be assessed in all patients with hypertension using a validated risk scoring system (e.g., SCORE2, SCORE2-OP).",
+          "class": "I",
+          "level": "B"
+        },
+        {
+          "id": "R2",
+          "text": "Assessment for target organ damage (ECG, echocardiography, renal function, fundoscopy) is recommended in all hypertensive patients.",
+          "class": "I",
+          "level": "B"
+        }
+      ]
+    },
+    {
+      "id": "lifestyle",
+      "title": "Lifestyle Interventions",
+      "content": "Lifestyle modifications reduce BP, enhance antihypertensive drug efficacy, and decrease overall cardiovascular risk. They are recommended in all patients with hypertension and in those with high-normal BP.",
+      "recommendations": [
+        {
+          "id": "L1",
+          "text": "Salt intake should be reduced to <5 g/day (2 g sodium/day).",
+          "class": "I",
+          "level": "A"
+        },
+        {
+          "id": "L2",
+          "text": "Alcohol consumption should be limited to ≤14 units/week in men and ≤8 units/week in women.",
+          "class": "I",
+          "level": "A"
+        },
+        {
+          "id": "L3",
+          "text": "Regular aerobic physical activity (≥30 min of moderate exercise, ≥5–7 days/week) is recommended.",
+          "class": "I",
+          "level": "A"
+        },
+        {
+          "id": "L4",
+          "text": "The DASH diet (rich in fruits, vegetables, low-fat dairy; reduced in saturated fat) is recommended.",
+          "class": "I",
+          "level": "A"
+        },
+        {
+          "id": "L5",
+          "text": "Smoking cessation is strongly recommended to reduce overall cardiovascular risk.",
+          "class": "I",
+          "level": "B"
+        },
+        {
+          "id": "L6",
+          "text": "Weight reduction is recommended in overweight and obese hypertensive patients (target BMI 20–25 kg/m²).",
+          "class": "I",
+          "level": "A"
+        }
+      ]
+    },
+    {
+      "id": "pharmacotherapy",
+      "title": "Pharmacological Treatment",
+      "content": "The five major drug classes — ACE inhibitors (ACEi), angiotensin receptor blockers (ARBs), calcium channel blockers (CCBs), thiazide/thiazide-like diuretics, and beta-blockers — are all suitable for initial and maintenance therapy. Single-pill combination (SPC) therapy is now the preferred starting strategy for most patients.",
+      "recommendations": [
+        {
+          "id": "P1",
+          "text": "Drug treatment should be initiated in all Grade 2–3 hypertensive patients and in Grade 1 patients with high/very high CV risk or persistent hypertension after lifestyle intervention.",
+          "class": "I",
+          "level": "A"
+        },
+        {
+          "id": "P2",
+          "text": "Initial treatment with a two-drug SPC (RAS blocker + CCB or diuretic) is recommended for most patients. Monotherapy may be considered for low-risk Grade 1 hypertension or very elderly/frail patients.",
+          "class": "I",
+          "level": "A"
+        },
+        {
+          "id": "P3",
+          "text": "If BP remains uncontrolled on two-drug SPC, a three-drug SPC (RAS blocker + CCB + diuretic) is recommended.",
+          "class": "I",
+          "level": "A"
+        },
+        {
+          "id": "P4",
+          "text": "For resistant hypertension (uncontrolled on three drugs including a diuretic), add spironolactone 25–50 mg/day as preferred fourth agent, or doxazosin/bisoprolol/amiloride.",
+          "class": "I",
+          "level": "B"
+        },
+        {
+          "id": "P5",
+          "text": "ARBs or ACEi should be the preferred RAS blocker in patients with diabetes, CKD, heart failure with reduced EF, or LV hypertrophy.",
+          "class": "I",
+          "level": "A"
+        },
+        {
+          "id": "P6",
+          "text": "Combination of ACEi + ARB is not recommended due to increased risk of adverse effects without additional benefit.",
+          "class": "III",
+          "level": "A"
+        }
+      ]
+    },
+    {
+      "id": "targets",
+      "title": "Blood Pressure Targets",
+      "content": "The primary target for most patients is office BP <140/90 mmHg. A more intensive target of <130/80 mmHg should be considered if tolerated, particularly in patients <65 years or those with high CV risk. Diastolic target is <80 mmHg for most patients.",
+      "recommendations": [
+        {
+          "id": "T1",
+          "text": "The primary BP target for all treated hypertensive patients is <140/90 mmHg.",
+          "class": "I",
+          "level": "A"
+        },
+        {
+          "id": "T2",
+          "text": "If treatment is well-tolerated, a BP target of <130/80 mmHg should be considered, especially in patients aged <65 years.",
+          "class": "IIa",
+          "level": "B"
+        },
+        {
+          "id": "T3",
+          "text": "In patients aged ≥65 years, an office SBP target of 130–139 mmHg is recommended.",
+          "class": "I",
+          "level": "A"
+        },
+        {
+          "id": "T4",
+          "text": "In patients with diabetes, BP target of <130/80 mmHg is recommended if well-tolerated.",
+          "class": "I",
+          "level": "A"
+        },
+        {
+          "id": "T5",
+          "text": "In patients with CKD, BP target of <130/80 mmHg is recommended. SBP should not be lowered to <120 mmHg.",
+          "class": "I",
+          "level": "B"
+        }
+      ]
+    },
+    {
+      "id": "special-populations",
+      "title": "Special Populations",
+      "content": "Treatment strategies require modification for specific patient subgroups including the elderly, pregnant women, patients with diabetes, CKD, coronary artery disease, heart failure, atrial fibrillation, and stroke.",
+      "subsections": [
+        {
+          "title": "Elderly patients (≥65 years)",
+          "points": [
+            "Antihypertensive treatment is recommended up to at least age 80; benefit maintained in frail elderly",
+            "SBP target 130–139 mmHg; DBP target <80 mmHg",
+            "Avoid over-treatment (SBP <120 mmHg) — increased fall and fracture risk",
+            "Start with lower doses; titrate slowly; monitor orthostatic hypotension"
+          ]
+        },
+        {
+          "title": "Pregnancy",
+          "points": [
+            "Methyldopa, labetalol, and nifedipine are first-line in pregnancy",
+            "ACEi, ARBs, and direct renin inhibitors are contraindicated",
+            "Severe hypertension in pregnancy (≥160/110 mmHg) requires urgent IV treatment",
+            "Aspirin 75–150 mg/day from 12 weeks recommended for women at high risk of pre-eclampsia"
+          ]
+        },
+        {
+          "title": "Diabetes mellitus",
+          "points": [
+            "BP target <130/80 mmHg if tolerated",
+            "RAS blocker (ACEi or ARB) preferred, especially with microalbuminuria or proteinuria",
+            "SGLT2 inhibitors provide additional CV and renal protection independent of BP effect"
+          ]
+        },
+        {
+          "title": "Chronic kidney disease",
+          "points": [
+            "BP target <130/80 mmHg",
+            "RAS blocker mandatory if proteinuria present",
+            "Thiazide diuretics may be less effective with eGFR <30 mL/min; loop diuretics preferred",
+            "Avoid volume depletion and NSAID use"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "monitoring",
+      "title": "Follow-up and Monitoring",
+      "content": "Regular monitoring of BP, treatment adherence, adverse effects, and target organ damage is essential to achieving sustained hypertension control.",
+      "recommendations": [
+        {
+          "id": "M1",
+          "text": "After initiation or adjustment of antihypertensive therapy, BP should be reassessed at 2–4 weeks.",
+          "class": "I",
+          "level": "C"
+        },
+        {
+          "id": "M2",
+          "text": "Once BP is controlled, annual follow-up visits are generally appropriate for low-risk patients; more frequent visits for high-risk or uncontrolled patients.",
+          "class": "I",
+          "level": "C"
+        },
+        {
+          "id": "M3",
+          "text": "Serum electrolytes, creatinine, and eGFR should be checked 4–8 weeks after initiating or intensifying RAS blocker + diuretic therapy.",
+          "class": "I",
+          "level": "C"
+        },
+        {
+          "id": "M4",
+          "text": "Assessment of treatment adherence should be performed at every visit, as non-adherence is the most common cause of apparent treatment resistance.",
+          "class": "I",
+          "level": "C"
+        }
+      ]
+    }
+  ],
+  "evidenceClassification": {
+    "classes": [
+      { "class": "I",   "meaning": "Evidence and/or general agreement that a given treatment or procedure is beneficial, useful, and effective. RECOMMENDED." },
+      { "class": "IIa", "meaning": "Weight of evidence/opinion is in favour of usefulness/efficacy. SHOULD BE CONSIDERED." },
+      { "class": "IIb", "meaning": "Usefulness/efficacy is less well established by evidence/opinion. MAY BE CONSIDERED." },
+      { "class": "III", "meaning": "Evidence or general agreement that the given treatment or procedure is not useful/effective, and in some cases may be harmful. NOT RECOMMENDED." }
+    ],
+    "levels": [
+      { "level": "A", "meaning": "Data derived from multiple randomised clinical trials or meta-analyses." },
+      { "level": "B", "meaning": "Data derived from a single randomised clinical trial or large non-randomised studies." },
+      { "level": "C", "meaning": "Consensus of opinion of the experts and/or small studies, retrospective studies, registries." }
+    ]
+  },
+  "references": [
+    "Mancia G, et al. 2023 ESH Guidelines for the management of arterial hypertension. J Hypertens. 2023;41(12):1874-2071.",
+    "Whelton PK, et al. 2017 ACC/AHA/AAPA Hypertension Guideline. J Am Coll Cardiol. 2018;71(19):e127-e248.",
+    "Williams B, et al. 2018 ESC/ESH Guidelines for the management of arterial hypertension. Eur Heart J. 2018;39(33):3021-3104.",
+    "SPRINT Research Group. A Randomized Trial of Intensive versus Standard Blood-Pressure Control. N Engl J Med. 2015;373:2103-2116.",
+    "Ettehad D, et al. Blood pressure lowering for prevention of cardiovascular disease and death: a systematic review and meta-analysis. Lancet. 2016;387:957-967."
+  ]
+}

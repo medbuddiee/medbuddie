@@ -8,6 +8,7 @@ import Dashboard from './components/Dashboard/Dashboard';
 import ProfilePage from './components/Profile/ProfilePage';
 import EditProfilePage from './components/Profile/EditProfilePage';
 import GuidelinesPage from './components/Guidelines/GuidelinesPage';
+import GuidelineDetail from './components/Guidelines/GuidelineDetail';
 import { UserProvider, useUser } from './context/UserContext.jsx';
 
 /**
@@ -42,7 +43,8 @@ function AppRoutes() {
 
             {/* Protected routes */}
             <Route path="/dashboard"    element={<PrivateRoute element={<Dashboard />} />} />
-            <Route path="/guidelines"   element={<PrivateRoute element={<GuidelinesPage />} />} />
+            <Route path="/guidelines"    element={<PrivateRoute element={<GuidelinesPage />} />} />
+            <Route path="/guidelines/:id" element={<PrivateRoute element={<GuidelineDetail />} />} />
             <Route path="/profile"      element={<PrivateRoute element={<ProfilePage />} />} />
             <Route path="/edit-profile" element={<PrivateRoute element={<EditProfilePage />} />} />
 

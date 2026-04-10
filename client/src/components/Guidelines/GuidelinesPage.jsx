@@ -270,7 +270,13 @@ export default function GuidelinesPage() {
                                                 <li key={item.id} className="gl-item">
                                                     <div className="gl-item-row">
                                                         <span className="gl-item-dot" style={{ background: color }} />
-                                                        <span className="gl-item-title">{item.title}</span>
+                                                        <span
+                                                            className={`gl-item-title${item.file_key ? ' gl-item-title-link' : ''}`}
+                                                            onClick={() => item.file_key && navigate(`/guidelines/${item.id}`)}
+                                                            title={item.file_key ? 'View full guideline' : undefined}
+                                                        >
+                                                            {item.title}
+                                                        </span>
                                                         <span className="gl-item-time">{timeAgo(item.published_at)}</span>
                                                     </div>
                                                     {item.summary && (
