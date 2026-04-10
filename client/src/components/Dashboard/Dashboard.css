@@ -631,3 +631,7 @@
 .rs-stat-value { font-weight: 600; color: #0a2a33; }
 
 .rs-stats-widget:hover { background: #f0f7f6; }
+
+/* Feed states */
+.feed-loading { color: #aaa; font-size: 0.85rem; text-align: center; padding: 1rem 0; }
+.feed-empty { color: #aaa; font-size: 0.9rem; text-align: center; padding: 2rem 0; }

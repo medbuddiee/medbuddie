@@ -270,6 +270,41 @@
 
 .empty-text { color: #aaa; font-size: 0.9rem; margin: 0; }
 
+.loading-inline { color: #888; font-size: 0.85rem; margin-bottom: 0.5rem; }
+.error-text { color: #e53935; font-size: 0.85rem; margin-bottom: 0.5rem; }
+
+/* Inline link button (looks like a link, acts as a button) */
+.inline-link {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #005c55;
+    font-size: inherit;
+    cursor: pointer;
+    text-decoration: underline;
+}
+.inline-link:hover { color: #003d33; }
+
+/* My Posts list */
+.posts-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.profile-post-item {
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 0.75rem;
+}
+.profile-post-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+.profile-post-content { font-size: 0.9rem; color: #333; margin: 0 0 0.4rem; line-height: 1.5; }
+
+.profile-post-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.post-time { font-size: 0.75rem; color: #bbb; margin-left: auto; }
+
 
 /* ═══════════════════════════════════════════════════════════════════════════
    EDIT PROFILE PAGE

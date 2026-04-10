@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import './Profile.css';
@@ -7,7 +7,7 @@ import { FaSearch, FaCog, FaUserCircle } from 'react-icons/fa';
 
 const TABS = ['Health Overview', 'My Posts', 'Communities & Followers', 'Second Opinions'];
 
-// Sample activity/diet — in a real app these would come from a health-tracking API
+// Sample activity/diet — would come from a dedicated health-tracking API in production
 const ACTIVITY = { steps: '7,856', caloriesBurned: '480 kcal', workoutTime: '40 min' };
 const DIET = {
     calories: '1,850 g',
@@ -17,13 +17,74 @@ const DIET = {
 };
 
 export default function ProfilePage() {
-    const { user } = useUser();
+    const { user, updateUser } = useUser();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState(0);
+    const [profile, setProfile] = useState(null);
+    const [posts, setPosts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // Fetch full profile from API on mount
+    useEffect(() => {
+        if (!user) return;
+
+        const fetchProfile = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const token = localStorage.getItem('token');
+                const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+                // Fall back to userId query param if no token (dev mode)
+                const url = token
+                    ? '/api/profile'
+                    : `/api/profile?userId=${user.id}`;
+
+                const res = await fetch(url, { headers });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    setProfile(data);
+                    updateUser(data); // keep context in sync
+                } else {
+                    // Use whatever is already in context
+                    setProfile(user);
+                }
+            } catch {
+                setProfile(user); // fallback to context on network error
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProfile();
+    }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Fetch user's posts when "My Posts" tab is selected
+    useEffect(() => {
+        if (activeTab !== 1 || !user?.id) return;
+
+        const fetchPosts = async () => {
+            try {
+                const res = await fetch(`/api/posts?userId=${user.id}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setPosts(data);
+                }
+            } catch {
+                // silently fail
+            }
+        };
+
+        fetchPosts();
+    }, [activeTab, user?.id]);
 
     if (!user) return <div className="loading">Loading...</div>;
 
-    const meds = user.medications?.filter((m) => m.name) || [];
+    // Merge fetched profile with context (profile wins when available)
+    const display = profile || user;
+    const meds = display.medications?.filter((m) => m.name) || [];
 
     return (
         <div className="profile-shell">
@@ -36,7 +97,13 @@ export default function ProfilePage() {
                 <div className="profile-topnav-right">
                     <button className="icon-btn" aria-label="Search"><FaSearch /></button>
                     <button className="icon-btn" aria-label="Settings"><FaCog /></button>
-                    <button className="icon-btn" aria-label="Profile"><FaUserCircle size={24} /></button>
+                    <button
+                        className="icon-btn"
+                        aria-label="Dashboard"
+                        onClick={() => navigate('/dashboard')}
+                    >
+                        <FaUserCircle size={24} />
+                    </button>
                 </div>
             </header>
 
@@ -50,8 +117,8 @@ export default function ProfilePage() {
                             className="profile-avatar"
                         />
                         <div>
-                            <h2 className="profile-name">{user.name || 'Jane Doe'}</h2>
-                            <p className="profile-subtitle">{user.bio || 'Living with Type 2 Diabetes'}</p>
+                            <h2 className="profile-name">{display.name || 'Jane Doe'}</h2>
+                            <p className="profile-subtitle">{display.bio || 'Living with Type 2 Diabetes'}</p>
                         </div>
                     </div>
                     <button className="edit-button" onClick={() => navigate('/edit-profile')}>
@@ -72,54 +139,55 @@ export default function ProfilePage() {
                     ))}
                 </div>
 
+                {/* ── Health Overview ── */}
                 {activeTab === 0 && (
                     <>
-                        {/* ── Personal Stats ── */}
+                        {loading && <p className="loading-inline">Loading profile…</p>}
+                        {error && <p className="error-text">{error}</p>}
+
+                        {/* Personal Stats */}
                         <div className="card">
                             <h4 className="card-title">Personal Stats</h4>
                             <div className="divider" />
                             <div className="stats-grid-2x2">
                                 <div className="stat-item">
                                     <span className="stat-label">Weight</span>
-                                    <span className="stat-value">{user.weight ? `${user.weight} lbs.` : '—'}</span>
+                                    <span className="stat-value">{display.weight ? `${display.weight} lbs.` : '—'}</span>
                                 </div>
                                 <div className="stat-item">
                                     <span className="stat-label">Blood Pressure</span>
-                                    <span className="stat-value">{user.bloodPressure || '—'} mmHg</span>
+                                    <span className="stat-value">{display.bloodPressure ? `${display.bloodPressure} mmHg` : '—'}</span>
                                 </div>
                                 <div className="stat-item">
                                     <span className="stat-label">Height</span>
-                                    <span className="stat-value">{user.height || '—'}</span>
+                                    <span className="stat-value">{display.height || '—'}</span>
                                 </div>
                                 <div className="stat-item">
                                     <span className="stat-label">HbA1c</span>
-                                    <span className="stat-value">{user.hba1c ? `${user.hba1c} %` : '—'}</span>
+                                    <span className="stat-value">{display.hba1c ? `${display.hba1c} %` : '—'}</span>
                                 </div>
                             </div>
                         </div>
 
-                        {/* ── Activity + Diet row ── */}
+                        {/* Activity + Diet row */}
                         <div className="two-col-row">
                             {/* Activity Summary */}
                             <div className="card">
                                 <h4 className="card-title">Activity Summary</h4>
                                 <div className="divider" />
                                 <div className="summary-list">
-                                    <div className="summary-item">
-                                        <span>Steps</span>
-                                        <span>{ACTIVITY.steps}</span>
-                                    </div>
-                                    <div className="summary-item">
-                                        <span>Calories burned</span>
-                                        <span>{ACTIVITY.caloriesBurned}</span>
-                                    </div>
-                                    <div className="summary-item">
-                                        <span>Workout time</span>
-                                        <span>{ACTIVITY.workoutTime}</span>
-                                    </div>
+                                    {[
+                                        ['Steps', ACTIVITY.steps],
+                                        ['Calories burned', ACTIVITY.caloriesBurned],
+                                        ['Workout time', ACTIVITY.workoutTime],
+                                    ].map(([label, val]) => (
+                                        <div key={label} className="summary-item">
+                                            <span>{label}</span><span>{val}</span>
+                                        </div>
+                                    ))}
                                 </div>
 
-                                {/* Medications inline (compact) */}
+                                {/* Medications compact */}
                                 <h4 className="card-title" style={{ marginTop: '1rem' }}>Medications</h4>
                                 <div className="divider" />
                                 {meds.length > 0 ? (
@@ -144,22 +212,16 @@ export default function ProfilePage() {
                                 <h4 className="card-title">Diet Summary</h4>
                                 <div className="divider" />
                                 <div className="summary-list">
-                                    <div className="summary-item">
-                                        <span>Calories consumed</span>
-                                        <span>{DIET.calories}</span>
-                                    </div>
-                                    <div className="summary-item">
-                                        <span>Carbohydrates</span>
-                                        <span>{DIET.carbohydrates}</span>
-                                    </div>
-                                    <div className="summary-item">
-                                        <span>Protein</span>
-                                        <span>{DIET.protein}</span>
-                                    </div>
-                                    <div className="summary-item">
-                                        <span>Fat</span>
-                                        <span>{DIET.fat}</span>
-                                    </div>
+                                    {[
+                                        ['Calories consumed', DIET.calories],
+                                        ['Carbohydrates', DIET.carbohydrates],
+                                        ['Protein', DIET.protein],
+                                        ['Fat', DIET.fat],
+                                    ].map(([label, val]) => (
+                                        <div key={label} className="summary-item">
+                                            <span>{label}</span><span>{val}</span>
+                                        </div>
+                                    ))}
                                     <div className="summary-item">
                                         <span>Intermittent Fasting</span>
                                         <span className="if-badges">
@@ -171,7 +233,7 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
-                        {/* ── Full Medications table ── */}
+                        {/* Full Medications table */}
                         <div className="card">
                             <h4 className="card-title">Medications</h4>
                             <div className="divider" />
@@ -190,27 +252,52 @@ export default function ProfilePage() {
                                     </tbody>
                                 </table>
                             ) : (
-                                <p className="empty-text">No medications listed.</p>
+                                <p className="empty-text">No medications listed. <button className="inline-link" onClick={() => navigate('/edit-profile')}>Add medications →</button></p>
                             )}
                         </div>
                     </>
                 )}
 
+                {/* ── My Posts ── */}
                 {activeTab === 1 && (
                     <div className="card">
-                        <p className="empty-text">No posts yet.</p>
+                        <h4 className="card-title">My Posts</h4>
+                        <div className="divider" />
+                        {posts.length === 0 ? (
+                            <p className="empty-text">No posts yet. Share your health journey on the <button className="inline-link" onClick={() => navigate('/dashboard')}>Health Feed →</button></p>
+                        ) : (
+                            <div className="posts-list">
+                                {posts.map((post) => (
+                                    <div key={post.id} className="profile-post-item">
+                                        <p className="profile-post-content">{post.content}</p>
+                                        <div className="profile-post-meta">
+                                            {(post.tags || []).map((tag, i) => (
+                                                <span key={i} className="tag">{tag}</span>
+                                            ))}
+                                            <span className="post-time">{new Date(post.created_at).toLocaleDateString()}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
 
+                {/* ── Communities & Followers ── */}
                 {activeTab === 2 && (
                     <div className="card">
-                        <p className="empty-text">No communities or followers yet.</p>
+                        <h4 className="card-title">Communities & Followers</h4>
+                        <div className="divider" />
+                        <p className="empty-text">No communities or followers yet. Browse <button className="inline-link" onClick={() => navigate('/dashboard')}>communities →</button></p>
                     </div>
                 )}
 
+                {/* ── Second Opinions ── */}
                 {activeTab === 3 && (
                     <div className="card">
-                        <p className="empty-text">No second opinions yet.</p>
+                        <h4 className="card-title">Second Opinions</h4>
+                        <div className="divider" />
+                        <p className="empty-text">No second opinions requested yet.</p>
                     </div>
                 )}
             </div>

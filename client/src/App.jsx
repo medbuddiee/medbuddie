@@ -9,29 +9,36 @@ import ProfilePage from './components/Profile/ProfilePage';
 import EditProfilePage from './components/Profile/EditProfilePage';
 import { UserProvider, useUser } from './context/UserContext.jsx';
 
-// Only allow access to route if user is logged in
+// Redirect to /signin if not logged in
 function PrivateRoute({ element }) {
     const { user } = useUser();
     return user ? element : <Navigate to="/signin" replace />;
 }
 
-function App() {
+function AppRoutes() {
+    return (
+        <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/signup" element={<SignUp />} />
+
+            {/* Protected routes */}
+            <Route path="/dashboard" element={<PrivateRoute element={<Dashboard />} />} />
+            <Route path="/profile" element={<PrivateRoute element={<ProfilePage />} />} />
+            <Route path="/edit-profile" element={<PrivateRoute element={<EditProfilePage />} />} />
+
+            {/* Catch-all */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+    );
+}
+
+export default function App() {
     return (
         <UserProvider>
             <Router>
-                <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/signin" element={<SignIn />} />
-                    <Route path="/signup" element={<SignUp />} />
-                    <Route path="/dashboard" element={
-                        <PrivateRoute element={<Dashboard />} />
-                    } />
-                    <Route path="/profile" element={<ProfilePage />} />
-                    <Route path="/edit-profile" element={<EditProfilePage />} />
-                </Routes>
+                <AppRoutes />
             </Router>
         </UserProvider>
     );
 }
-
-export default App;
