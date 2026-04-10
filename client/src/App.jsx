@@ -10,6 +10,7 @@ import EditProfilePage from './components/Profile/EditProfilePage';
 import GuidelinesPage from './components/Guidelines/GuidelinesPage';
 import GuidelineDetail from './components/Guidelines/GuidelineDetail';
 import HealthMetricsPage from './components/Profile/HealthMetricsPage';
+import SecondOpinionPage from './components/SecondOpinion/SecondOpinionPage';
 import { UserProvider, useUser } from './context/UserContext.jsx';
 
 /**
@@ -48,7 +49,8 @@ function AppRoutes() {
             <Route path="/guidelines/:id" element={<PrivateRoute element={<GuidelineDetail />} />} />
             <Route path="/profile"      element={<PrivateRoute element={<ProfilePage />} />} />
             <Route path="/edit-profile"    element={<PrivateRoute element={<EditProfilePage />} />} />
-            <Route path="/health-metrics" element={<PrivateRoute element={<HealthMetricsPage />} />} />
+            <Route path="/health-metrics"  element={<PrivateRoute element={<HealthMetricsPage />} />} />
+            <Route path="/second-opinion" element={<PrivateRoute element={<SecondOpinionPage />} />} />
 
             {/* Any unknown path: logged-in → dashboard, logged-out → home */}
             <Route path="*" element={<SmartRedirect />} />
