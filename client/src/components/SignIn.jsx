@@ -4,16 +4,10 @@ import './SignIn.css';
 import logo from '../../assets/medbuddie_logo.png';
 import googleIcon from '../../assets/signin/google_logo.png';
 import appleIcon from '../../assets/signin/apple_logo.png';
-import facebookIcon from '../../assets/signin/facebook_logo.png';
 import { useUser } from '../context/UserContext.jsx';
 
 export default function SignIn() {
-    const [form, setForm] = useState({
-        identifier: '',
-        password: '',
-        rememberMe: false,
-    });
-
+    const [form, setForm] = useState({ identifier: '', password: '', rememberMe: false });
     const navigate = useNavigate();
     const { login } = useUser();
 
@@ -24,153 +18,136 @@ export default function SignIn() {
 
     const handleLogin = async (e) => {
         e.preventDefault();
-
-        const { identifier, password } = form;
-
         try {
-            // ✔ Try backend login
-            const res = await fetch("http://localhost:5000/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    email: identifier,
-                    password: password,
-                }),
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: form.identifier, password: form.password }),
             });
-
             const data = await res.json();
-
             if (res.ok) {
-                // ✔ Successful backend login
-                login(data.user); // store in context
-                localStorage.setItem("user", JSON.stringify(data.user));
-                return navigate("/dashboard");
+                login(data.user);
+                if (data.token) localStorage.setItem('token', data.token);
+                return navigate('/dashboard');
             }
-
-            // ❗ If backend login failed, fallback to mock
-            if (
-                identifier === "abcdef@gmail.com" &&
-                password === "123456"
-            ) {
-                login({
-                    name: "Lalit Wadhwani",
-                    email: identifier,
-                });
-                return navigate("/dashboard");
-            }
-
-            // ❌ Otherwise: invalid credentials
-            alert("Invalid email or password");
-
-        } catch (err) {
-            console.error("Login error:", err);
-            alert("Server error");
+            alert(data.error || 'Invalid credentials');
+        } catch {
+            alert('Server error — is the backend running?');
         }
     };
 
-
     return (
         <>
-            <div className="signin-container">
-                <div className="signin-card">
-                    <div className="signin-header">
-                        <div className="logo">
-                            <img src={logo} alt="MedBuddie Logo" width="40" height="40" />
-                            <span>MedBuddie</span>
-                        </div>
+            <div className="signin-page">
+                {/* ── Top bar ── */}
+                <header className="signin-topbar">
+                    <div className="signin-topbar-logo">
+                        <img src={logo} alt="MedBuddie" width="36" height="36" />
+                        <span className="signin-brand">MedBuddie</span>
                     </div>
+                    <a href="/signup" className="signin-create-link">Create new account</a>
+                </header>
 
-                    <form onSubmit={handleLogin} className="signin-form">
-                        <label>Username or Email</label>
-                        <input
-                            type="text"
-                            name="identifier"
-                            value={form.identifier}
-                            onChange={handleChange}
-                            required
-                        />
+                {/* ── Card ── */}
+                <main className="signin-main">
+                    <div className="signin-card">
+                        <h1 className="signin-title">Sign in</h1>
 
-                        <div className="password-row">
-                            <label>Password</label>
-                            <a href="/forgot-password" className="forgot-link">Forgot password?</a>
-                        </div>
-                        <input
-                            type="password"
-                            name="password"
-                            value={form.password}
-                            onChange={handleChange}
-                            required
-                        />
+                        <form onSubmit={handleLogin} className="signin-form">
+                            <label htmlFor="identifier">Email or username</label>
+                            <input
+                                id="identifier"
+                                type="text"
+                                name="identifier"
+                                value={form.identifier}
+                                onChange={handleChange}
+                                placeholder="Enter your email or username"
+                                required
+                            />
 
-                        <div className="checkbox-group">
+                            <div className="password-row">
+                                <label htmlFor="password">Password</label>
+                                <a href="/forgot-password" className="forgot-link">Forgot password?</a>
+                            </div>
+                            <input
+                                id="password"
+                                type="password"
+                                name="password"
+                                value={form.password}
+                                onChange={handleChange}
+                                placeholder="Enter your password"
+                                required
+                            />
+
+                            <div className="checkbox-group">
                                 <input
                                     type="checkbox"
                                     name="rememberMe"
+                                    id="rememberMe"
                                     checked={form.rememberMe}
                                     onChange={handleChange}
                                 />
-                                <span>Remember me on this computer</span>
-                        </div>
+                                <label htmlFor="rememberMe">Remember me</label>
+                            </div>
 
-                        <button type="submit" className="primary-btn">Sign In</button>
-                    </form>
+                            <button type="submit" className="signin-primary-btn">Sign in</button>
+                        </form>
 
-                    <a href="/signup" className="create-account-link">Create new account</a>
+                        <div className="or-divider"><span>or</span></div>
 
-                    <div className="or-divider"><span>or</span></div>
-
-                    <button className="social-btn apple">
-                        <img src={appleIcon} alt="Apple" /> Sign in with Apple
-                    </button>
-                    <button className="social-btn google">
-                        <img src={googleIcon} alt="Google" /> Sign in with Google
-                    </button>
-                    <button className="social-btn facebook">
-                        <img src={facebookIcon} alt="Facebook" /> Sign in with Facebook
-                    </button>
-                </div>
+                        <button className="social-btn apple">
+                            <img src={appleIcon} alt="Apple" />
+                            Sign in with Apple
+                        </button>
+                        <button className="social-btn google">
+                            <img src={googleIcon} alt="Google" />
+                            Sign in with Google
+                        </button>
+                    </div>
+                </main>
             </div>
 
+            {/* ── Footer ── */}
             <footer className="signin-footer">
-                <div className="footer-columns">
-                    <div>
-                        <strong>Company</strong>
-                        <ul>
-                            <li>About Us</li>
-                            <li>Privacy and Security</li>
-                            <li>Careers</li>
-                            <li>Blog</li>
-                        </ul>
+                <div className="footer-inner">
+                    <div className="footer-links-group">
+                        <div className="footer-col">
+                            <strong>COMPANY</strong>
+                            <ul>
+                                <li>About Us</li>
+                                <li>Privacy Policy</li>
+                                <li>Terms of Use</li>
+                                <li>Press</li>
+                            </ul>
+                        </div>
+                        <div className="footer-col">
+                            <strong>LEARN MORE</strong>
+                            <ul>
+                                <li>Community</li>
+                                <li>Physician Portal</li>
+                                <li>Pricing</li>
+                                <li>FAQ</li>
+                            </ul>
+                        </div>
                     </div>
-                    <div>
-                        <strong>Support</strong>
-                        <ul>
-                            <li>Contact Us</li>
-                            <li>Help Center</li>
-                            <li>User Agreement</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <strong>Research</strong>
-                        <ul>
-                            <li>Publications</li>
-                            <li>Press</li>
-                            <li>Funding</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <strong>Legal</strong>
-                        <ul>
-                            <li>Terms</li>
-                            <li>Privacy Policy</li>
-                            <li>Cookies</li>
-                        </ul>
-                    </div>
-                </div>
 
-                <div className="footer-bottom">
-                    <img src={logo} alt="MedBuddie Logo" className="footer-logo" />
-                    <p>© 2025 MedBuddie. All rights reserved. This site is not medical advice.</p>
+                    <div className="footer-brand-col">
+                        <div className="footer-patientslikeme">
+                            <img src={logo} alt="Patientslikeme" width="28" height="28" />
+                            <span>Patientslikeme</span>
+                            <span className="footer-plus">+</span>
+                        </div>
+                        <div className="footer-social-icons">
+                            <button aria-label="Facebook">f</button>
+                            <button aria-label="Twitter">t</button>
+                            <button aria-label="Google">g</button>
+                            <button aria-label="LinkedIn">in</button>
+                            <button aria-label="YouTube">▶</button>
+                        </div>
+                        <p className="footer-privacy-pref">Privacy Preferences</p>
+                        <p className="footer-copy">(c) 2024 MedBuddie. All Rights Reserved.</p>
+                        <p className="footer-soc">MedBuddie is SOC 2-Type II accredited</p>
+                    </div>
                 </div>
             </footer>
         </>

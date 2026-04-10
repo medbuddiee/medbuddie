@@ -1,4 +1,5 @@
 /* SignIn.css */
+*, *::before, *::after { box-sizing: border-box; }
 
 body {
     margin: 0;
@@ -7,256 +8,304 @@ body {
     color: #333;
 }
 
-.signin-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 4rem 1rem;
+/* ── Top bar ─────────────────────────────────────────────────────────────── */
+.signin-page {
     min-height: 100vh;
     background-color: #f6f9fc;
+    display: flex;
+    flex-direction: column;
 }
 
-.signup-conditions {
-    display:  none;
+.signin-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background: #fff;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.signin-topbar-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.signin-brand {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #005c55;
+}
+
+.signin-create-link {
+    color: #1a5cd6;
+    font-weight: 500;
+    text-decoration: none;
+    font-size: 0.95rem;
+}
+.signin-create-link:hover { text-decoration: underline; }
+
+/* ── Main / Card ─────────────────────────────────────────────────────────── */
+.signin-main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    padding: 3rem 1rem;
 }
 
 .signin-card {
-    background: white;
-    padding: 2rem 3rem;
-    border-radius: 16px;
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
-    max-width: 420px;
+    background: #fff;
+    border-radius: 4px;
+    padding: 2.5rem 2rem;
     width: 100%;
-    text-align: center;
+    max-width: 480px;
 }
 
-.signin-header {
-    display: inline-block;
+.signin-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 1.5rem;
 }
 
-.logo {
+/* ── Form ────────────────────────────────────────────────────────────────── */
+.signin-form {
     display: flex;
-    align-items: center;
-    font-weight: bold;
-    font-size: 1.5rem;
-    color: #006B6B; /* match the teal logo */
-}
-
-.signin-header .logo-icon {
-    width: 48px;
-    height: 48px;
-    margin-bottom: 1rem;
+    flex-direction: column;
 }
 
 .signin-form label {
-    display: block;
     font-weight: 600;
-    margin: 1rem 0 0.25rem;
-    text-align: left;
+    font-size: 0.95rem;
+    margin-bottom: 0.3rem;
+    color: #222;
 }
 
 .signin-form input[type="text"],
 .signin-form input[type="password"] {
     width: 100%;
-    padding: 0.75rem;
+    padding: 0.75rem 1rem;
     border: 1px solid #ccc;
-    border-radius: 8px;
+    border-radius: 6px;
     margin-bottom: 1rem;
     font-size: 1rem;
-    background:  #f7f7f8;
+    background: #fafafa;
     color: #1a1a1a;
+}
+.signin-form input:focus {
+    outline: none;
+    border-color: #005c55;
+    background: #fff;
 }
 
 .password-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 0.3rem;
 }
 
 .forgot-link {
     font-size: 0.85rem;
-    color: #006b6b;
+    color: #1a5cd6;
     text-decoration: none;
-    margin-top: 10px;
+}
+.forgot-link:hover { text-decoration: underline; }
+
+/* Checkbox */
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 1.25rem;
 }
 
-.primary-btn {
+.checkbox-group label {
+    font-weight: 400;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+input[type="checkbox"] {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    background-color: #fff;
+    border: 1.5px solid #aaa;
+    border-radius: 3px;
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+}
+
+input[type="checkbox"]:checked {
+    background-color: #005c55;
+    border-color: #005c55;
+}
+
+input[type="checkbox"]:checked::after {
+    content: "✓";
+    position: absolute;
+    top: -1px;
+    left: 2px;
+    font-size: 13px;
+    color: #fff;
+}
+
+/* Primary button */
+.signin-primary-btn {
     width: 100%;
-    padding: 0.75rem;
-    background-color: #006b6b;
+    padding: 0.8rem;
+    background-color: #004d40;
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-    margin-bottom: 1rem;
-}
-
-.create-account-link {
-    display: block;
-    margin: 1rem 0;
-    color: #006b6b;
-    text-decoration: none;
     font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
 }
+.signin-primary-btn:hover { background-color: #003d33; }
 
+/* OR divider */
 .or-divider {
-    margin: 1.5rem 0 1rem;
-    text-align: center;
-    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 1.25rem 0;
     color: #888;
-    position: relative;
+    font-size: 0.9rem;
 }
-
-.or-divider span {
-    background-color: white;
-    padding: 0 0.75rem;
-    position: relative;
-    z-index: 1;
-}
-
-.or-divider::before {
+.or-divider::before,
+.or-divider::after {
     content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
+    flex: 1;
     height: 1px;
-    background-color: #ccc;
-    z-index: 0;
+    background: #ddd;
 }
 
+/* Social buttons */
 .social-btn {
     width: 100%;
     padding: 0.75rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.75rem;
+    gap: 12px;
     border: 1px solid #ccc;
-    border-radius: 8px;
-    background-color: white;
+    border-radius: 6px;
+    background: #fff;
     margin-bottom: 0.75rem;
+    font-size: 0.95rem;
     font-weight: 500;
     cursor: pointer;
+    transition: background 0.2s;
 }
+.social-btn img { width: 20px; height: 20px; }
+.social-btn.apple { background: #000; color: #fff; border: none; }
+.social-btn.apple:hover { background: #222; }
+.social-btn.google:hover { background: #f5f5f5; }
 
-.social-btn img {
-    width: 20px;
-    height: 20px;
-}
-
-
-.social-btn.google {
-    border: 1px solid #ccc;
-    color: #1a1a1a;
-}
-
-.social-btn.apple {
-    background-color: #000;
-    color: white;
-    border: none;
-}
-
-.social-btn.facebook {
-    background-color: #1877f2;
-    color: white;
-    border: none;
-}
-
-/* Footer Styles */
+/* ── Footer ──────────────────────────────────────────────────────────────── */
 .signin-footer {
-    background-color: #eaf3f3;
-    padding: 2rem 1rem;
-    margin-top: 4rem;
-    text-align: center;
-    color: #333;
+    background-color: #fff;
+    border-top: 1px solid #e8e8e8;
+    padding: 2.5rem 2rem 1.5rem;
 }
 
-.footer-columns {
+.footer-inner {
+    max-width: 900px;
+    margin: 0 auto;
     display: flex;
-    flex-wrap: wrap;
     justify-content: space-between;
-    max-width: 1000px;
-    margin: 0 auto 2rem;
-    text-align: left;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 2rem;
 }
 
-.footer-columns div {
-    flex: 1 1 180px;
-    margin: 1rem;
+.footer-links-group {
+    display: flex;
+    gap: 3rem;
 }
 
-.footer-columns strong {
+.footer-col strong {
     display: block;
-    margin-bottom: 0.5rem;
-    font-size: 1.1rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+    color: #444;
 }
 
-.footer-columns ul {
+.footer-col ul {
     list-style: none;
     padding: 0;
     margin: 0;
 }
 
-.footer-columns li {
+.footer-col li {
+    font-size: 0.88rem;
+    color: #555;
     margin-bottom: 0.5rem;
-    font-size: 0.9rem;
-    color: #444;
+    cursor: pointer;
+}
+.footer-col li:hover { color: #005c55; }
+
+.footer-brand-col {
+    text-align: right;
 }
 
-.footer-bottom {
-    border-top: 1px solid #ccc;
-    padding-top: 1rem;
+.footer-patientslikeme {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    font-weight: 700;
+    font-size: 1rem;
+    color: #005c55;
+    margin-bottom: 0.75rem;
 }
 
-.footer-logo {
+.footer-plus {
+    background: #005c55;
+    color: #fff;
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+}
+
+.footer-social-icons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-bottom: 0.75rem;
+}
+
+.footer-social-icons button {
     width: 32px;
     height: 32px;
-    vertical-align: middle;
-    margin-bottom: 0.5rem;
-}
-
-/* Checkbox group */
-.checkbox-group {
-    margin-bottom: 1.5rem;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-}
-
-.checkbox-style {
-    background: red;
-}
-
-.checkbox-group a {
-    color: #00796b;
-    text-decoration: underline;
-    font-weight: 500;
-    display: flex;
-}
-
-.checkbox-group span {
-    padding-left: 10px;
-}
-
-input[type="checkbox"] {
-    appearance: none;
-    width: 20px;
-    height: 20px;
-    background-color: #fff; /* Set to white or your preferred background */
+    border-radius: 6px;
     border: 1px solid #ccc;
-    border-radius: 4px;
+    background: #f5f5f5;
     cursor: pointer;
-    position: relative;
+    font-size: 0.75rem;
+    color: #555;
+}
+.footer-social-icons button:hover { background: #e0e0e0; }
+
+.footer-privacy-pref {
+    font-size: 0.82rem;
+    color: #555;
+    margin: 0 0 0.3rem;
 }
 
-input[type="checkbox"]:checked::after {
-    content: "✓";
-    position: absolute;
-    top: 0;
-    left: 3px;
-    font-size: 14px;
-    color: #006B6B; /* Match MedBuddie theme */
+.footer-copy,
+.footer-soc {
+    font-size: 0.78rem;
+    color: #888;
+    margin: 0.2rem 0;
 }
