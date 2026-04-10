@@ -1,0 +1,449 @@
+/* HealthMetrics.css */
+
+/* ── Page shell ───────────────────────────────────────────────────────────── */
+.hm-page {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 1.5rem 1.25rem 3rem;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    color: #0a2a33;
+}
+
+/* ── Back button ──────────────────────────────────────────────────────────── */
+.hm-back-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: 1.5px solid #ddd;
+    border-radius: 6px;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.85rem;
+    color: #555;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+}
+.hm-back-btn:hover { border-color: #005c55; color: #005c55; }
+
+/* ── Page title row ───────────────────────────────────────────────────────── */
+.hm-page-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+}
+
+.hm-page-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin: 0 0 4px;
+    display: flex;
+    align-items: center;
+    color: #0a2a33;
+}
+
+.hm-page-sub {
+    font-size: 0.88rem;
+    color: #888;
+    margin: 0;
+}
+
+/* ── Summary rings row ────────────────────────────────────────────────────── */
+.hm-rings-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.85rem;
+    margin-bottom: 1rem;
+}
+
+.hm-ring-card {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    padding: 1rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.hm-ring-card-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 2px;
+}
+
+/* ── Ring component ───────────────────────────────────────────────────────── */
+.hm-ring-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hm-ring-inner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hm-ring-val {
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.hm-ring-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #0a2a33;
+    margin: 0;
+    text-align: center;
+}
+
+.hm-ring-sub {
+    font-size: 0.72rem;
+    color: #888;
+    margin: 0;
+    text-align: center;
+}
+
+/* ── Trend badge ──────────────────────────────────────────────────────────── */
+.hm-trend {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 20px;
+}
+
+.hm-trend-up   { background: #e0f2f1; color: #005c55; }
+.hm-trend-down { background: #fce4ec; color: #c62828; }
+
+/* ── Two-column layout ────────────────────────────────────────────────────── */
+.hm-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.85rem;
+    margin-bottom: 0.85rem;
+}
+
+/* ── Card head (icon + title) ─────────────────────────────────────────────── */
+.hm-card-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0.5rem;
+}
+
+/* ── Horizontal bar ───────────────────────────────────────────────────────── */
+.hm-hbar-track {
+    width: 100%;
+    height: 5px;
+    background: #f0f0f0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+.hm-hbar-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.4s ease;
+}
+
+/* ── Vital list ───────────────────────────────────────────────────────────── */
+.hm-vital-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.hm-vital-row {}
+
+.hm-vital-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.hm-vital-label {
+    font-size: 0.82rem;
+    color: #888;
+    font-weight: 500;
+}
+
+.hm-vital-val {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #0a2a33;
+}
+
+.hm-vital-sub {
+    font-size: 0.72rem;
+    color: #aaa;
+    margin: 1px 0 0;
+}
+
+/* ── Activity rows ────────────────────────────────────────────────────────── */
+.hm-activity-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.hm-activity-row {}
+
+.hm-activity-row-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 2px;
+}
+
+.hm-activity-label {
+    font-size: 0.82rem;
+    color: #888;
+    font-weight: 500;
+}
+
+.hm-activity-val {
+    font-size: 0.9rem;
+    color: #0a2a33;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.hm-activity-goal {
+    font-size: 0.72rem;
+    color: #bbb;
+    font-weight: 400;
+}
+
+/* ── Weekly bar chart ─────────────────────────────────────────────────────── */
+.hm-subsection-title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #555;
+    margin: 0.75rem 0 0.5rem;
+}
+
+.hm-week-bars {
+    display: flex;
+    gap: 4px;
+    align-items: flex-end;
+    height: 60px;
+}
+
+.hm-week-bar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    height: 100%;
+}
+
+.hm-week-bar-track {
+    flex: 1;
+    width: 100%;
+    background: #f0f0f0;
+    border-radius: 4px 4px 0 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    overflow: hidden;
+}
+
+.hm-week-bar-fill {
+    border-radius: 3px 3px 0 0;
+    min-height: 3px;
+}
+
+.hm-week-day {
+    font-size: 0.65rem;
+    color: #bbb;
+    font-weight: 500;
+}
+
+/* ── Macro grid ───────────────────────────────────────────────────────────── */
+.hm-macro-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.hm-macro-item {}
+
+.hm-macro-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 3px;
+}
+
+.hm-macro-label {
+    font-size: 0.82rem;
+    color: #888;
+    font-weight: 500;
+}
+
+.hm-macro-val {
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.hm-macro-goal {
+    font-size: 0.7rem;
+    color: #bbb;
+    margin-top: 2px;
+    display: block;
+}
+
+/* ── Fasting row ──────────────────────────────────────────────────────────── */
+.hm-fasting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 0.75rem;
+    border-top: 1px solid #f0f0f0;
+}
+
+.hm-fasting-label {
+    font-size: 0.85rem;
+    color: #555;
+    font-weight: 500;
+}
+
+/* ── Medication list ──────────────────────────────────────────────────────── */
+.hm-med-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    margin-bottom: 1rem;
+}
+
+.hm-med-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid #f5f5f5;
+}
+.hm-med-item:last-child { border-bottom: none; }
+
+.hm-med-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.hm-med-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.hm-med-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #0a2a33;
+}
+
+.hm-med-freq {
+    font-size: 0.75rem;
+    color: #888;
+}
+
+.hm-med-time {
+    font-size: 0.78rem;
+    color: #888;
+    white-space: nowrap;
+}
+
+.hm-med-check {
+    color: #005c55;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.hm-med-cta {
+    padding-top: 0.75rem;
+    border-top: 1px solid #f0f0f0;
+}
+
+.hm-empty {
+    text-align: center;
+    padding: 1rem 0;
+}
+
+/* ── Goals grid ───────────────────────────────────────────────────────────── */
+.hm-goals-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.85rem;
+}
+
+.hm-goal-card {
+    background: #f9fafb;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.hm-goal-icon { font-size: 1.3rem; }
+
+.hm-goal-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #555;
+    margin: 0;
+}
+
+.hm-goal-current {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0a2a33;
+    margin: 0;
+}
+
+.hm-goal-target {
+    font-size: 0.72rem;
+    color: #bbb;
+    margin: 0 0 4px;
+}
+
+.hm-goal-pct {
+    font-size: 0.78rem;
+    font-weight: 600;
+    margin-top: 3px;
+    text-align: right;
+}
+
+/* ── CTA row ──────────────────────────────────────────────────────────────── */
+.hm-cta-row {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+    flex-wrap: wrap;
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .hm-rings-row    { grid-template-columns: repeat(2, 1fr); }
+    .hm-two-col      { grid-template-columns: 1fr; }
+    .hm-goals-grid   { grid-template-columns: repeat(2, 1fr); }
+    .hm-page-title-row { flex-direction: column; gap: 0.75rem; }
+}

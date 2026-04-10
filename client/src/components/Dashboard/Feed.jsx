@@ -80,7 +80,7 @@ export default function Feed({ userInfo, searchQuery, onClearSearch }) {
     const navigate = useNavigate();
 
     const [postType,   setPostType]   = useState('medical_question');
-    const [feedFilter, setFeedFilter] = useState('physicians');
+    const [feedFilter, setFeedFilter] = useState('new');
     const [content,    setContent]    = useState('');
     const [posts,      setPosts]      = useState([]);
     const [loading,    setLoading]    = useState(true);
@@ -136,6 +136,7 @@ export default function Feed({ userInfo, searchQuery, onClearSearch }) {
                 const newPost = await res.json();
                 setPosts(prev => [newPost, ...prev]);
                 setContent('');
+                setFeedFilter('new'); // ensure the new post is visible
             } else {
                 setPostError((await res.json()).error || 'Could not create post.');
             }
@@ -410,7 +411,7 @@ export default function Feed({ userInfo, searchQuery, onClearSearch }) {
 
                         <button
                             className="ht-cta-btn"
-                            onClick={() => navigate('/profile')}
+                            onClick={() => navigate('/health-metrics')}
                         >
                             View Detailed Insights ›
                         </button>
@@ -419,7 +420,7 @@ export default function Feed({ userInfo, searchQuery, onClearSearch }) {
                             <h4 className="ht-goals-title">Set Your Health Goals ✎</h4>
                             <button
                                 className="ht-cta-btn"
-                                onClick={() => navigate('/edit-profile')}
+                                onClick={() => navigate('/health-metrics')}
                             >
                                 View Detailed Insights ›
                             </button>
