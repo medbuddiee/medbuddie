@@ -133,7 +133,8 @@ export default function Feed({ userInfo, searchQuery, onClearSearch }) {
                 body: JSON.stringify({ content: content.trim(), type: postType, tags: [] }),
             });
             if (res.ok) {
-                setPosts(prev => [await res.json(), ...prev]);
+                const newPost = await res.json();
+                setPosts(prev => [newPost, ...prev]);
                 setContent('');
             } else {
                 setPostError((await res.json()).error || 'Could not create post.');
