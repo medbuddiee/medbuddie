@@ -1,85 +1,55 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import PostCard from './PostCard';
 import './Dashboard.css';
+import { FaArrowLeft, FaTimes } from 'react-icons/fa';
 
-// ── Fallback data shown when the backend has no posts yet ─────────────────────
-const SAMPLE_POSTS = [
-    {
-        id: 'sample-1',
-        authorId: null,
-        type: 'medical_opinion',
-        author: 'Dr. Sarah Chen',
-        created_at: new Date(Date.now() - 8 * 3600 * 1000).toISOString(),
-        content: 'Combining a GLP-1 receptor agonist with an SGLT2 inhibitor for type 2 diabetes mellitus — evidence for a unilateral approach to optimal glycaemic control is growing. Recent RCTs show ~1.5% additional HbA1c reduction versus monotherapy.',
-        tags: ['#Type2Diabetes', '#Pharmacology'],
-        comments_count: 25,
-        likes: 48,
-        likedByMe: false,
-        views: '25k',
-    },
-    {
-        id: 'sample-2',
-        authorId: null,
-        type: 'personal',
-        author: 'Alex Nguyen',
-        created_at: new Date(Date.now() - 5 * 3600 * 1000).toISOString(),
-        content: 'Three months into post-concussion recovery and the combination of graded aerobic exercise, consistent sleep hygiene, and mindfulness has made a noticeable difference. Anyone else had a similar experience?',
-        tags: ['#Concussion', '#Recovery'],
-        comments_count: 12,
-        likes: 60,
-        likedByMe: false,
-        views: '14k',
-    },
-    {
-        id: 'sample-3',
-        authorId: null,
-        type: 'medical_opinion',
-        author: 'Dr. Marcus Webb',
-        created_at: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString(),
-        content: 'Updated AHA/ACC guidelines now emphasise shared decision-making for statin initiation in the 7.5–10% 10-year ASCVD risk range. Lifestyle optimisation remains first-line for borderline cases — but the conversation should always include patient values.',
-        tags: ['#Cardiology', '#Lipids', '#Guidelines'],
-        comments_count: 31,
-        likes: 112,
-        likedByMe: false,
-        views: '38k',
-    },
-];
-
-export default function Feed({ userInfo }) {
-    const [postType, setPostType]         = useState('medical');
-    const [content, setContent]           = useState('');
+/**
+ * Feed
+ *
+ * Props:
+ *   userInfo        — logged-in user object from context
+ *   searchQuery     — active search string (empty string = normal feed)
+ *   onClearSearch() — called when user dismisses the search results
+ */
+export default function Feed({ userInfo, searchQuery, onClearSearch }) {
+    const [postType, setPostType]           = useState('medical');
+    const [content, setContent]             = useState('');
     const [physicianOnly, setPhysicianOnly] = useState(false);
-    const [posts, setPosts]               = useState([]);
-    const [loading, setLoading]           = useState(true);
-    const [postError, setPostError]       = useState(null);
-    const [posting, setPosting]           = useState(false);
+    const [posts, setPosts]                 = useState([]);
+    const [loading, setLoading]             = useState(true);
+    const [postError, setPostError]         = useState(null);
+    const [posting, setPosting]             = useState(false);
 
-    // ── Load posts from the API on mount ──────────────────────────────────────
-    useEffect(() => {
-        const fetchPosts = async () => {
-            setLoading(true);
-            try {
-                const token = localStorage.getItem('token');
-                const res = await fetch('/api/posts?limit=20', {
-                    headers: token ? { Authorization: `Bearer ${token}` } : {},
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    // Use real posts when available; fall back to samples for first-run UX
-                    setPosts(data.length > 0 ? data : SAMPLE_POSTS);
-                } else {
-                    setPosts(SAMPLE_POSTS);
-                }
-            } catch {
-                // Backend not reachable — show sample posts so the UI isn't empty
-                setPosts(SAMPLE_POSTS);
-            } finally {
-                setLoading(false);
+    const isSearchMode = Boolean(searchQuery);
+
+    // ── Fetch posts (normal feed or search results) ───────────────────────────
+    const fetchPosts = useCallback(async () => {
+        setLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            const params = new URLSearchParams({ limit: 20 });
+            if (searchQuery) params.set('q', searchQuery);
+
+            const res = await fetch(`/api/posts?${params}`, {
+                headers: token ? { Authorization: `Bearer ${token}` } : {},
+            });
+
+            if (res.ok) {
+                setPosts(await res.json());
+            } else {
+                setPosts([]);
             }
-        };
+        } catch {
+            setPosts([]);
+        } finally {
+            setLoading(false);
+        }
+    }, [searchQuery]);
 
+    // Re-fetch whenever the committed search query changes
+    useEffect(() => {
         fetchPosts();
-    }, []);
+    }, [fetchPosts]);
 
     // ── Create a new post ─────────────────────────────────────────────────────
     const handlePost = async () => {
@@ -118,12 +88,12 @@ export default function Feed({ userInfo }) {
         }
     };
 
-    // ── Toggle like on a post (optimistic UI update) ──────────────────────────
+    // ── Toggle like (optimistic update + server reconciliation) ───────────────
     const handleLike = async (postId) => {
         const token = localStorage.getItem('token');
         if (!token) return;
 
-        // Optimistic update — flip likedByMe and adjust count immediately
+        // Optimistic flip
         setPosts(prev => prev.map(p => {
             if (p.id !== postId) return p;
             const liked = !p.likedByMe;
@@ -137,24 +107,23 @@ export default function Feed({ userInfo }) {
             });
             if (res.ok) {
                 const { likes, likedByMe } = await res.json();
-                // Reconcile with server-confirmed counts
                 setPosts(prev => prev.map(p =>
                     p.id === postId ? { ...p, likes, likedByMe } : p
                 ));
             } else {
-                // Revert on failure
+                // Revert
                 setPosts(prev => prev.map(p => {
                     if (p.id !== postId) return p;
-                    const reverted = !p.likedByMe;
-                    return { ...p, likedByMe: reverted, likes: reverted ? p.likes + 1 : Math.max(0, p.likes - 1) };
+                    const rev = !p.likedByMe;
+                    return { ...p, likedByMe: rev, likes: rev ? p.likes + 1 : Math.max(0, p.likes - 1) };
                 }));
             }
         } catch {
-            // Revert optimistic update on network error
+            // Revert
             setPosts(prev => prev.map(p => {
                 if (p.id !== postId) return p;
-                const reverted = !p.likedByMe;
-                return { ...p, likedByMe: reverted, likes: reverted ? p.likes + 1 : Math.max(0, p.likes - 1) };
+                const rev = !p.likedByMe;
+                return { ...p, likedByMe: rev, likes: rev ? p.likes + 1 : Math.max(0, p.likes - 1) };
             }));
         }
     };
@@ -163,21 +132,18 @@ export default function Feed({ userInfo }) {
     const handleDelete = async (postId) => {
         const token = localStorage.getItem('token');
         if (!token) return;
-
         try {
             const res = await fetch(`/api/posts/${postId}`, {
                 method: 'DELETE',
                 headers: { Authorization: `Bearer ${token}` },
             });
-            if (res.ok) {
-                setPosts(prev => prev.filter(p => p.id !== postId));
-            }
+            if (res.ok) setPosts(prev => prev.filter(p => p.id !== postId));
         } catch {
-            // silent — post remains visible
+            // silent — post stays visible
         }
     };
 
-    // ── Update comments_count when a comment is added/removed ────────────────
+    // ── Keep comments_count in sync after add/remove ──────────────────────────
     const handleCommentCountChange = (postId, delta) => {
         setPosts(prev => prev.map(p =>
             p.id === postId
@@ -190,94 +156,134 @@ export default function Feed({ userInfo }) {
         ? posts.filter(p => p.type === 'medical_opinion')
         : posts;
 
-    const currentUserId = userInfo?.id;
-
     return (
         <div className="feed">
 
-            {/* ── Post creation box ── */}
-            <div className="post-box">
-                <div className="post-box-header">
-                    <div className="post-box-avatar">
-                        {userInfo?.name?.[0]?.toUpperCase() || 'U'}
+            {/* ── Post creation box — hidden in search mode ── */}
+            {!isSearchMode && (
+                <div className="post-box">
+                    <div className="post-box-header">
+                        <div className="post-box-avatar">
+                            {userInfo?.name?.[0]?.toUpperCase() || 'U'}
+                        </div>
+                        <span className="post-box-placeholder">Share a MedPost…</span>
                     </div>
-                    <span className="post-box-placeholder">Share a MedPost…</span>
-                </div>
 
-                {/* Post type toggle */}
-                <div className="post-type-toggle">
-                    <button
-                        className={postType === 'medical' ? 'selected' : ''}
-                        onClick={() => setPostType('medical')}
-                    >
-                        Medical opinion
-                    </button>
-                    <span className="toggle-arrow">›</span>
-                    <button
-                        className={postType === 'personal' ? 'selected' : ''}
-                        onClick={() => setPostType('personal')}
-                    >
-                        Personal
-                    </button>
-                </div>
-
-                <textarea
-                    className="post-textarea"
-                    placeholder="Write your thoughts, a clinical note, or a question…"
-                    value={content}
-                    onChange={e => setContent(e.target.value)}
-                    rows={3}
-                />
-
-                {postError && <p className="post-error">{postError}</p>}
-
-                {content.trim() && (
-                    <div className="post-actions">
+                    <div className="post-type-toggle">
                         <button
-                            className="post-submit-btn"
-                            onClick={handlePost}
-                            disabled={posting}
+                            className={postType === 'medical' ? 'selected' : ''}
+                            onClick={() => setPostType('medical')}
                         >
-                            {posting ? 'Posting…' : 'Post'}
+                            Medical opinion
+                        </button>
+                        <span className="toggle-arrow">›</span>
+                        <button
+                            className={postType === 'personal' ? 'selected' : ''}
+                            onClick={() => setPostType('personal')}
+                        >
+                            Personal
                         </button>
                     </div>
+
+                    <textarea
+                        className="post-textarea"
+                        placeholder="Write your thoughts, a clinical note, or a question…"
+                        value={content}
+                        onChange={e => setContent(e.target.value)}
+                        rows={3}
+                    />
+
+                    {postError && <p className="post-error">{postError}</p>}
+
+                    {content.trim() && (
+                        <div className="post-actions">
+                            <button
+                                className="post-submit-btn"
+                                onClick={handlePost}
+                                disabled={posting}
+                            >
+                                {posting ? 'Posting…' : 'Post'}
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* ── Feed / search header ── */}
+            <div className="feed-section-header">
+                {isSearchMode ? (
+                    /* Search mode: back button + query label */
+                    <div className="search-mode-header">
+                        <button
+                            className="search-back-btn"
+                            onClick={onClearSearch}
+                            aria-label="Back to feed"
+                        >
+                            <FaArrowLeft size={13} />
+                        </button>
+                        <h3 className="feed-section-title">
+                            Results for <span className="search-query-label">"{searchQuery}"</span>
+                        </h3>
+                        <button
+                            className="search-clear-btn"
+                            onClick={onClearSearch}
+                            aria-label="Clear search"
+                            title="Back to Health Feed"
+                        >
+                            <FaTimes size={13} />
+                        </button>
+                    </div>
+                ) : (
+                    /* Normal feed header */
+                    <>
+                        <h3 className="feed-section-title">Health Feed</h3>
+                        <div className="physician-toggle">
+                            <span className="physician-toggle-label">Physicians only</span>
+                            <button
+                                className={`toggle-switch ${physicianOnly ? 'on' : ''}`}
+                                onClick={() => setPhysicianOnly(v => !v)}
+                                aria-label="Toggle physician-only posts"
+                                aria-pressed={physicianOnly}
+                            />
+                        </div>
+                    </>
                 )}
             </div>
 
-            {/* ── Feed header + physician filter ── */}
-            <div className="feed-section-header">
-                <h3 className="feed-section-title">Health Feed</h3>
-                <div className="physician-toggle">
-                    <span className="physician-toggle-label">Physicians only</span>
-                    <button
-                        className={`toggle-switch ${physicianOnly ? 'on' : ''}`}
-                        onClick={() => setPhysicianOnly(v => !v)}
-                        aria-label="Toggle physician-only posts"
-                        aria-pressed={physicianOnly}
-                    />
-                </div>
-            </div>
-
             {/* ── Post list ── */}
-            {loading && <p className="feed-loading">Loading posts…</p>}
+            {loading && (
+                <p className="feed-loading">
+                    {isSearchMode ? `Searching for "${searchQuery}"…` : 'Loading posts…'}
+                </p>
+            )}
 
             {!loading && visiblePosts.map(post => (
                 <PostCard
                     key={post.id}
                     post={post}
-                    currentUserId={currentUserId}
+                    currentUserId={userInfo?.id}
                     onLike={handleLike}
                     onDelete={handleDelete}
                     onCommentCountChange={handleCommentCountChange}
                 />
             ))}
 
+            {/* ── Empty states ── */}
             {!loading && visiblePosts.length === 0 && (
-                <p className="feed-empty">
-                    {physicianOnly
-                        ? 'No physician posts yet.'
-                        : 'No posts found. Be the first to share!'}
-                </p>
+                <div className="feed-empty-state">
+                    {isSearchMode ? (
+                        <>
+                            <p className="feed-empty">No posts matched "{searchQuery}".</p>
+                            <button className="feed-empty-link" onClick={onClearSearch}>
+                                ← Back to Health Feed
+                            </button>
+                        </>
+                    ) : physicianOnly ? (
+                        <p className="feed-empty">No physician posts yet.</p>
+                    ) : (
+                        <p className="feed-empty">No posts yet — be the first to share!</p>
+                    )}
+                </div>
             )}
         </div>
     );

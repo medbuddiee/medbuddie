@@ -74,14 +74,178 @@
 
 .topnav-search {
     width: 100%;
-    padding: 0.5rem 0.75rem 0.5rem 2rem;
+    /* left pad for icon, right pad for clear button */
+    padding: 0.5rem 2rem 0.5rem 2rem;
     border: 1px solid #e0e0e0;
     border-radius: 20px;
     font-size: 0.9rem;
     background: #f5f7fa;
     color: #1a1a1a;
+    transition: border-color 0.2s, background 0.2s;
 }
-.topnav-search:focus { outline: none; border-color: #005c55; }
+.topnav-search:focus {
+    outline: none;
+    border-color: #005c55;
+    background: #fff;
+}
+
+/* Clear (×) button inside the search input */
+.topnav-search-clear {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #aaa;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    border-radius: 50%;
+    transition: color 0.15s;
+}
+.topnav-search-clear:hover { color: #555; }
+
+/* Spinning dot while /api/search is in flight */
+.topnav-search-spinner {
+    width: 12px;
+    height: 12px;
+    border: 2px solid #ccc;
+    border-top-color: #005c55;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+}
+@keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SEARCH DROPDOWN
+   ══════════════════════════════════════════════════════════════════════════ */
+.search-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    z-index: 500;
+    overflow: hidden;
+    animation: dropdownFadeIn 0.12s ease;
+    max-height: 420px;
+    overflow-y: auto;
+}
+
+.search-dropdown-section {
+    padding: 0.4rem 0;
+}
+.search-dropdown-section + .search-dropdown-section {
+    border-top: 1px solid #f0f0f0;
+}
+
+.search-section-label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #aaa;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.4rem 0.85rem 0.2rem;
+}
+
+.search-result-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+    padding: 0.5rem 0.85rem;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.12s;
+}
+.search-result-item:hover { background: #f5f7fa; }
+
+.search-result-icon {
+    color: #aaa;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+/* Small circular avatar for people results */
+.search-result-avatar-sm {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #b2dfdb;
+    color: #004d40;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.search-result-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.search-result-title {
+    font-size: 0.85rem;
+    color: #1a1a1a;
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.search-result-meta {
+    font-size: 0.75rem;
+    color: #888;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.search-result-badge {
+    background: #e0f2f1;
+    color: #005c55;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 8px;
+}
+
+.search-no-results {
+    font-size: 0.85rem;
+    color: #aaa;
+    text-align: center;
+    padding: 1rem;
+}
+
+/* "See all results for '...'" footer */
+.search-see-all {
+    display: block;
+    width: 100%;
+    padding: 0.6rem 0.85rem;
+    background: #f5f7fa;
+    border: none;
+    border-top: 1px solid #f0f0f0;
+    text-align: center;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #005c55;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.search-see-all:hover { background: #e8f5f4; }
 
 .topnav-right {
     display: flex;
@@ -635,6 +799,68 @@
 /* Feed states */
 .feed-loading { color: #aaa; font-size: 0.85rem; text-align: center; padding: 1rem 0; }
 .feed-empty   { color: #aaa; font-size: 0.9rem;  text-align: center; padding: 2rem 0; }
+
+/* ── Feed search-mode header ──────────────────────────────────────────────── */
+.search-mode-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.search-back-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+    padding: 5px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    transition: background 0.15s, color 0.15s;
+    flex-shrink: 0;
+}
+.search-back-btn:hover { background: #f0f0f0; color: #005c55; }
+
+.search-query-label {
+    color: #005c55;
+    font-style: italic;
+}
+
+.search-clear-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #aaa;
+    padding: 5px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    transition: background 0.15s, color 0.15s;
+}
+.search-clear-btn:hover { background: #f0f0f0; color: #555; }
+
+/* Empty-state wrapper that stacks text + back link */
+.feed-empty-state {
+    text-align: center;
+    padding: 2rem 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.feed-empty-link {
+    background: none;
+    border: none;
+    color: #005c55;
+    font-size: 0.88rem;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+}
+.feed-empty-link:hover { color: #004040; }
 
 /* Post error (shown below textarea) */
 .post-error {

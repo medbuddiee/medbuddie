@@ -35,12 +35,17 @@ function softAuthenticate(req, _res, next) {
 }
 
 // ── GET /api/posts — public paginated feed ────────────────────────────────────
-// Query params: limit (max 50), offset, userId (filter by author)
+// Query params:
+//   limit  (max 50, default 20)
+//   offset (default 0)
+//   userId — filter by author id
+//   q      — full-text search: ILIKE match on content and tags
 // When caller is authenticated, each post includes likedByMe: true/false
 router.get('/', softAuthenticate, async (req, res) => {
     const limit      = Math.min(parseInt(req.query.limit)  || 20, 50);
     const offset     = parseInt(req.query.offset) || 0;
     const filterUser = req.query.userId ? parseInt(req.query.userId) : null;
+    const rawQuery   = (req.query.q || '').trim();
     const viewerId   = req.user?.id || null;   // null for anonymous viewers
 
     // Build param list and WHERE clause dynamically
@@ -50,6 +55,15 @@ router.get('/', softAuthenticate, async (req, res) => {
     if (filterUser) {
         params.push(filterUser);
         conditions.push(`p.user_id = $${params.length}`);
+    }
+
+    if (rawQuery) {
+        // Escape ILIKE wildcards so search is a literal substring match
+        const like = `%${rawQuery.replace(/[%_\\]/g, '\\$&')}%`;
+        params.push(like);
+        const p = params.length;
+        // Reusing the same param index ($p) twice in one clause is valid in pg
+        conditions.push(`(p.content ILIKE $${p} OR p.tags::text ILIKE $${p})`);
     }
 
     // viewerId param used in the LEFT JOIN below

@@ -4,7 +4,8 @@ const cors = require('cors');
 
 const { router: authRouter } = require('./routes/auth');
 const profileRouter = require('./routes/profile');
-const postsRouter = require('./routes/posts');
+const postsRouter   = require('./routes/posts');
+const searchRouter  = require('./routes/search');
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -16,7 +17,8 @@ app.use(express.json());
 app.use('/api', authRouter);          // POST /api/signup, /api/login, /api/google-login
 app.use('/api/auth', authRouter);     // POST /api/auth/facebook
 app.use('/api/profile', profileRouter); // GET/PUT /api/profile
-app.use('/api/posts', postsRouter);   // GET/POST /api/posts, POST /api/posts/:id/like
+app.use('/api/posts', postsRouter);   // GET/POST /api/posts, likes, comments
+app.use('/api/search', searchRouter); // GET /api/search?q=...
 
 // Backward-compat alias for old /login path
 app.post('/login', (req, res, next) => {
