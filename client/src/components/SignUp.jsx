@@ -3,31 +3,18 @@ import './SignUp.css';
 import logo from '../../assets/medbuddie_logo.png';
 import appleIcon from '../../assets/signup/apple_logo.png';
 import facebookIcon from '../../assets/signup/facebook_logo.png';
-import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
-
-const GOOGLE_CLIENT_ID = '369701342975-ntoanlmiauclime0ketc2csdp7r299q6.apps.googleusercontent.com';
 
 export default function SignUp() {
     const [form, setForm] = useState({
         email: '',
         password: '',
-        username: '',
+        showPassword: false,
         dob: { year: '', month: '', day: '' },
         isCaregiver: false,
         acceptedTerms: false,
     });
-
     const navigate = useNavigate();
-
-    const handleGoogleSuccess = (credentialResponse) => {
-        console.log('Google Login Success:', credentialResponse);
-        // You may send the credentialResponse.credential to backend here
-    };
-
-    const handleGoogleFailure = () => {
-        alert('Google login failed');
-    };
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -38,125 +25,163 @@ export default function SignUp() {
         }
     };
 
+    const togglePassword = () =>
+        setForm((prev) => ({ ...prev, showPassword: !prev.showPassword }));
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const dob = `${form.dob.year}-${form.dob.month.padStart(2, '0')}-${form.dob.day.padStart(2, '0')}`;
+        const { year, month, day } = form.dob;
+        const dob = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const username = form.email.split('@')[0];
 
         const payload = {
-            name: form.username,
+            name: username,
             email: form.email,
-            username: form.username,
+            username,
             password: form.password,
             dob,
             isCaregiver: form.isCaregiver,
-            acceptedTerms: form.acceptedTerms
         };
 
         try {
-            const response = await fetch('http://localhost:5000/api/signup', {
+            const res = await fetch('/api/signup', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
             });
-
-            let data;
-            try {
-                data = await response.json();
-                // eslint-disable-next-line no-unused-vars
-            } catch (e) {
-                return alert("Signup error!");
+            const data = await res.json();
+            if (res.ok) {
+                if (data.token) localStorage.setItem('token', data.token);
+                return navigate('/signin');
             }
-
-            if (response.ok) {
-                alert('Signup successful!');
-            } else {
-                alert(`Error: ${data.error}`);
-            }
-            return navigate("/dashboard");
-        } catch (err) {
-            console.error('Network error:', err);
-            alert('Something went wrong. Please try again.');
+            alert(data.error || 'Signup failed');
+        } catch {
+            alert('Network error — is the backend running?');
         }
     };
 
+    const months = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December',
+    ];
+
     return (
-        <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-            <div className="signup-container">
+        <div className="signup-page">
+            {/* ── Top bar ── */}
+            <header className="signup-topbar">
+                <div className="signup-topbar-logo">
+                    <img src={logo} alt="MedBuddie" width="36" height="36" />
+                    <span className="signup-brand">MedBuddie</span>
+                </div>
+                <div className="signup-signin-hint">
+                    Already a member?{' '}
+                    <a href="/signin">Sign in</a>
+                </div>
+            </header>
+
+            {/* ── Card ── */}
+            <main className="signup-main">
                 <div className="signup-card">
-                    <div className="signup-header">
-                        <div className="logo">
-                            <img
-                                src={logo}
-                                alt="MedBuddie Logo"
-                                width="40"
-                                height="40"
-                                style={{ display: 'inline-block' }}
+                    <h1 className="signup-headline">Connect. Learn. Heal.</h1>
+
+                    <form onSubmit={handleSubmit} className="signup-form">
+                        {/* Email */}
+                        <label>Email</label>
+                        <input
+                            type="email"
+                            name="email"
+                            value={form.email}
+                            onChange={handleChange}
+                            placeholder="Your email address will not be shared"
+                            required
+                        />
+
+                        {/* Password */}
+                        <label>Password</label>
+                        <div className="password-wrapper">
+                            <input
+                                type={form.showPassword ? 'text' : 'password'}
+                                name="password"
+                                value={form.password}
+                                onChange={handleChange}
+                                required
                             />
-                            <span>MedBuddie</span>
-                        </div>
-                        <div className="header-text">
-                            <span>Already a member? <a href="/signin">Sign in</a></span>
-                        </div>
-                    </div>
-
-                    <h2>Living better starts here.</h2>
-
-                    <form onSubmit={handleSubmit}>
-                        <div className="inputField">
-                            <label>Email</label>
-                            <input type="email" name="email" value={form.email} onChange={handleChange} placeholder="Your email address will not be shared" required />
-
-                            <label>Password</label>
-                            <input type="password" name="password" value={form.password} onChange={handleChange} placeholder="" required />
-
-                            <label>Username</label>
-                            <input type="text" name="username" value={form.username} onChange={handleChange} placeholder="This is visible to other MedBuddie members." required />
+                            <button
+                                type="button"
+                                className="eye-btn"
+                                onClick={togglePassword}
+                                aria-label="Toggle password visibility"
+                            >
+                                {form.showPassword ? '🙈' : '👁'}
+                            </button>
                         </div>
 
-                        <label>Date of birth</label>
+                        {/* Date of birth */}
+                        <label className="dob-label">Date of birth</label>
                         <div className="dob-row">
-                            <select name="year" value={form.dob.year} onChange={handleChange} required>
-                                <option value="">YEAR</option>
-                                {Array.from({ length: 100 }, (_, i) => 2024 - i).map(year => (
-                                    <option key={year} value={year}>{year}</option>
-                                ))}
-                            </select>
-                            <select name="month" value={form.dob.month} onChange={handleChange} required>
-                                <option value="">MONTH</option>
-                                {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
-                                    <option key={month} value={month}>{month}</option>
-                                ))}
-                            </select>
-                            <select name="day" value={form.dob.day} onChange={handleChange} required>
-                                <option value="">DAY</option>
-                                {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
-                                    <option key={day} value={day}>{day}</option>
-                                ))}
-                            </select>
+                            <div className="dob-field">
+                                <span className="dob-sub-label">YEAR</span>
+                                <select name="year" value={form.dob.year} onChange={handleChange} required>
+                                    <option value=""></option>
+                                    {Array.from({ length: 100 }, (_, i) => 2024 - i).map((y) => (
+                                        <option key={y} value={y}>{y}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="dob-field">
+                                <span className="dob-sub-label">MONTH</span>
+                                <select name="month" value={form.dob.month} onChange={handleChange} required>
+                                    <option value=""></option>
+                                    {months.map((m, i) => (
+                                        <option key={i + 1} value={i + 1}>{m}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="dob-field">
+                                <span className="dob-sub-label">DAY</span>
+                                <select name="day" value={form.dob.day} onChange={handleChange} required>
+                                    <option value=""></option>
+                                    {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                                        <option key={d} value={d}>{d}</option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
 
-                        <div className="signup-condition checkbox-groups">
-                            <label>
-                                <input type="checkbox" name="isCaregiver" checked={form.isCaregiver} onChange={handleChange} className='checkbox-style' />
-                                I am joining as a caregiver for someone else
-                            </label>
-                            <label>
-                                <input type="checkbox"
-                                       name="acceptedTerms"
-                                       checked={form.acceptedTerms}
-                                       onChange={handleChange}
-                                       required
+                        {/* Checkboxes */}
+                        <div className="signup-checkbox-group">
+                            <label className="signup-checkbox-label">
+                                <input
+                                    type="checkbox"
+                                    name="isCaregiver"
+                                    checked={form.isCaregiver}
+                                    onChange={handleChange}
                                 />
-                                <span>I agree to the MedBuddie <a href="/terms">terms & conditions of use</a> <a href="/privacy"> and privacy policy</a></span>
+                                <span>I am joining as a caregiver for someone else</span>
+                            </label>
+                            <label className="signup-checkbox-label">
+                                <input
+                                    type="checkbox"
+                                    name="acceptedTerms"
+                                    checked={form.acceptedTerms}
+                                    onChange={handleChange}
+                                    required
+                                />
+                                <span>
+                                    I agree to the MedBuddie{' '}
+                                    <a href="/terms">terms &amp; conditions</a>
+                                    {' '}and{' '}
+                                    <a href="/privacy">privacy policy</a>
+                                </span>
                             </label>
                         </div>
+
                         <button
                             type="submit"
+                            className={`signup-submit-btn ${!form.acceptedTerms ? 'disabled' : ''}`}
                             disabled={!form.acceptedTerms}
-                            className={!form.acceptedTerms ? 'button-disabled' : 'button-active'}
-                        >    Create Account
+                        >
+                            Create account
                         </button>
                     </form>
 
@@ -165,26 +190,27 @@ export default function SignUp() {
                     <button
                         className="social-btn facebook"
                         onClick={() => {
-                            window.location.href = `https://www.facebook.com/v19.0/dialog/oauth?client_id=4735178640041107&redirect_uri=http://localhost:3000/facebook-callback&scope=email,public_profile`;
+                            window.location.href = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${import.meta.env.VITE_FB_APP_ID || '4735178640041107'}&redirect_uri=${encodeURIComponent('http://localhost:3000/facebook-callback')}&scope=email,public_profile`;
                         }}
                     >
-                        <img src={facebookIcon} alt="Facebook" /> Sign up with Facebook
+                        <img src={facebookIcon} alt="Facebook" />
+                        Sign up with Facebook
                     </button>
                     <button className="social-btn apple">
-                        <img src={appleIcon} alt="Apple" /> Sign up with Apple
+                        <img src={appleIcon} alt="Apple" />
+                        Sign up with Apple
+                    </button>
+                    <button className="social-btn google">
+                        <span className="google-g">G</span>
+                        Sign up with Google
                     </button>
 
-                    <div className="google-login-wrapper">
-                        <GoogleLogin
-                            onSuccess={handleGoogleSuccess}
-                            onError={handleGoogleFailure}
-                            shape="pill"
-                            size="large"
-                            width="100%"
-                        />
-                    </div>
+                    <p className="signup-disclaimer">
+                        We don&apos;t share any of the information you report on Patientslikeme,
+                        with these providers.
+                    </p>
                 </div>
-            </div>
-        </GoogleOAuthProvider>
+            </main>
+        </div>
     );
 }

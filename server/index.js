@@ -1,219 +1,111 @@
 require('dotenv').config();
 const express = require('express');
-const bcrypt = require('bcrypt');
-const { Pool } = require('pg');
-const cors = require('cors');
-const app = express();
-app.use(cors());
+const cors    = require('cors');
+const path    = require('path');
+const pool    = require('./config/db');
 
-const { OAuth2Client } = require('google-auth-library');
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const { router: authRouter } = require('./routes/auth');
+const profileRouter          = require('./routes/profile');
+const postsRouter            = require('./routes/posts');
+const searchRouter           = require('./routes/search');
+const guidelinesRouter       = require('./routes/guidelines');
+const bookmarksRouter        = require('./routes/bookmarks');
+const secondOpinionsRouter   = require('./routes/secondOpinions');
 
+const app  = express();
 const port = process.env.PORT || 5000;
 
-const pool = new Pool({
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-});
+/* ═══════════════════════════════════════════════════════════════════════════
+   RUN ALL MIGRATIONS BEFORE ACCEPTING REQUESTS
+   Each ALTER / CREATE is idempotent (IF NOT EXISTS / IF NOT EXISTS column).
+   ═══════════════════════════════════════════════════════════════════════════ */
+async function runMigrations() {
+    const migrations = [
+        // Add avatar_url to users if it doesn't exist
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT DEFAULT NULL`,
 
-app.use(express.json());
+        // Guideline bookmarks
+        `CREATE TABLE IF NOT EXISTS user_guideline_bookmarks (
+            user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            guideline_id INTEGER NOT NULL REFERENCES guidelines(id) ON DELETE CASCADE,
+            created_at   TIMESTAMPTZ DEFAULT NOW(),
+            PRIMARY KEY (user_id, guideline_id)
+        )`,
 
-/**
- * Third Party Sign In like apple, google and facebook
- */
-//Google Signup
-app.post('/api/google-login', async (req, res) => {
-    const { token } = req.body;
+        // Second opinions
+        `CREATE TABLE IF NOT EXISTS second_opinions (
+            id               SERIAL PRIMARY KEY,
+            user_id          INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            doctor_name      VARCHAR(120),
+            doctor_specialty VARCHAR(100),
+            concern          TEXT NOT NULL,
+            medical_history  TEXT DEFAULT '',
+            status           VARCHAR(30) DEFAULT 'pending',
+            submitted_at     TIMESTAMPTZ DEFAULT NOW()
+        )`,
 
-    try {
-        const ticket = await client.verifyIdToken({
-            idToken: token,
-            audience: process.env.GOOGLE_CLIENT_ID
-        });
+        `CREATE INDEX IF NOT EXISTS idx_second_opinions_user
+         ON second_opinions(user_id)`,
+    ];
 
-        const payload = ticket.getPayload();
-        const { email, name } = payload;
-
-        // Optional: Save or login user in DB
-        res.json({ email, name });
-    } catch (err) {
-        console.error(err);
-        res.status(401).json({ error: 'Invalid token' });
-    }
-});
-
-//Facebook Sign Up endpoint
-app.post('/api/auth/facebook', async (req, res) => {
-    const { code } = req.body;
-    const redirectUri = 'http://localhost:3000/facebook-callback';
-
-    try {
-        // Exchange code for access token
-        const tokenRes = await fetch(`https://graph.facebook.com/v19.0/oauth/access_token?client_id=${process.env.FB_APP_ID}&redirect_uri=${redirectUri}&client_secret=${process.env.FB_APP_SECRET}&code=${code}`);
-        const tokenData = await tokenRes.json();
-
-        // Fetch user profile
-        const profileRes = await fetch(`https://graph.facebook.com/me?fields=id,name,email&access_token=${tokenData.access_token}`);
-        const profile = await profileRes.json();
-
-        // Save or fetch user from DB here
-        res.json({ user: profile });
-
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Facebook authentication failed' });
-    }
-});
-
-/**
- * Post and Put requests
- */
-// Signup endpoint
-app.post('/api/signup', async (req, res) => {
-    debugger
-    const { name, email, password, username, dob, isCaregiver } = req.body;
-
-    try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const result = await pool.query(
-            `INSERT INTO users (name, email, password, username, dob, is_caregiver)
-             VALUES ($1, $2, $3, $4, $5, $6)
-                 RETURNING id, name, email, username, dob, is_caregiver AS "isCaregiver"`,
-            [name, email, hashedPassword, username, dob, isCaregiver]
-        );
-
-        res.status(201).json({ user: result.rows[0] });
-    } catch (err) {
-        console.error(err);
-        if (err.code === '23505') {
-            res.status(400).json({ error: 'Email already exists' });
-        } else {
-            res.status(500).json({ error: 'Internal server error' });
+    for (const sql of migrations) {
+        try {
+            await pool.query(sql);
+        } catch (err) {
+            // Log but don't crash — some may fail on old PG versions
+            console.error('Migration warning:', err.message);
         }
     }
-});
+    console.log('Migrations complete.');
+}
 
-//login post
-app.post('/login', async (req, res) => {
-    const { email, password } = req.body;
+/* ═══════════════════════════════════════════════════════════════════════════
+   START SERVER
+   ═══════════════════════════════════════════════════════════════════════════ */
+async function start() {
+    await runMigrations();
 
-    try {
-        const { rows } = await pool.query(
-            'SELECT * FROM users WHERE email = $1',
-            [email]
-        );
+    app.use(cors());
+    app.use(express.json());
 
-        if (rows.length === 0) {
-            return res.status(400).json({ error: "User not found" });
-        }
+    // Serve uploaded files (avatars, etc.)
+    app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-        const user = rows[0];
+    // Routes
+    app.use('/api',              authRouter);           // signup / login / google
+    app.use('/api/auth',         authRouter);           // facebook callback
+    app.use('/api/profile',      profileRouter);        // profile + avatar upload
+    app.use('/api/posts',        postsRouter);          // feed CRUD + likes + comments
+    app.use('/api/search',       searchRouter);         // search
+    app.use('/api/guidelines',   guidelinesRouter);     // guidelines list + content
+    app.use('/api/bookmarks',    bookmarksRouter);      // guideline bookmarks
+    app.use('/api/second-opinions', secondOpinionsRouter); // second opinion cases
 
-        const validPassword = await bcrypt.compare(password, user.password);
-        if (!validPassword) {
-            return res.status(400).json({ error: "Invalid password" });
-        }
+    // Backward-compat alias
+    app.post('/login', (req, res, next) => {
+        req.url = '/login';
+        authRouter(req, res, next);
+    });
 
-        // Strip password before sending response
-        delete user.password;
-
-        res.json({
-            message: "Login successful",
-            user,
-        });
-
-    } catch (err) {
-        console.error("Login error:", err);
-        res.status(500).json({ error: "Server error" });
+    // Serve React build in production
+    const clientBuild = path.join(__dirname, '..', 'client', 'dist');
+    if (require('fs').existsSync(clientBuild)) {
+        app.use(express.static(clientBuild));
+        app.get('*', (_req, res) => res.sendFile(path.join(clientBuild, 'index.html')));
     }
-});
 
+    // Global error handler
+    app.use((err, _req, res, _next) => {
+        console.error('Unhandled error:', err);
+        res.status(500).json({ error: err.message || 'Internal server error' });
+    });
 
-// PUT: update profile
-app.put('/api/profile', async (req, res) => {
-    const {
-        userId,
-        name,
-        bio,
-        weight,
-        height,
-        bmi,
-        bloodPressure,
-        lipidPanel,
-        medications = [],
-    } = req.body;
+    app.listen(port, () => {
+        console.log(`MedBuddie server running on http://localhost:${port}`);
+    });
+}
 
-    try {
-        const { rows } = await pool.query(
-            `UPDATE users SET
-                              name = $1,
-                              bio = $2,
-                              weight = $3,
-                              height = $4,
-                              bmi = $5,
-                              blood_pressure = $6,
-                              lipid_panel = $7,
-                              medications = $8::jsonb
-             WHERE id = $9
-                 RETURNING id, name, bio, weight, height, bmi,
-                 blood_pressure AS "bloodPressure",
-                 lipid_panel AS "lipidPanel",
-                 medications`,
-            [
-                name,
-                bio,
-                weight,
-                height,
-                bmi,
-                bloodPressure,
-                lipidPanel,
-                JSON.stringify(medications),
-                userId,
-            ]
-        );
-
-        if (!rows.length) return res.status(404).json({ error: 'Profile not found' });
-
-        res.json(rows[0]);
-
-    } catch (err) {
-        console.error('PUT /api/profile error:', err);
-        res.status(500).json({ error: 'Server error' });
-    }
-});
-
-
-/**
- * Get requests
- */
-app.get('/api/profile', async (req, res) => {
-    const userId = req.user?.id || 1; // demo user
-    try {
-        const { rows } = await pool.query(
-            `SELECT id, name, username, bio, weight, height, bmi,
-                    blood_pressure AS "bloodPressure",
-                    lipid_panel AS "lipidPanel",
-                    medications
-             FROM users
-             WHERE id = $1`,
-            [userId]
-        );
-
-        if (!rows[0]) return res.status(404).json({ error: 'Not found' });
-
-        const profile = rows[0];
-        profile.medications = profile.medications || []; // ✅ no JSON.parse()
-
-        res.json(profile);
-    } catch (err) {
-        console.error('GET /profile error:', err);
-        res.status(500).json({ error: 'Server error' });
-    }
-});
-
-app.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
+start().catch(err => {
+    console.error('Failed to start server:', err);
+    process.exit(1);
 });

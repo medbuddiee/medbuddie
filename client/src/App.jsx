@@ -7,31 +7,76 @@ import SignUp from './components/SignUp';
 import Dashboard from './components/Dashboard/Dashboard';
 import ProfilePage from './components/Profile/ProfilePage';
 import EditProfilePage from './components/Profile/EditProfilePage';
+import GuidelinesPage from './components/Guidelines/GuidelinesPage';
+import GuidelineDetail from './components/Guidelines/GuidelineDetail';
+import HealthMetricsPage from './components/Profile/HealthMetricsPage';
+import SecondOpinionPage from './components/SecondOpinion/SecondOpinionPage';
 import { UserProvider, useUser } from './context/UserContext.jsx';
 
-// Only allow access to route if user is logged in
+/**
+ * PrivateRoute — waits for the auth session to be restored from localStorage
+ * before deciding whether to render or redirect. Without the `loading` guard,
+ * a hard refresh causes user === null for one render tick, which incorrectly
+ * sends the user to /signin even though they have a valid stored session.
+ */
 function PrivateRoute({ element }) {
-    const { user } = useUser();
+    const { user, loading } = useUser();
+    if (loading) return null;            // session not yet hydrated — render nothing
     return user ? element : <Navigate to="/signin" replace />;
 }
 
-function App() {
+/**
+ * SmartRedirect — used as the catch-all for unknown paths.
+ * Logged-in users who click an unimplemented sidebar link land back on
+ * the dashboard; unauthenticated visitors see the home page.
+ */
+function SmartRedirect() {
+    const { user, loading } = useUser();
+    if (loading) return null;
+    return <Navigate to={user ? '/dashboard' : '/'} replace />;
+}
+
+function AppRoutes() {
+    return (
+        <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/signup" element={<SignUp />} />
+
+            {/* Protected routes */}
+            <Route path="/dashboard"    element={<PrivateRoute element={<Dashboard />} />} />
+            <Route path="/guidelines"    element={<PrivateRoute element={<GuidelinesPage />} />} />
+            <Route path="/guidelines/:id" element={<PrivateRoute element={<GuidelineDetail />} />} />
+            <Route path="/profile"      element={<PrivateRoute element={<ProfilePage />} />} />
+            <Route path="/edit-profile"    element={<PrivateRoute element={<EditProfilePage />} />} />
+            <Route path="/health-metrics"  element={<PrivateRoute element={<HealthMetricsPage />} />} />
+            <Route path="/second-opinion" element={<PrivateRoute element={<SecondOpinionPage />} />} />
+
+            {/* ── Sidebar links that redirect to implemented equivalents ── */}
+            {/* Activity, Diet, Medications → Health Metrics page */}
+            <Route path="/activity"    element={<PrivateRoute element={<HealthMetricsPage />} />} />
+            <Route path="/diet"        element={<PrivateRoute element={<HealthMetricsPage />} />} />
+            <Route path="/medications" element={<PrivateRoute element={<HealthMetricsPage />} />} />
+            {/* Top Articles, Recommended → Guidelines */}
+            <Route path="/top-articles"  element={<PrivateRoute element={<GuidelinesPage />} />} />
+            <Route path="/recommended"   element={<PrivateRoute element={<GuidelinesPage />} />} />
+            {/* MedBuddies, Following, Communities → Dashboard (coming soon) */}
+            <Route path="/medbuddies"  element={<PrivateRoute element={<Dashboard />} />} />
+            <Route path="/following"   element={<PrivateRoute element={<Dashboard />} />} />
+            <Route path="/communities" element={<PrivateRoute element={<Dashboard />} />} />
+
+            {/* Any unknown path: logged-in → dashboard, logged-out → home */}
+            <Route path="*" element={<SmartRedirect />} />
+        </Routes>
+    );
+}
+
+export default function App() {
     return (
         <UserProvider>
             <Router>
-                <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/signin" element={<SignIn />} />
-                    <Route path="/signup" element={<SignUp />} />
-                    <Route path="/dashboard" element={
-                        <PrivateRoute element={<Dashboard />} />
-                    } />
-                    <Route path="/profile" element={<ProfilePage />} />
-                    <Route path="/edit-profile" element={<EditProfilePage />} />
-                </Routes>
+                <AppRoutes />
             </Router>
         </UserProvider>
     );
 }
-
-export default App;
