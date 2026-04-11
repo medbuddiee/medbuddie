@@ -87,6 +87,13 @@ async function start() {
         authRouter(req, res, next);
     });
 
+    // Serve React build in production
+    const clientBuild = path.join(__dirname, '..', 'client', 'dist');
+    if (require('fs').existsSync(clientBuild)) {
+        app.use(express.static(clientBuild));
+        app.get('*', (_req, res) => res.sendFile(path.join(clientBuild, 'index.html')));
+    }
+
     // Global error handler
     app.use((err, _req, res, _next) => {
         console.error('Unhandled error:', err);
