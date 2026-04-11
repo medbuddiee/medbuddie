@@ -65,6 +65,26 @@ export default function GuidelineDetail() {
     const [loading, setLoading]     = useState(true);
     const [error, setError]         = useState(null);
     const [activeSection, setActiveSection] = useState(null);
+    const [bookmarked, setBookmarked] = useState(() => {
+        try {
+            const saved = JSON.parse(localStorage.getItem('mb_bookmarks') || '[]');
+            return saved.includes(String(id));
+        } catch { return false; }
+    });
+
+    const toggleBookmark = () => {
+        setBookmarked(prev => {
+            const next = !prev;
+            try {
+                const saved = JSON.parse(localStorage.getItem('mb_bookmarks') || '[]');
+                const updated = next
+                    ? [...new Set([...saved, String(id)])]
+                    : saved.filter(b => b !== String(id));
+                localStorage.setItem('mb_bookmarks', JSON.stringify(updated));
+            } catch { /* ignore */ }
+            return next;
+        });
+    };
 
     useEffect(() => {
         (async () => {
@@ -163,8 +183,12 @@ export default function GuidelineDetail() {
                         </p>
                     )}
                     <div className="gd-hero-actions">
-                        <button className="gd-action-btn gd-action-bookmark">
-                            <FaBookmark size={13} /> Bookmark
+                        <button
+                            className={`gd-action-btn gd-action-bookmark ${bookmarked ? 'gd-bookmarked' : ''}`}
+                            onClick={toggleBookmark}
+                            title={bookmarked ? 'Remove bookmark' : 'Bookmark this guideline'}
+                        >
+                            <FaBookmark size={13} /> {bookmarked ? 'Bookmarked' : 'Bookmark'}
                         </button>
                         {guideline.doi && (
                             <a

@@ -236,10 +236,20 @@ export default function TopNav({ searchQuery, onSearch }) {
 
             {/* ── Right icons ── */}
             <div className="topnav-right">
-                <button className="topnav-icon-btn" aria-label="Notifications">
+                <button
+                    className="topnav-icon-btn"
+                    aria-label="Notifications"
+                    title="Notifications (coming soon)"
+                    onClick={() => navigate('/dashboard')}
+                >
                     <FaBell />
                 </button>
-                <button className="topnav-icon-btn" aria-label="Settings">
+                <button
+                    className="topnav-icon-btn"
+                    aria-label="Settings"
+                    title="Settings"
+                    onClick={() => navigate('/edit-profile')}
+                >
                     <FaCog />
                 </button>
                 <button

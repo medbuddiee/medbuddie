@@ -42,6 +42,20 @@ const BROWSE_TAGS = [
     'Clinical Decision Support', 'Telehealth & Beyond',
 ];
 
+/* Maps sidebar specialty names → CATEGORIES keys used in guideline data */
+const SPECIALTY_TO_CATEGORY = {
+    'Internal Medicine':   null,                // null = show all
+    'Cardiology':          'Cardiovascular',
+    'Pulmonology':         'Respiratory',
+    'Proctology':          'Gastrointestinal',
+    'Gastroenterology':    'Gastrointestinal',
+    'Neurology':           'Neurology',
+    'Rheumatology':        'Musculoskeletal',
+    'Nephrology':          'Renal & Urinary',
+    'Oncology':            'Oncology',
+    'Infectious Disease':  'Infectious Disease',
+};
+
 const SUGGESTED = [
     { title: 'Pathways Force Physician Patient Decisions', meta: 'Shared Decision Making' },
     { title: 'Surgeon Flea Disease: Pathways for IbsCD Methodologies', meta: 'IBD Management' },
@@ -97,12 +111,30 @@ export default function GuidelinesPage() {
         })();
     }, []);
 
-    // ── Filter client-side by category + search ─────────────────────────────
+    // ── Filter client-side by category + specialty checkboxes + search ──────
     const filtered = useMemo(() => {
         let items = guidelines;
+
+        // 1. Category bar filter
         if (activeCategory !== 'ALL') {
             items = items.filter(g => g.specialty === activeCategory);
         }
+
+        // 2. Specialty checkbox filter (only when category is ALL)
+        if (activeCategory === 'ALL' && checkedSpecialties.size > 0) {
+            const mappedCategories = new Set();
+            let includeAll = false;
+            checkedSpecialties.forEach(spec => {
+                const cat = SPECIALTY_TO_CATEGORY[spec];
+                if (cat === null) { includeAll = true; }
+                else if (cat)      { mappedCategories.add(cat); }
+            });
+            if (!includeAll && mappedCategories.size > 0) {
+                items = items.filter(g => mappedCategories.has(g.specialty));
+            }
+        }
+
+        // 3. Text search
         if (search.trim()) {
             const q = search.toLowerCase();
             items = items.filter(
@@ -112,7 +144,7 @@ export default function GuidelinesPage() {
             );
         }
         return items;
-    }, [guidelines, activeCategory, search]);
+    }, [guidelines, activeCategory, checkedSpecialties, search]);
 
     // ── Group filtered results by specialty ─────────────────────────────────
     const grouped = useMemo(() => {
@@ -150,7 +182,7 @@ export default function GuidelinesPage() {
                 </div>
                 <nav className="gl-subnav">
                     <button className="gl-subnav-item" onClick={() => navigate('/dashboard')}>Dashboard</button>
-                    <button className="gl-subnav-item">Community Forum</button>
+                    <button className="gl-subnav-item" onClick={() => navigate('/second-opinion')}>Community Forum</button>
                     <button className="gl-subnav-item gl-subnav-active">Most Recent Guidelines</button>
                 </nav>
                 <div className="gl-topnav-right">
@@ -336,7 +368,12 @@ export default function GuidelinesPage() {
                         </div>
                         <div className="gl-tags">
                             {BROWSE_TAGS.map(tag => (
-                                <button key={tag} className="gl-tag">{tag}</button>
+                                <button
+                                    key={tag}
+                                    className="gl-tag"
+                                    onClick={() => setSearch(tag)}
+                                    title={`Filter by "${tag}"`}
+                                >{tag}</button>
                             ))}
                         </div>
                     </div>

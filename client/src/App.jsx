@@ -52,6 +52,19 @@ function AppRoutes() {
             <Route path="/health-metrics"  element={<PrivateRoute element={<HealthMetricsPage />} />} />
             <Route path="/second-opinion" element={<PrivateRoute element={<SecondOpinionPage />} />} />
 
+            {/* ── Sidebar links that redirect to implemented equivalents ── */}
+            {/* Activity, Diet, Medications → Health Metrics page */}
+            <Route path="/activity"    element={<PrivateRoute element={<HealthMetricsPage />} />} />
+            <Route path="/diet"        element={<PrivateRoute element={<HealthMetricsPage />} />} />
+            <Route path="/medications" element={<PrivateRoute element={<HealthMetricsPage />} />} />
+            {/* Top Articles, Recommended → Guidelines */}
+            <Route path="/top-articles"  element={<PrivateRoute element={<GuidelinesPage />} />} />
+            <Route path="/recommended"   element={<PrivateRoute element={<GuidelinesPage />} />} />
+            {/* MedBuddies, Following, Communities → Dashboard (coming soon) */}
+            <Route path="/medbuddies"  element={<PrivateRoute element={<Dashboard />} />} />
+            <Route path="/following"   element={<PrivateRoute element={<Dashboard />} />} />
+            <Route path="/communities" element={<PrivateRoute element={<Dashboard />} />} />
+
             {/* Any unknown path: logged-in → dashboard, logged-out → home */}
             <Route path="*" element={<SmartRedirect />} />
         </Routes>

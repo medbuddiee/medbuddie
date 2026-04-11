@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import './Profile.css';
@@ -14,6 +14,8 @@ export default function EditProfilePage() {
     const [saving, setSaving] = useState(false);
     const [saveError, setSaveError] = useState(null);
     const [saveSuccess, setSaveSuccess] = useState(false);
+    const [avatarPreview, setAvatarPreview] = useState(null);
+    const photoInputRef = useRef(null);
 
     useEffect(() => {
         if (user) {
@@ -113,7 +115,12 @@ export default function EditProfilePage() {
                     <img src={logo} alt="MedBuddie" width="32" height="32" />
                     <span className="edit-brand">MedBuddie</span>
                 </div>
-                <button className="icon-btn" aria-label="Settings">
+                <button
+                    className="icon-btn"
+                    aria-label="Settings"
+                    title="Settings"
+                    onClick={() => navigate('/edit-profile')}
+                >
                     <FaCog size={20} color="#888" />
                 </button>
             </header>
@@ -123,8 +130,35 @@ export default function EditProfilePage() {
                 <form className="edit-profile-form" onSubmit={handleSubmit}>
                     {/* Avatar */}
                     <div className="avatar-container">
-                        <img src="https://placehold.co/400x400" alt="Profile" className="avatar" />
-                        <button type="button" className="change-photo-btn">Change Photo</button>
+                        <img
+                            src={avatarPreview || 'https://placehold.co/400x400'}
+                            alt="Profile"
+                            className="avatar"
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => photoInputRef.current.click()}
+                            title="Click to change photo"
+                        />
+                        <input
+                            type="file"
+                            ref={photoInputRef}
+                            accept="image/*"
+                            style={{ display: 'none' }}
+                            onChange={e => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                    const url = URL.createObjectURL(file);
+                                    setAvatarPreview(url);
+                                }
+                                e.target.value = '';
+                            }}
+                        />
+                        <button
+                            type="button"
+                            className="change-photo-btn"
+                            onClick={() => photoInputRef.current.click()}
+                        >
+                            Change Photo
+                        </button>
                     </div>
 
                     {/* Status messages */}

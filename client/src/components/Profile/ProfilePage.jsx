@@ -99,11 +99,26 @@ export default function ProfilePage() {
                     <span className="profile-topnav-brand">MedBuddie</span>
                 </div>
                 <div className="profile-topnav-right">
-                    <button className="icon-btn" aria-label="Search"><FaSearch /></button>
-                    <button className="icon-btn" aria-label="Settings"><FaCog /></button>
+                    <button
+                        className="icon-btn"
+                        aria-label="Search"
+                        title="Go to dashboard to search"
+                        onClick={() => navigate('/dashboard')}
+                    >
+                        <FaSearch />
+                    </button>
+                    <button
+                        className="icon-btn"
+                        aria-label="Settings"
+                        title="Edit profile"
+                        onClick={() => navigate('/edit-profile')}
+                    >
+                        <FaCog />
+                    </button>
                     <button
                         className="icon-btn"
                         aria-label="Dashboard"
+                        title="Back to dashboard"
                         onClick={() => navigate('/dashboard')}
                     >
                         <FaUserCircle size={24} />

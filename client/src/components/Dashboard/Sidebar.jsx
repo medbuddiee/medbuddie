@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './Dashboard.css';
 import logo from '../../../assets/medbuddie_logo.png';
@@ -27,9 +27,22 @@ const NAV_BOTTOM = [
     { icon: <FaPills />, label: 'Medications', path: '/medications' },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ onSearch }) {
     const navigate = useNavigate();
     const location = useLocation();
+    const [searchText, setSearchText] = useState('');
+
+    const handleSearchKeyDown = (e) => {
+        if (e.key === 'Enter' && searchText.trim()) {
+            if (onSearch) {
+                // If on dashboard, commit to feed search
+                onSearch(searchText.trim());
+            } else {
+                // Otherwise navigate to dashboard with the search committed
+                navigate('/dashboard');
+            }
+        }
+    };
 
     const NavLink = ({ icon, label, path }) => {
         const active = location.pathname === path;
@@ -57,7 +70,15 @@ export default function Sidebar() {
                 />
                 <div className="sidebar-search-wrap">
                     <FaSearch className="sidebar-search-icon" />
-                    <input type="text" placeholder="Search" className="sidebar-search" />
+                    <input
+                        type="text"
+                        placeholder="Search"
+                        className="sidebar-search"
+                        value={searchText}
+                        onChange={e => setSearchText(e.target.value)}
+                        onKeyDown={handleSearchKeyDown}
+                        title="Press Enter to search the feed"
+                    />
                 </div>
             </div>
 

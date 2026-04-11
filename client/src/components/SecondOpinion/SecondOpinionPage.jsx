@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import './SecondOpinion.css';
@@ -53,13 +53,25 @@ export default function SecondOpinionPage() {
     const { user }   = useUser();
     const navigate   = useNavigate();
 
-    const [concern,     setConcern]     = useState('');
-    const [medHistory,  setMedHistory]  = useState('');
-    const [selectedDoc, setSelectedDoc] = useState(DOCTORS[0]);
-    const [faqOpen,     setFaqOpen]     = useState({});
-    const [searchQuery, setSearchQuery] = useState('');
-    const [submitted,   setSubmitted]   = useState(false);
-    const [submitting,  setSubmitting]  = useState(false);
+    const [concern,        setConcern]        = useState('');
+    const [medHistory,     setMedHistory]     = useState('');
+    const [selectedDoc,    setSelectedDoc]    = useState(DOCTORS[0]);
+    const [faqOpen,        setFaqOpen]        = useState({});
+    const [searchQuery,    setSearchQuery]    = useState('');
+    const [submitted,      setSubmitted]      = useState(false);
+    const [submitting,     setSubmitting]     = useState(false);
+    const [respondSent,    setRespondSent]    = useState(false);
+    const [attachedFiles,  setAttachedFiles]  = useState([]);
+    const [historyFiles,   setHistoryFiles]   = useState([]);
+
+    const concernFileRef  = useRef(null);
+    const concernImgRef   = useRef(null);
+    const historyFileRef  = useRef(null);
+    const historyImgRef   = useRef(null);
+
+    const addFile = (setter, file) => {
+        if (file) setter(prev => [...prev, file.name]);
+    };
 
     const toggleFaq = (i) => setFaqOpen(prev => ({ ...prev, [i]: !prev[i] }));
 
@@ -177,10 +189,27 @@ export default function SecondOpinionPage() {
                                 </span>
                             </div>
 
+                            {/* Hidden inputs for Describe Your Concern */}
+                            <input type="file" ref={concernFileRef} style={{ display: 'none' }}
+                                onChange={e => { addFile(setAttachedFiles, e.target.files[0]); e.target.value = ''; }} />
+                            <input type="file" ref={concernImgRef} accept="image/*" style={{ display: 'none' }}
+                                onChange={e => { addFile(setAttachedFiles, e.target.files[0]); e.target.value = ''; }} />
+
+                            {attachedFiles.length > 0 && (
+                                <div className="so-attached-list">
+                                    {attachedFiles.map((name, i) => (
+                                        <span key={i} className="so-attached-chip">
+                                            📎 {name}
+                                            <button onClick={() => setAttachedFiles(p => p.filter((_, j) => j !== i))}>×</button>
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+
                             <div className="so-btn-row">
-                                <button className="so-action-btn"><FaPaperclip size={11} /> Attach Files</button>
-                                <button className="so-action-btn"><FaImage     size={11} /> Upload Image</button>
-                                <button className="so-action-btn"><FaLink      size={11} /> Source</button>
+                                <button className="so-action-btn" onClick={() => concernFileRef.current.click()}><FaPaperclip size={11} /> Attach Files</button>
+                                <button className="so-action-btn" onClick={() => concernImgRef.current.click()}><FaImage size={11} /> Upload Image</button>
+                                <button className="so-action-btn"><FaLink size={11} /> Source</button>
                                 <button className="so-action-btn so-action-dashed">
                                     <FaPlus size={10} /> Attach Guidelines or Study
                                 </button>
@@ -215,22 +244,48 @@ export default function SecondOpinionPage() {
                                 rows={4}
                             />
 
+                            {/* Hidden inputs for Medical History */}
+                            <input type="file" ref={historyFileRef} style={{ display: 'none' }}
+                                onChange={e => { addFile(setHistoryFiles, e.target.files[0]); e.target.value = ''; }} />
+                            <input type="file" ref={historyImgRef} accept="image/*" style={{ display: 'none' }}
+                                onChange={e => { addFile(setHistoryFiles, e.target.files[0]); e.target.value = ''; }} />
+
+                            {historyFiles.length > 0 && (
+                                <div className="so-attached-list">
+                                    {historyFiles.map((name, i) => (
+                                        <span key={i} className="so-attached-chip">
+                                            📎 {name}
+                                            <button onClick={() => setHistoryFiles(p => p.filter((_, j) => j !== i))}>×</button>
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+
                             <div className="so-history-footer">
                                 <div className="so-btn-row" style={{ margin: 0 }}>
-                                    <button className="so-action-btn"><FaPaperclip size={11} /> Attach Files</button>
-                                    <button className="so-action-btn"><FaImage     size={11} /> Upload Image</button>
-                                    <button className="so-action-btn"><FaLink      size={11} /> Source</button>
+                                    <button className="so-action-btn" onClick={() => historyFileRef.current.click()}><FaPaperclip size={11} /> Attach Files</button>
+                                    <button className="so-action-btn" onClick={() => historyImgRef.current.click()}><FaImage size={11} /> Upload Image</button>
+                                    <button className="so-action-btn"><FaLink size={11} /> Source</button>
                                 </div>
                                 <div className="so-history-submit-row">
                                     <span className="so-char-count">
-                                        {medHistory.length > 0 ? `${medHistory.length} chars` : '0.839'}
+                                        {medHistory.length > 0 ? `${medHistory.length} chars` : '0'}
                                     </span>
-                                    <button
-                                        className="so-respond-btn"
-                                        disabled={!medHistory.trim()}
-                                    >
-                                        Respond
-                                    </button>
+                                    {respondSent ? (
+                                        <span className="so-respond-ok">✓ Sent</span>
+                                    ) : (
+                                        <button
+                                            className="so-respond-btn"
+                                            disabled={!medHistory.trim()}
+                                            onClick={() => {
+                                                if (!medHistory.trim()) return;
+                                                setRespondSent(true);
+                                                setTimeout(() => setRespondSent(false), 3000);
+                                            }}
+                                        >
+                                            Respond
+                                        </button>
+                                    )}
                                 </div>
                             </div>
 

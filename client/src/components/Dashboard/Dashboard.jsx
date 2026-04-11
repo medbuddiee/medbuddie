@@ -20,7 +20,7 @@ export default function Dashboard() {
                 onSearch={setSearchQuery}
             />
             <div className="dashboard-body">
-                <Sidebar />
+                <Sidebar onSearch={setSearchQuery} />
                 <Feed
                     userInfo={user}
                     searchQuery={searchQuery}

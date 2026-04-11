@@ -1,6 +1,45 @@
 /* SecondOpinion.css */
 *, *::before, *::after { box-sizing: border-box; }
 
+/* ── Attached file chips ─────────────────────────────────────────────────── */
+.so-attached-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 0.5rem;
+}
+
+.so-attached-chip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: #e0f2f1;
+    color: #004d40;
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.so-attached-chip button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #00695c;
+    font-size: 0.9rem;
+    line-height: 1;
+    padding: 0 2px;
+}
+.so-attached-chip button:hover { color: #c62828; }
+
+/* ── Respond confirmation ────────────────────────────────────────────────── */
+.so-respond-ok {
+    font-size: 0.85rem;
+    color: #005c55;
+    font-weight: 600;
+    padding: 0.42rem 0.75rem;
+}
+
 /* ── Shell ───────────────────────────────────────────────────────────────── */
 .so-shell {
     min-height: 100vh;

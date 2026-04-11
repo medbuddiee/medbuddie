@@ -763,6 +763,7 @@
     color: #fff;
 }
 .gd-action-bookmark:hover { background: #004040; }
+.gd-bookmarked { background: #e0f2f1; color: #005c55; border: 1.5px solid #005c55; }
 
 .gd-action-doi {
     background: #f0f0f0;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import PostCard from './PostCard';
 import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
@@ -87,6 +87,10 @@ export default function Feed({ userInfo, searchQuery, onClearSearch }) {
     const [postError,  setPostError]  = useState(null);
     const [posting,    setPosting]    = useState(false);
     const [guidelines, setGuidelines] = useState([]);
+    const [attachedFiles, setAttachedFiles] = useState([]);
+
+    const fileInputRef  = useRef(null);
+    const imageInputRef = useRef(null);
 
     const isSearchMode = Boolean(searchQuery);
     const firstName = userInfo?.name?.split(' ')[0] || userInfo?.username || 'Doctor';
@@ -192,10 +196,23 @@ export default function Feed({ userInfo, searchQuery, onClearSearch }) {
                 : p
         ));
 
-    /* ── Filter display ──────────────────────────────────────────────────── */
-    const visiblePosts = feedFilter === 'physicians'
-        ? posts.filter(p => p.type === 'medical_opinion')
-        : posts;
+    /* ── Filter + sort display ───────────────────────────────────────────── */
+    const visiblePosts = useMemo(() => {
+        let list = feedFilter === 'physicians'
+            ? posts.filter(p => p.type === 'medical_opinion')
+            : [...posts];
+
+        if (feedFilter === 'popular') {
+            list.sort((a, b) =>
+                ((b.likes || 0) + (b.comments_count || 0)) -
+                ((a.likes || 0) + (a.comments_count || 0))
+            );
+        } else if (feedFilter === 'relevant') {
+            list.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+        }
+        // 'new' and 'physicians' keep API order (newest first)
+        return list;
+    }, [posts, feedFilter]);
 
     const recentDiscussions = posts.slice(0, 3);
 
@@ -277,12 +294,61 @@ export default function Feed({ userInfo, searchQuery, onClearSearch }) {
 
                     {postError && <p className="post-error">{postError}</p>}
 
+                    {/* Hidden file inputs */}
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        style={{ display: 'none' }}
+                        onChange={e => {
+                            const f = e.target.files[0];
+                            if (f) setAttachedFiles(prev => [...prev, f.name]);
+                            e.target.value = '';
+                        }}
+                    />
+                    <input
+                        type="file"
+                        ref={imageInputRef}
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={e => {
+                            const f = e.target.files[0];
+                            if (f) setAttachedFiles(prev => [...prev, f.name]);
+                            e.target.value = '';
+                        }}
+                    />
+
+                    {attachedFiles.length > 0 && (
+                        <div className="post-attached-files">
+                            {attachedFiles.map((name, i) => (
+                                <span key={i} className="post-attached-chip">
+                                    📎 {name}
+                                    <button
+                                        className="post-attached-remove"
+                                        onClick={() => setAttachedFiles(prev => prev.filter((_, j) => j !== i))}
+                                    >×</button>
+                                </span>
+                            ))}
+                        </div>
+                    )}
+
                     <div className="post-box-footer">
                         <div className="post-box-icons">
-                            <FaPaperclip title="Attach file" />
-                            <FaImage     title="Add image" />
-                            <FaCamera    title="Add photo" />
-                            <FaLinkIcon  title="Add link" />
+                            <FaPaperclip
+                                title="Attach file"
+                                style={{ cursor: 'pointer' }}
+                                onClick={() => fileInputRef.current.click()}
+                            />
+                            <FaImage
+                                title="Add image"
+                                style={{ cursor: 'pointer' }}
+                                onClick={() => imageInputRef.current.click()}
+                            />
+                            <FaCamera
+                                title="Add photo"
+                                style={{ cursor: 'pointer' }}
+                                onClick={() => imageInputRef.current.click()}
+                            />
+                            <FaLinkIcon title="Add link" style={{ cursor: 'pointer' }} />
                         </div>
                         <span className="post-box-signed">
                             Signed: {userInfo?.name || userInfo?.username || 'Anonymous'}
