@@ -8,10 +8,6 @@ const fs      = require('fs');
 const router     = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'medbuddie_dev_secret_change_in_production';
 
-/* ── Ensure avatar_url column exists ────────────────────────────────────── */
-pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT DEFAULT NULL`)
-    .catch(err => console.error('avatar_url migration error:', err));
-
 /* ── Auth helpers ────────────────────────────────────────────────────────── */
 function resolveUserId(req) {
     const auth = req.headers.authorization;
@@ -103,7 +99,7 @@ router.put('/', async (req, res) => {
              RETURNING id, name, bio, weight, height, bmi,
                        blood_pressure AS "bloodPressure",
                        hba1c, lipid_panel AS "lipidPanel",
-                       medications, avatar_url AS "avatarUrl"`,
+                       medications`,
             [name, bio, weight, height, bmi, bloodPressure, hba1c,
              lipidPanel, JSON.stringify(medications), resolvedId]
         );

@@ -18,23 +18,6 @@ function authenticate(req, res, next) {
     }
 }
 
-/* ── Auto-create table ───────────────────────────────────────────────────── */
-pool.query(`
-    CREATE TABLE IF NOT EXISTS second_opinions (
-        id               SERIAL PRIMARY KEY,
-        user_id          INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        doctor_name      VARCHAR(120),
-        doctor_specialty VARCHAR(100),
-        concern          TEXT NOT NULL,
-        medical_history  TEXT DEFAULT '',
-        status           VARCHAR(30) DEFAULT 'pending',
-        submitted_at     TIMESTAMPTZ DEFAULT NOW()
-    )
-`).catch(err => console.error('Second opinions table migration error:', err));
-
-pool.query(`CREATE INDEX IF NOT EXISTS idx_second_opinions_user ON second_opinions(user_id)`)
-   .catch(() => {});
-
 /* ── POST /api/second-opinions — submit a case ───────────────────────────── */
 router.post('/', authenticate, async (req, res) => {
     const { concern, medicalHistory, doctorName, doctorSpecialty } = req.body;

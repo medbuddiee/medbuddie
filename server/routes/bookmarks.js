@@ -18,16 +18,6 @@ function authenticate(req, res, next) {
     }
 }
 
-/* ── Auto-create table ───────────────────────────────────────────────────── */
-pool.query(`
-    CREATE TABLE IF NOT EXISTS user_guideline_bookmarks (
-        user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        guideline_id INTEGER NOT NULL REFERENCES guidelines(id) ON DELETE CASCADE,
-        created_at   TIMESTAMPTZ DEFAULT NOW(),
-        PRIMARY KEY (user_id, guideline_id)
-    )
-`).catch(err => console.error('Bookmark table migration error:', err));
-
 /* ── GET /api/bookmarks — list current user's bookmarked guideline IDs ───── */
 router.get('/', authenticate, async (req, res) => {
     try {
