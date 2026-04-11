@@ -118,9 +118,9 @@ router.post('/', authenticate, async (req, res) => {
         return res.status(400).json({ error: 'Content is required' });
     }
 
-    // Normalise the type value coming from the frontend toggle
-    const postType = type === 'medical' ? 'medical_opinion'
-                   : (type === 'medical_opinion' ? 'medical_opinion' : 'personal');
+    // Accept any valid type; fall back to 'personal'
+    const VALID_TYPES = ['medical_opinion', 'medical_question', 'personal'];
+    const postType = VALID_TYPES.includes(type) ? type : 'personal';
 
     // Accept tags as an array or comma-separated string
     const parsedTags = Array.isArray(tags)

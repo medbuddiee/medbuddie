@@ -131,9 +131,10 @@ export default function ProfilePage() {
                 <div className="profile-header">
                     <div className="profile-info">
                         <img
-                            src="https://placehold.co/200x200"
+                            src={display.avatarUrl || 'https://placehold.co/200x200'}
                             alt="avatar"
                             className="profile-avatar"
+                            onError={e => { e.target.src = 'https://placehold.co/200x200'; }}
                         />
                         <div>
                             <h2 className="profile-name">{display.name || 'Jane Doe'}</h2>

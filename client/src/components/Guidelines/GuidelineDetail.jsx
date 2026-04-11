@@ -65,25 +65,37 @@ export default function GuidelineDetail() {
     const [loading, setLoading]     = useState(true);
     const [error, setError]         = useState(null);
     const [activeSection, setActiveSection] = useState(null);
-    const [bookmarked, setBookmarked] = useState(() => {
-        try {
-            const saved = JSON.parse(localStorage.getItem('mb_bookmarks') || '[]');
-            return saved.includes(String(id));
-        } catch { return false; }
-    });
+    const [bookmarked, setBookmarked] = useState(false);
 
-    const toggleBookmark = () => {
-        setBookmarked(prev => {
-            const next = !prev;
-            try {
-                const saved = JSON.parse(localStorage.getItem('mb_bookmarks') || '[]');
-                const updated = next
-                    ? [...new Set([...saved, String(id)])]
-                    : saved.filter(b => b !== String(id));
-                localStorage.setItem('mb_bookmarks', JSON.stringify(updated));
-            } catch { /* ignore */ }
-            return next;
-        });
+    /* ── Load bookmark state from API ─────────────────────────────────────── */
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        fetch('/api/bookmarks', { headers: { Authorization: `Bearer ${token}` } })
+            .then(r => r.ok ? r.json() : [])
+            .then(ids => setBookmarked(ids.map(Number).includes(Number(id))))
+            .catch(() => {});
+    }, [id]);
+
+    const toggleBookmark = async () => {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        // Optimistic update
+        setBookmarked(prev => !prev);
+        try {
+            const res = await fetch(`/api/bookmarks/${id}`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (res.ok) {
+                const { bookmarked: bm } = await res.json();
+                setBookmarked(bm);
+            } else {
+                setBookmarked(prev => !prev); // revert on error
+            }
+        } catch {
+            setBookmarked(prev => !prev); // revert on network error
+        }
     };
 
     useEffect(() => {

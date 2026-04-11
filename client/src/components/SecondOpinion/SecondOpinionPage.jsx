@@ -75,14 +75,41 @@ export default function SecondOpinionPage() {
 
     const toggleFaq = (i) => setFaqOpen(prev => ({ ...prev, [i]: !prev[i] }));
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!concern.trim() || submitting) return;
+        const token = localStorage.getItem('token');
+        if (!token) return;
         setSubmitting(true);
-        setTimeout(() => {
+        try {
+            const res = await fetch('/api/second-opinions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    concern:        concern.trim(),
+                    medicalHistory: medHistory.trim(),
+                    doctorName:     selectedDoc.name,
+                    doctorSpecialty: selectedDoc.specialty,
+                }),
+            });
+            if (res.ok) {
+                setSubmitted(true);
+                setConcern('');
+                setMedHistory('');
+                setAttachedFiles([]);
+                setHistoryFiles([]);
+                setTimeout(() => setSubmitted(false), 5000);
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Could not submit case. Please try again.');
+            }
+        } catch {
+            alert('Cannot reach the server. Please check your connection.');
+        } finally {
             setSubmitting(false);
-            setSubmitted(true);
-            setTimeout(() => setSubmitted(false), 4000);
-        }, 800);
+        }
     };
 
     /* ── Filtered doctors by search ── */

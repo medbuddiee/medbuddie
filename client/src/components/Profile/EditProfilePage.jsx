@@ -15,10 +15,13 @@ export default function EditProfilePage() {
     const [saveError, setSaveError] = useState(null);
     const [saveSuccess, setSaveSuccess] = useState(false);
     const [avatarPreview, setAvatarPreview] = useState(null);
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const photoInputRef = useRef(null);
 
     useEffect(() => {
         if (user) {
+            // Initialise avatar preview from saved profile
+            if (user.avatarUrl) setAvatarPreview(user.avatarUrl);
             setForm({
                 name:          user.name          || '',
                 bio:           user.bio           || '',
@@ -143,21 +146,41 @@ export default function EditProfilePage() {
                             ref={photoInputRef}
                             accept="image/*"
                             style={{ display: 'none' }}
-                            onChange={e => {
+                            onChange={async (e) => {
                                 const file = e.target.files[0];
-                                if (file) {
-                                    const url = URL.createObjectURL(file);
-                                    setAvatarPreview(url);
-                                }
+                                if (!file) return;
+                                // Show instant local preview
+                                setAvatarPreview(URL.createObjectURL(file));
                                 e.target.value = '';
+                                // Upload to server
+                                const token = localStorage.getItem('token');
+                                if (!token) return;
+                                setUploadingAvatar(true);
+                                try {
+                                    const formData = new FormData();
+                                    formData.append('avatar', file);
+                                    const res = await fetch('/api/profile/avatar', {
+                                        method: 'POST',
+                                        headers: { Authorization: `Bearer ${token}` },
+                                        body: formData,
+                                    });
+                                    if (res.ok) {
+                                        const { avatarUrl } = await res.json();
+                                        // Persist the server URL so it survives refresh
+                                        setAvatarPreview(avatarUrl);
+                                        updateUser({ ...user, avatarUrl });
+                                    }
+                                } catch { /* silent — local preview still shown */ }
+                                finally { setUploadingAvatar(false); }
                             }}
                         />
                         <button
                             type="button"
                             className="change-photo-btn"
                             onClick={() => photoInputRef.current.click()}
+                            disabled={uploadingAvatar}
                         >
-                            Change Photo
+                            {uploadingAvatar ? 'Uploading…' : 'Change Photo'}
                         </button>
                     </div>
 
