@@ -115,8 +115,6 @@
 }
 
 .gl-hero-inner {
-    max-width: 1200px;
-    margin: 0 auto;
     padding: 0 1.5rem;
 }
 
@@ -149,8 +147,6 @@
 .gl-catbar {
     display: flex;
     gap: 0;
-    max-width: 1200px;
-    margin: 0 auto;
     padding: 0 1.5rem;
 }
 
@@ -190,8 +186,6 @@
 .gl-body {
     display: flex;
     flex: 1;
-    max-width: 1200px;
-    margin: 0 auto;
     width: 100%;
     padding: 1.25rem 1.5rem;
     gap: 1.25rem;
@@ -686,8 +680,6 @@
 }
 
 .gd-hero-inner {
-    max-width: 1200px;
-    margin: 0 auto;
     padding: 0 1.5rem;
 }
 
@@ -779,8 +771,6 @@
 }
 
 .gd-highlights-inner {
-    max-width: 1200px;
-    margin: 0 auto;
     padding: 0 1.5rem;
     display: flex;
     gap: 1rem;
@@ -828,8 +818,6 @@
 .gd-body {
     display: flex;
     flex: 1;
-    max-width: 1200px;
-    margin: 0 auto;
     width: 100%;
     padding: 1.5rem 1.5rem;
     gap: 1.5rem;
