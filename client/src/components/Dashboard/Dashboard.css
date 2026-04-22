@@ -313,6 +313,26 @@
 }
 .topnav-avatar-btn:hover { background: #e8f5f4; }
 
+/* Chip-style user button — always visible */
+.topnav-user-chip {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: #f0faf9;
+    border: 1px solid #b2dfdb;
+    border-radius: 20px;
+    padding: 4px 10px 4px 5px;
+    cursor: pointer;
+    color: #005c55;
+    font-size: 0.83rem;
+    font-weight: 600;
+    transition: background 0.2s, border-color 0.2s;
+    white-space: nowrap;
+}
+.topnav-user-chip:hover { background: #e0f2f1; border-color: #80cbc4; }
+.topnav-user-chip-name { max-width: 90px; overflow: hidden; text-overflow: ellipsis; }
+.topnav-user-chip-chevron { opacity: 0.6; flex-shrink: 0; }
+
 /* User menu dropdown */
 .topnav-user-menu-wrap {
     position: relative;

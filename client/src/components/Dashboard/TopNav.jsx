@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import './Dashboard.css';
 import logo from '../../../assets/medbuddie_logo.png';
-import { FaSearch, FaCog, FaBell, FaTimes, FaUser, FaUserCircle, FaSignOutAlt, FaEdit } from 'react-icons/fa';
+import { FaSearch, FaCog, FaBell, FaTimes, FaUser, FaUserCircle, FaSignOutAlt, FaEdit, FaChevronDown } from 'react-icons/fa';
 import UserAvatar from '../common/UserAvatar';
 import { MdArticle } from 'react-icons/md';
 
@@ -250,9 +250,8 @@ export default function TopNav({ searchQuery, onSearch }) {
                 {/* Avatar + dropdown menu */}
                 <div className="topnav-user-menu-wrap" ref={userMenuRef}>
                     <button
-                        className="topnav-avatar-btn"
+                        className="topnav-user-chip"
                         onClick={() => setShowUserMenu(m => !m)}
-                        title={`Signed in as ${user?.name || user?.email}`}
                         aria-label="User menu"
                         aria-expanded={showUserMenu}
                     >
@@ -260,19 +259,23 @@ export default function TopNav({ searchQuery, onSearch }) {
                             <img
                                 src={user.avatarUrl}
                                 alt={user.name || 'avatar'}
-                                style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                                style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
                                 onError={e => { e.currentTarget.style.display = 'none'; }}
                             />
                         ) : (
                             <div style={{
-                                width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+                                width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
                                 background: `hsl(${user?.name ? [...user.name].reduce((a,c)=>a+c.charCodeAt(0),0)%360 : 200},55%,48%)`,
                                 color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontSize: 13, fontWeight: 700,
+                                fontSize: 12, fontWeight: 700,
                             }}>
                                 {user?.name?.[0]?.toUpperCase() || '?'}
                             </div>
                         )}
+                        <span className="topnav-user-chip-name">
+                            {user?.name?.split(' ')[0] || 'Account'}
+                        </span>
+                        <FaChevronDown size={10} className="topnav-user-chip-chevron" />
                     </button>
 
                     {showUserMenu && (
