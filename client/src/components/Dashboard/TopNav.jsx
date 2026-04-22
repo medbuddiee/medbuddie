@@ -256,7 +256,23 @@ export default function TopNav({ searchQuery, onSearch }) {
                         aria-label="User menu"
                         aria-expanded={showUserMenu}
                     >
-                        <UserAvatar name={user?.name} avatarUrl={user?.avatarUrl} size={32} />
+                        {user?.avatarUrl ? (
+                            <img
+                                src={user.avatarUrl}
+                                alt={user.name || 'avatar'}
+                                style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                                onError={e => { e.currentTarget.style.display = 'none'; }}
+                            />
+                        ) : (
+                            <div style={{
+                                width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+                                background: `hsl(${user?.name ? [...user.name].reduce((a,c)=>a+c.charCodeAt(0),0)%360 : 200},55%,48%)`,
+                                color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontSize: 13, fontWeight: 700,
+                            }}>
+                                {user?.name?.[0]?.toUpperCase() || '?'}
+                            </div>
+                        )}
                     </button>
 
                     {showUserMenu && (
