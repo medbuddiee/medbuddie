@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './SignIn.css';
 import logo from '../../assets/medbuddie_logo.png';
@@ -10,6 +10,32 @@ export default function SignIn() {
     const [form, setForm] = useState({ identifier: '', password: '', rememberMe: false });
     const navigate = useNavigate();
     const { login } = useUser();
+
+    useEffect(() => {
+        if (!window.google) return;
+        window.google.accounts.id.initialize({
+            client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+            callback: async (response) => {
+                try {
+                    const res = await fetch('/api/google-login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ token: response.credential }),
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        login(data.user);
+                        localStorage.setItem('token', data.token);
+                        navigate('/dashboard');
+                    } else {
+                        alert(data.error || 'Google sign-in failed');
+                    }
+                } catch {
+                    alert('Server error during Google sign-in');
+                }
+            },
+        });
+    }, [login, navigate]);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -99,7 +125,10 @@ export default function SignIn() {
                             <img src={appleIcon} alt="Apple" />
                             Sign in with Apple
                         </button>
-                        <button className="social-btn google">
+                        <button
+                            className="social-btn google"
+                            onClick={() => window.google?.accounts.id.prompt()}
+                        >
                             <img src={googleIcon} alt="Google" />
                             Sign in with Google
                         </button>

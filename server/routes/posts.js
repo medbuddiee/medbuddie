@@ -1,38 +1,8 @@
 const express = require('express');
-const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
+const { authenticate, softAuthenticate } = require('../middleware/auth');
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'medbuddie_dev_secret_change_in_production';
-
-// ── Auth middleware ───────────────────────────────────────────────────────────
-
-/** Hard auth — returns 401 if no valid Bearer token */
-function authenticate(req, res, next) {
-    const auth = req.headers.authorization;
-    if (!auth || !auth.startsWith('Bearer ')) {
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
-    try {
-        req.user = jwt.verify(auth.slice(7), JWT_SECRET);
-        next();
-    } catch {
-        res.status(401).json({ error: 'Invalid or expired token' });
-    }
-}
-
-/** Soft auth — decodes token if present, continues regardless (for public routes) */
-function softAuthenticate(req, _res, next) {
-    const auth = req.headers.authorization;
-    if (auth && auth.startsWith('Bearer ')) {
-        try {
-            req.user = jwt.verify(auth.slice(7), JWT_SECRET);
-        } catch {
-            // Ignore invalid/expired tokens on public routes
-        }
-    }
-    next();
-}
 
 // ── GET /api/posts — public paginated feed ────────────────────────────────────
 // Query params:

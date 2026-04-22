@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './SignUp.css';
 import logo from '../../assets/medbuddie_logo.png';
 import appleIcon from '../../assets/signup/apple_logo.png';
 import facebookIcon from '../../assets/signup/facebook_logo.png';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '../context/UserContext.jsx';
 
 export default function SignUp() {
+    const navigate = useNavigate();
+    const { login } = useUser();
+
     const [form, setForm] = useState({
         email: '',
         password: '',
@@ -14,7 +18,31 @@ export default function SignUp() {
         isCaregiver: false,
         acceptedTerms: false,
     });
-    const navigate = useNavigate();
+    useEffect(() => {
+        if (!window.google) return;
+        window.google.accounts.id.initialize({
+            client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+            callback: async (response) => {
+                try {
+                    const res = await fetch('/api/google-login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ token: response.credential }),
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        login(data.user);
+                        localStorage.setItem('token', data.token);
+                        navigate('/dashboard');
+                    } else {
+                        alert(data.error || 'Google sign-up failed');
+                    }
+                } catch {
+                    alert('Server error during Google sign-up');
+                }
+            },
+        });
+    }, [login, navigate]);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -51,8 +79,9 @@ export default function SignUp() {
             });
             const data = await res.json();
             if (res.ok) {
-                if (data.token) localStorage.setItem('token', data.token);
-                return navigate('/signin');
+                login(data.user);
+                localStorage.setItem('token', data.token);
+                return navigate('/dashboard');
             }
             alert(data.error || 'Signup failed');
         } catch {
@@ -200,7 +229,10 @@ export default function SignUp() {
                         <img src={appleIcon} alt="Apple" />
                         Sign up with Apple
                     </button>
-                    <button className="social-btn google">
+                    <button
+                        className="social-btn google"
+                        onClick={() => window.google?.accounts.id.prompt()}
+                    >
                         <span className="google-g">G</span>
                         Sign up with Google
                     </button>

@@ -72,11 +72,9 @@ export default function EditProfilePage() {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    // Always send JWT — this is the authoritative way to identify the user
-                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                    Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
-                    userId: user.id,   // fallback for dev without token
                     ...form,
                     // Filter out empty medication rows before saving
                     medications: form.medications.filter(m => m.name.trim()),

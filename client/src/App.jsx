@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import HomePage from './components/HomePage';
 import SignIn from './components/SignIn';
 import SignUp from './components/SignUp';
+import FacebookCallback from './components/SignUp/FacebookCallback';
 import Dashboard from './components/Dashboard/Dashboard';
 import ProfilePage from './components/Profile/ProfilePage';
 import EditProfilePage from './components/Profile/EditProfilePage';
@@ -42,6 +43,7 @@ function AppRoutes() {
             <Route path="/" element={<HomePage />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/facebook-callback" element={<FacebookCallback />} />
 
             {/* Protected routes */}
             <Route path="/dashboard"    element={<PrivateRoute element={<Dashboard />} />} />

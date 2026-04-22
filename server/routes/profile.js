@@ -1,34 +1,11 @@
 const express = require('express');
-const jwt     = require('jsonwebtoken');
 const pool    = require('../config/db');
 const multer  = require('multer');
 const path    = require('path');
 const fs      = require('fs');
+const { authenticate } = require('../middleware/auth');
 
-const router     = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'medbuddie_dev_secret_change_in_production';
-
-/* ── Auth helpers ────────────────────────────────────────────────────────── */
-function resolveUserId(req) {
-    const auth = req.headers.authorization;
-    if (auth && auth.startsWith('Bearer ')) {
-        try { return jwt.verify(auth.slice(7), JWT_SECRET).id; } catch { return null; }
-    }
-    if (req.query.userId) return parseInt(req.query.userId);
-    return null;
-}
-
-function authenticate(req, res, next) {
-    const auth = req.headers.authorization;
-    if (!auth || !auth.startsWith('Bearer '))
-        return res.status(401).json({ error: 'Unauthorized' });
-    try {
-        req.user = jwt.verify(auth.slice(7), JWT_SECRET);
-        next();
-    } catch {
-        res.status(401).json({ error: 'Invalid or expired token' });
-    }
-}
+const router = express.Router();
 
 /* ── Multer — avatar upload ──────────────────────────────────────────────── */
 const UPLOAD_DIR = path.join(__dirname, '..', 'uploads', 'avatars');
@@ -53,9 +30,8 @@ const upload = multer({
 });
 
 /* ── GET /api/profile ────────────────────────────────────────────────────── */
-router.get('/', async (req, res) => {
-    const userId = resolveUserId(req);
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+router.get('/', authenticate, async (req, res) => {
+    const userId = req.user.id;
 
     try {
         const { rows } = await pool.query(
@@ -78,14 +54,13 @@ router.get('/', async (req, res) => {
 });
 
 /* ── PUT /api/profile ────────────────────────────────────────────────────── */
-router.put('/', async (req, res) => {
+router.put('/', authenticate, async (req, res) => {
     const {
-        userId, name, bio, weight, height, bmi,
+        name, bio, weight, height, bmi,
         bloodPressure, hba1c, lipidPanel, medications = [],
     } = req.body;
 
-    const resolvedId = userId || resolveUserId(req);
-    if (!resolvedId) return res.status(400).json({ error: 'userId is required' });
+    const resolvedId = req.user.id;
 
     try {
         const { rows } = await pool.query(

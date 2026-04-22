@@ -34,14 +34,9 @@ export default function ProfilePage() {
             setError(null);
             try {
                 const token = localStorage.getItem('token');
-                const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
-                // Fall back to userId query param if no token (dev mode)
-                const url = token
-                    ? '/api/profile'
-                    : `/api/profile?userId=${user.id}`;
-
-                const res = await fetch(url, { headers });
+                const res = await fetch('/api/profile', {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
 
                 if (res.ok) {
                     const data = await res.json();

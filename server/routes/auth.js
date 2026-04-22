@@ -121,14 +121,33 @@ router.post('/facebook', async (req, res) => {
     const redirectUri = process.env.FB_REDIRECT_URI || 'http://localhost:3000/facebook-callback';
     try {
         const tokenRes = await fetch(
-            `https://graph.facebook.com/v19.0/oauth/access_token?client_id=${process.env.FB_APP_ID}&redirect_uri=${redirectUri}&client_secret=${process.env.FB_APP_SECRET}&code=${code}`
+            `https://graph.facebook.com/v19.0/oauth/access_token?client_id=${process.env.FB_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&client_secret=${process.env.FB_APP_SECRET}&code=${code}`
         );
         const tokenData = await tokenRes.json();
+        if (tokenData.error) throw new Error(tokenData.error.message);
+
         const profileRes = await fetch(
             `https://graph.facebook.com/me?fields=id,name,email&access_token=${tokenData.access_token}`
         );
-        const profile = await profileRes.json();
-        res.json({ user: profile });
+        const fbProfile = await profileRes.json();
+        if (!fbProfile.email) {
+            return res.status(400).json({ error: 'Facebook account has no email address' });
+        }
+
+        const result = await pool.query(
+            `INSERT INTO users (name, email, password, username)
+             VALUES ($1, $2, '', $3)
+             ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name
+             RETURNING id, name, email, username, bio, weight, height, bmi,
+                       blood_pressure AS "bloodPressure",
+                       lipid_panel AS "lipidPanel",
+                       hba1c, medications`,
+            [fbProfile.name, fbProfile.email, fbProfile.email.split('@')[0]]
+        );
+        const user = result.rows[0];
+        user.medications = user.medications || [];
+        const token = makeToken(user);
+        res.json({ user, token });
     } catch (err) {
         console.error('Facebook auth error:', err);
         res.status(500).json({ error: 'Facebook authentication failed' });

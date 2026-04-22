@@ -1,22 +1,8 @@
 const express = require('express');
-const jwt     = require('jsonwebtoken');
 const pool    = require('../config/db');
+const { authenticate } = require('../middleware/auth');
 
-const router     = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'medbuddie_dev_secret_change_in_production';
-
-/* ── Auth middleware ─────────────────────────────────────────────────────── */
-function authenticate(req, res, next) {
-    const auth = req.headers.authorization;
-    if (!auth || !auth.startsWith('Bearer '))
-        return res.status(401).json({ error: 'Unauthorized' });
-    try {
-        req.user = jwt.verify(auth.slice(7), JWT_SECRET);
-        next();
-    } catch {
-        res.status(401).json({ error: 'Invalid or expired token' });
-    }
-}
+const router = express.Router();
 
 /* ── GET /api/bookmarks — list current user's bookmarked guideline IDs ───── */
 router.get('/', authenticate, async (req, res) => {
