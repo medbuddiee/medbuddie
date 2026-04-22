@@ -11,6 +11,9 @@ const searchRouter           = require('./routes/search');
 const guidelinesRouter       = require('./routes/guidelines');
 const bookmarksRouter        = require('./routes/bookmarks');
 const secondOpinionsRouter   = require('./routes/secondOpinions');
+const usersRouter            = require('./routes/users');
+const communitiesRouter      = require('./routes/communities');
+const consultationsRouter    = require('./routes/consultations');
 
 const app  = express();
 const port = process.env.PORT || 5000;
@@ -46,6 +49,61 @@ async function runMigrations() {
 
         `CREATE INDEX IF NOT EXISTS idx_second_opinions_user
          ON second_opinions(user_id)`,
+
+        // ── Doctor fields on users ───────────────────────────────────────────
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS is_doctor BOOLEAN DEFAULT FALSE`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS doctor_specialties TEXT[] DEFAULT '{}'`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS license_number VARCHAR(100)`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified_doctor BOOLEAN DEFAULT FALSE`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS doctor_bio TEXT`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS years_experience INTEGER`,
+
+        // ── Followers ───────────────────────────────────────────────────────
+        `CREATE TABLE IF NOT EXISTS user_followers (
+            follower_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            following_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            created_at   TIMESTAMPTZ DEFAULT NOW(),
+            PRIMARY KEY (follower_id, following_id)
+        )`,
+        `CREATE INDEX IF NOT EXISTS idx_user_followers_following ON user_followers(following_id)`,
+        `CREATE INDEX IF NOT EXISTS idx_user_followers_follower  ON user_followers(follower_id)`,
+
+        // ── Communities ─────────────────────────────────────────────────────
+        `CREATE TABLE IF NOT EXISTS communities (
+            id            SERIAL PRIMARY KEY,
+            name          VARCHAR(100) NOT NULL,
+            description   TEXT DEFAULT '',
+            category      VARCHAR(100) DEFAULT 'General',
+            icon          VARCHAR(10)  DEFAULT '🏥',
+            created_by    INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            members_count INTEGER DEFAULT 0,
+            posts_count   INTEGER DEFAULT 0,
+            created_at    TIMESTAMPTZ DEFAULT NOW()
+        )`,
+        `CREATE TABLE IF NOT EXISTS community_members (
+            user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            community_id INTEGER NOT NULL REFERENCES communities(id) ON DELETE CASCADE,
+            joined_at    TIMESTAMPTZ DEFAULT NOW(),
+            PRIMARY KEY (user_id, community_id)
+        )`,
+        `CREATE INDEX IF NOT EXISTS idx_community_members_community ON community_members(community_id)`,
+        `ALTER TABLE posts ADD COLUMN IF NOT EXISTS community_id INTEGER REFERENCES communities(id) ON DELETE SET NULL`,
+
+        // ── Consultations (doctor ↔ patient video sessions) ─────────────────
+        `CREATE TABLE IF NOT EXISTS consultations (
+            id                SERIAL PRIMARY KEY,
+            second_opinion_id INTEGER REFERENCES second_opinions(id) ON DELETE SET NULL,
+            patient_id        INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            doctor_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            status            VARCHAR(30) DEFAULT 'pending',
+            meeting_url       TEXT,
+            scheduled_at      TIMESTAMPTZ,
+            notes             TEXT,
+            concern           TEXT NOT NULL DEFAULT '',
+            created_at        TIMESTAMPTZ DEFAULT NOW()
+        )`,
+        `CREATE INDEX IF NOT EXISTS idx_consultations_patient ON consultations(patient_id)`,
+        `CREATE INDEX IF NOT EXISTS idx_consultations_doctor  ON consultations(doctor_id)`,
     ];
 
     for (const sql of migrations) {
@@ -80,6 +138,9 @@ async function start() {
     app.use('/api/guidelines',   guidelinesRouter);     // guidelines list + content
     app.use('/api/bookmarks',    bookmarksRouter);      // guideline bookmarks
     app.use('/api/second-opinions', secondOpinionsRouter); // second opinion cases
+    app.use('/api/users',           usersRouter);          // people / follow system
+    app.use('/api/communities',     communitiesRouter);    // communities
+    app.use('/api/consultations',   consultationsRouter);  // doctor consultations
 
     // Backward-compat alias
     app.post('/login', (req, res, next) => {

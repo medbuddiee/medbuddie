@@ -39,7 +39,13 @@ router.get('/', authenticate, async (req, res) => {
                     blood_pressure  AS "bloodPressure",
                     lipid_panel     AS "lipidPanel",
                     hba1c, medications, email,
-                    avatar_url      AS "avatarUrl"
+                    avatar_url      AS "avatarUrl",
+                    is_doctor       AS "isDoctor",
+                    is_verified_doctor AS "isVerifiedDoctor",
+                    doctor_specialties AS "doctorSpecialties",
+                    doctor_bio      AS "doctorBio",
+                    years_experience AS "yearsExperience",
+                    license_number  AS "licenseNumber"
              FROM users WHERE id = $1`,
             [userId]
         );

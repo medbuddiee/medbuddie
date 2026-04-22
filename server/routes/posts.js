@@ -62,6 +62,8 @@ router.get('/', softAuthenticate, async (req, res) => {
                 p.created_at,
                 u.name           AS author,
                 u.username,
+                u.avatar_url     AS "authorAvatar",
+                u.is_verified_doctor AS "authorIsDoctor",
                 -- likedByMe is TRUE only when the viewer has a row in post_likes
                 (pl.user_id IS NOT NULL) AS "likedByMe"
              FROM posts p
@@ -207,7 +209,8 @@ router.get('/:id/comments', async (req, res) => {
                 c.created_at,
                 c.user_id AS "authorId",
                 u.name    AS author,
-                u.username
+                u.username,
+                u.avatar_url AS "authorAvatar"
              FROM comments c
              JOIN users u ON u.id = c.user_id
              WHERE c.post_id = $1
@@ -286,6 +289,49 @@ router.delete('/:id/comments/:commentId', authenticate, async (req, res) => {
         res.status(500).json({ error: 'Server error' });
     } finally {
         client.release();
+    }
+});
+
+// ── GET /api/posts/top-week — top posts by likes in the last 7 days ──────────
+router.get('/top-week', softAuthenticate, async (req, res) => {
+    const limit    = Math.min(parseInt(req.query.limit) || 20, 50);
+    const viewerId = req.user?.id || null;
+
+    const params = [];
+    if (viewerId) params.push(viewerId);
+    const viewerRef = viewerId ? `$${params.length}` : 'NULL';
+    params.push(limit);
+    const limitRef = `$${params.length}`;
+
+    try {
+        const { rows } = await pool.query(
+            `SELECT
+                p.id,
+                p.user_id        AS "authorId",
+                p.content,
+                p.type,
+                p.tags,
+                p.likes,
+                p.comments_count,
+                p.created_at,
+                u.name           AS author,
+                u.username,
+                u.avatar_url     AS "authorAvatar",
+                u.is_verified_doctor AS "authorIsDoctor",
+                (pl.user_id IS NOT NULL) AS "likedByMe"
+             FROM posts p
+             JOIN  users u ON u.id = p.user_id
+             LEFT JOIN post_likes pl ON pl.post_id = p.id AND pl.user_id = ${viewerRef}
+             WHERE p.created_at >= NOW() - INTERVAL '7 days'
+               AND p.community_id IS NULL
+             ORDER BY p.likes DESC, p.comments_count DESC, p.created_at DESC
+             LIMIT ${limitRef}`,
+            params
+        );
+        res.json(rows);
+    } catch (err) {
+        console.error('GET /api/posts/top-week error:', err);
+        res.status(500).json({ error: 'Server error' });
     }
 });
 

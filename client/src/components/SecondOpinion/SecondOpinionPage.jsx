@@ -1,549 +1,450 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
+import Sidebar from '../Dashboard/Sidebar';
+import TopNav from '../Dashboard/TopNav';
+import UserAvatar from '../common/UserAvatar';
 import './SecondOpinion.css';
-import logo from '../../../assets/medbuddie_logo.png';
 import {
-    FaPaperclip, FaImage, FaLink, FaPlus, FaSearch,
-    FaExclamationTriangle, FaChevronRight, FaChevronDown,
-    FaCheckCircle, FaCog, FaUserCircle, FaCheck,
+    FaUserMd, FaCheckCircle, FaVideo, FaPhone,
+    FaSearch, FaStar, FaTimes, FaChevronDown, FaChevronUp,
+    FaPaperclip, FaCalendarAlt,
 } from 'react-icons/fa';
 
-/* ── Static data ─────────────────────────────────────────────────────────── */
-const DOCTORS = [
-    { id: 1, name: 'Dr. S. Patel',  specialty: 'Hypertension', tag: 'Nephrologist',  initials: 'SP', color: '#005c55' },
-    { id: 2, name: 'Dr. J. Rivera', specialty: 'Cardiology',   tag: 'Cardiologist',  initials: 'JR', color: '#1565c0' },
-    { id: 3, name: 'Dr. W. Nguyen', specialty: 'Cardiology',   tag: 'Cardiologist',  initials: 'WN', color: '#6a1b9a' },
-];
+const SPECIALTIES_FILTER = ['All', 'Cardiology', 'Neurology', 'Oncology', 'Endocrinology',
+    'Gastroenterology', 'Pulmonology', 'Orthopedics', 'Dermatology',
+    'Psychiatry', 'Pediatrics', 'General Practice', 'Internal Medicine'];
+
+const STATUS_COLORS = {
+    pending:   { bg: '#fff8e1', color: '#f57f17', label: 'Pending' },
+    accepted:  { bg: '#e8f5e9', color: '#2e7d32', label: 'Accepted' },
+    declined:  { bg: '#ffebee', color: '#c62828', label: 'Declined' },
+    completed: { bg: '#e8eaf6', color: '#3949ab', label: 'Completed' },
+};
 
 const FAQS = [
-    {
-        q: 'How does a second opinion help me?',
-        a: 'A second opinion from a licensed physician helps you validate your diagnosis, explore alternative treatments, and make more informed healthcare decisions backed by evidence.',
-    },
-    {
-        q: 'How soon should I expect a response?',
-        a: 'Most physicians respond within 24–48 hours. Response time may vary based on physician availability and the complexity of your case.',
-    },
-    {
-        q: 'Who reviews my case?',
-        a: 'Your case is reviewed by licensed, board-certified physicians who have been verified on the MedBuddie platform.',
-    },
+    { q: 'How does a second opinion help me?',
+      a: 'A second opinion validates your diagnosis, explores alternatives, and helps you make evidence-backed healthcare decisions.' },
+    { q: 'How soon will the doctor respond?',
+      a: 'Most physicians respond within 24–48 hours. You\'ll be notified when they accept and schedule a call.' },
+    { q: 'How does the video call work?',
+      a: 'When a doctor accepts your request, a secure video call link is generated. You can join from the consultation card using your browser — no downloads needed.' },
 ];
 
-const RESOURCES = [
-    'Medical Response Guide',
-    'Latest Treatment Guidelines',
-    'How Specialist Selection Works',
-    'Uploading Records Properly',
-];
-
-const SUBMIT_CHECKS = [
-    'Case Summary',
-    'Medical Concern',
-    'Medical History',
-    'Attached Source(s)',
-    'Latest Records',
-];
-
-/* ══════════════════════════════════════════════════════════════════════════════
-   SECOND OPINION PAGE
-   ══════════════════════════════════════════════════════════════════════════════ */
 export default function SecondOpinionPage() {
-    const { user }   = useUser();
-    const navigate   = useNavigate();
+    const { user } = useUser();
+    const navigate = useNavigate();
+    const token = localStorage.getItem('token');
 
-    const [concern,        setConcern]        = useState('');
-    const [medHistory,     setMedHistory]     = useState('');
-    const [selectedDoc,    setSelectedDoc]    = useState(DOCTORS[0]);
-    const [faqOpen,        setFaqOpen]        = useState({});
-    const [searchQuery,    setSearchQuery]    = useState('');
-    const [submitted,      setSubmitted]      = useState(false);
-    const [submitting,     setSubmitting]     = useState(false);
-    const [respondSent,    setRespondSent]    = useState(false);
-    const [attachedFiles,  setAttachedFiles]  = useState([]);
-    const [historyFiles,   setHistoryFiles]   = useState([]);
+    const [tab, setTab]                   = useState('find');   // 'find' | 'my-consultations'
+    const [doctors, setDoctors]           = useState([]);
+    const [consultations, setConsultations] = useState([]);
+    const [loadingDoctors, setLoadingDoctors]   = useState(true);
+    const [loadingConsults, setLoadingConsults] = useState(false);
+    const [specialtyFilter, setSpecialtyFilter] = useState('All');
+    const [doctorSearch, setDoctorSearch]   = useState('');
+    const [selectedDoctor, setSelectedDoctor] = useState(null);
+    const [concern, setConcern]             = useState('');
+    const [submitting, setSubmitting]       = useState(false);
+    const [submitted, setSubmitted]         = useState(false);
+    const [openFaq, setOpenFaq]             = useState(null);
+    const [callModal, setCallModal]         = useState(null); // { url, doctorName }
+    const [doctorTab, setDoctorTab]         = useState('accept'); // for doctor: pending vs history
+    const iframeRef = useRef(null);
 
-    const concernFileRef  = useRef(null);
-    const concernImgRef   = useRef(null);
-    const historyFileRef  = useRef(null);
-    const historyImgRef   = useRef(null);
+    const isDoctor = user?.isDoctor && user?.isVerifiedDoctor;
 
-    const addFile = (setter, file) => {
-        if (file) setter(prev => [...prev, file.name]);
+    // Load doctors
+    useEffect(() => {
+        if (tab !== 'find') return;
+        setLoadingDoctors(true);
+        let url = '/api/users/doctors/list';
+        const params = [];
+        if (specialtyFilter !== 'All') params.push(`specialty=${encodeURIComponent(specialtyFilter)}`);
+        if (doctorSearch.trim()) params.push(`q=${encodeURIComponent(doctorSearch.trim())}`);
+        if (params.length) url += '?' + params.join('&');
+        fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+            .then(r => r.json())
+            .then(d => { if (Array.isArray(d)) setDoctors(d); })
+            .catch(() => {})
+            .finally(() => setLoadingDoctors(false));
+    }, [tab, specialtyFilter, token]);
+
+    // Load consultations
+    useEffect(() => {
+        if (tab !== 'my-consultations') return;
+        setLoadingConsults(true);
+        fetch('/api/consultations', { headers: { Authorization: `Bearer ${token}` } })
+            .then(r => r.json())
+            .then(d => { if (Array.isArray(d)) setConsultations(d); })
+            .catch(() => {})
+            .finally(() => setLoadingConsults(false));
+    }, [tab, token]);
+
+    const handleDoctorSearch = (e) => {
+        e.preventDefault();
+        // Re-trigger effect
+        setDoctors([]);
+        setLoadingDoctors(true);
+        let url = '/api/users/doctors/list';
+        const params = [];
+        if (specialtyFilter !== 'All') params.push(`specialty=${encodeURIComponent(specialtyFilter)}`);
+        if (doctorSearch.trim()) params.push(`q=${encodeURIComponent(doctorSearch.trim())}`);
+        if (params.length) url += '?' + params.join('&');
+        fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+            .then(r => r.json())
+            .then(d => { if (Array.isArray(d)) setDoctors(d); })
+            .catch(() => {})
+            .finally(() => setLoadingDoctors(false));
     };
 
-    const toggleFaq = (i) => setFaqOpen(prev => ({ ...prev, [i]: !prev[i] }));
-
-    const handleSubmit = async () => {
-        if (!concern.trim() || submitting) return;
-        const token = localStorage.getItem('token');
-        if (!token) return;
+    const handleRequestConsultation = async (e) => {
+        e.preventDefault();
+        if (!selectedDoctor || !concern.trim()) return;
         setSubmitting(true);
         try {
-            const res = await fetch('/api/second-opinions', {
+            const res = await fetch('/api/consultations', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    concern:        concern.trim(),
-                    medicalHistory: medHistory.trim(),
-                    doctorName:     selectedDoc.name,
-                    doctorSpecialty: selectedDoc.specialty,
-                }),
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ doctorId: selectedDoctor.id, concern: concern.trim() }),
             });
             if (res.ok) {
                 setSubmitted(true);
                 setConcern('');
-                setMedHistory('');
-                setAttachedFiles([]);
-                setHistoryFiles([]);
-                setTimeout(() => setSubmitted(false), 5000);
             } else {
-                const data = await res.json();
-                alert(data.error || 'Could not submit case. Please try again.');
+                const d = await res.json();
+                alert(d.error || 'Failed to submit consultation request');
             }
-        } catch {
-            alert('Cannot reach the server. Please check your connection.');
-        } finally {
-            setSubmitting(false);
-        }
+        } catch { alert('Network error'); } finally { setSubmitting(false); }
     };
 
-    /* ── Filtered doctors by search ── */
-    const filteredDoctors = DOCTORS.filter(d =>
-        !searchQuery ||
-        d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        d.specialty.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    // Doctor actions — accept/decline
+    const updateConsultation = async (id, status) => {
+        try {
+            const res = await fetch(`/api/consultations/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ status }),
+            });
+            if (res.ok) {
+                const updated = await res.json();
+                setConsultations(prev => prev.map(c =>
+                    c.id === id ? { ...c, ...updated } : c
+                ));
+            }
+        } catch { /* silent */ }
+    };
+
+    const joinCall = (c) => {
+        setCallModal({ url: c.meetingUrl, doctorName: isDoctor ? c.patientName : c.doctorName });
+    };
 
     return (
-        <div className="so-shell">
-
-            {/* ── Top nav ── */}
-            <header className="so-header">
-                <div
-                    className="so-header-left"
-                    onClick={() => navigate('/dashboard')}
-                    style={{ cursor: 'pointer' }}
-                >
-                    <img src={logo} alt="MedBuddie" width="32" height="32" />
-                    <span className="so-brand">MedBuddie</span>
-                </div>
-                <div className="so-header-right">
-                    <button className="so-header-btn" onClick={() => navigate('/edit-profile')}>
-                        <FaCog size={12} /> Settings
-                    </button>
-                    <button className="so-header-user" onClick={() => navigate('/profile')}>
-                        <FaUserCircle size={15} />
-                        {user?.name || user?.username || 'User'} ▾
-                    </button>
-                </div>
-            </header>
-
-            <div className="so-page">
-
-                {/* ── Page title + filter ── */}
-                <div className="so-title-row">
-                    <div>
-                        <h1 className="so-title">Get a Second Opinion</h1>
-                        <p className="so-subtitle">
-                            Here are second opinion requests from a licensed physician. Select a specialty,
-                            provide your medical history, and update your latest health records to receive
-                            a personalized, evidence-based second opinion.
-                        </p>
-                    </div>
-                    <div className="so-filter-toggle">
-                        <span className="so-filter-label">Great Distributions</span>
-                        <div className="so-toggle-pill" />
-                    </div>
-                </div>
-
-                {/* ── Stats bar ── */}
-                <div className="so-stats-bar">
-                    <div className="so-stats-left">
-                        <span className="so-stat">Reputation <strong>1,240 pts</strong> ✦</span>
-                        <span className="so-stat-sep" />
-                        <span className="so-stat">Responses: <strong>278</strong></span>
-                        <span className="so-stat-sep" />
-                        <span className="so-stat">Avg rating <strong>4.9 / 5</strong> ✦</span>
-                    </div>
-                    <div className="so-search-wrap">
-                        <FaSearch className="so-search-icon" size={11} />
-                        <input
-                            className="so-search"
-                            type="text"
-                            placeholder="Search..."
-                            value={searchQuery}
-                            onChange={e => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-                </div>
-
-                {/* ── Two-column body ── */}
-                <div className="so-body">
-
-                    {/* ════ MAIN COLUMN ════ */}
-                    <div className="so-main">
-
-                        {/* ── Describe Your Concern ── */}
-                        <div className="so-card">
-                            <div className="so-card-head">
-                                <h3 className="so-card-title">Describe Your Concern</h3>
-                                <div className="so-card-head-right">
-                                    <span className="so-attach-count">
-                                        <FaPaperclip size={10} /> 127
-                                    </span>
-                                    <FaChevronDown size={10} color="#bbb" />
-                                </div>
-                            </div>
-
-                            <textarea
-                                className="so-textarea"
-                                placeholder="Type your medical concern here — describe symptoms, duration, and context…"
-                                value={concern}
-                                onChange={e => setConcern(e.target.value)}
-                                rows={4}
-                            />
-
-                            <div className="so-note-box">
-                                <FaExclamationTriangle size={12} color="#f9a825" style={{ flexShrink: 0 }} />
-                                <span>
-                                    Note: Please attach at least one relevant source as all medical
-                                    claims must be backed by evidence.
-                                </span>
-                            </div>
-
-                            {/* Hidden inputs for Describe Your Concern */}
-                            <input type="file" ref={concernFileRef} style={{ display: 'none' }}
-                                onChange={e => { addFile(setAttachedFiles, e.target.files[0]); e.target.value = ''; }} />
-                            <input type="file" ref={concernImgRef} accept="image/*" style={{ display: 'none' }}
-                                onChange={e => { addFile(setAttachedFiles, e.target.files[0]); e.target.value = ''; }} />
-
-                            {attachedFiles.length > 0 && (
-                                <div className="so-attached-list">
-                                    {attachedFiles.map((name, i) => (
-                                        <span key={i} className="so-attached-chip">
-                                            📎 {name}
-                                            <button onClick={() => setAttachedFiles(p => p.filter((_, j) => j !== i))}>×</button>
-                                        </span>
-                                    ))}
-                                </div>
-                            )}
-
-                            <div className="so-btn-row">
-                                <button className="so-action-btn" onClick={() => concernFileRef.current.click()}><FaPaperclip size={11} /> Attach Files</button>
-                                <button className="so-action-btn" onClick={() => concernImgRef.current.click()}><FaImage size={11} /> Upload Image</button>
-                                <button className="so-action-btn"><FaLink size={11} /> Source</button>
-                                <button className="so-action-btn so-action-dashed">
-                                    <FaPlus size={10} /> Attach Guidelines or Study
-                                </button>
-                            </div>
-
-                            <div className="so-info-banner">
-                                <span className="so-info-emoji">💬</span>
-                                Always include the source when providing a medical treatment claim!
-                            </div>
+        <div className="dashboard-shell">
+            <TopNav searchQuery="" onSearch={() => {}} />
+            <div className="dashboard-body">
+                <Sidebar />
+                <main className="so-main-new">
+                    {/* Header */}
+                    <div className="so-header-new">
+                        <div>
+                            <h2 className="so-title-new">Second Opinion</h2>
+                            <p className="so-sub-new">Connect with verified doctors for a professional second opinion on your health concerns.</p>
                         </div>
+                        {!isDoctor && (
+                            <button className="so-doctor-register-btn" onClick={() => navigate('/doctor-portal')}>
+                                <FaUserMd size={13} /> Register as a Doctor
+                            </button>
+                        )}
+                    </div>
 
-                        {/* ── Medical History ── */}
-                        <div className="so-card">
-                            <div className="so-card-head">
-                                <div className="so-card-head-left">
-                                    <h3 className="so-card-title">Medical History</h3>
-                                    <FaCheckCircle size={13} color="#005c55" />
-                                </div>
-                                <button className="so-pill-btn">Concerteur ▾</button>
-                            </div>
+                    {/* Tabs */}
+                    <div className="so-tabs-new">
+                        {[
+                            { key: 'find',             label: isDoctor ? 'Patient Requests' : 'Find a Doctor' },
+                            { key: 'my-consultations', label: isDoctor ? 'My Consultations' : 'My Requests' },
+                        ].map(t => (
+                            <button key={t.key} className={`so-tab-new ${tab === t.key ? 'active' : ''}`} onClick={() => setTab(t.key)}>
+                                {t.label}
+                            </button>
+                        ))}
+                    </div>
 
-                            <p className="so-history-hint">
-                                Age, gender, existing conditions, recent surgeries, medications,
-                                relevant medical history, fler…
-                            </p>
-
-                            <textarea
-                                className="so-textarea"
-                                placeholder="Describe your medical history…"
-                                value={medHistory}
-                                onChange={e => setMedHistory(e.target.value)}
-                                rows={4}
-                            />
-
-                            {/* Hidden inputs for Medical History */}
-                            <input type="file" ref={historyFileRef} style={{ display: 'none' }}
-                                onChange={e => { addFile(setHistoryFiles, e.target.files[0]); e.target.value = ''; }} />
-                            <input type="file" ref={historyImgRef} accept="image/*" style={{ display: 'none' }}
-                                onChange={e => { addFile(setHistoryFiles, e.target.files[0]); e.target.value = ''; }} />
-
-                            {historyFiles.length > 0 && (
-                                <div className="so-attached-list">
-                                    {historyFiles.map((name, i) => (
-                                        <span key={i} className="so-attached-chip">
-                                            📎 {name}
-                                            <button onClick={() => setHistoryFiles(p => p.filter((_, j) => j !== i))}>×</button>
-                                        </span>
-                                    ))}
-                                </div>
-                            )}
-
-                            <div className="so-history-footer">
-                                <div className="so-btn-row" style={{ margin: 0 }}>
-                                    <button className="so-action-btn" onClick={() => historyFileRef.current.click()}><FaPaperclip size={11} /> Attach Files</button>
-                                    <button className="so-action-btn" onClick={() => historyImgRef.current.click()}><FaImage size={11} /> Upload Image</button>
-                                    <button className="so-action-btn"><FaLink size={11} /> Source</button>
-                                </div>
-                                <div className="so-history-submit-row">
-                                    <span className="so-char-count">
-                                        {medHistory.length > 0 ? `${medHistory.length} chars` : '0'}
-                                    </span>
-                                    {respondSent ? (
-                                        <span className="so-respond-ok">✓ Sent</span>
-                                    ) : (
+                    {/* ══ Find a Doctor tab ══════════════════════════════════════ */}
+                    {tab === 'find' && (
+                        <div className="so-find-layout">
+                            <div className="so-find-main">
+                                {/* Specialty filter */}
+                                <div className="so-spec-filter">
+                                    {SPECIALTIES_FILTER.map(s => (
                                         <button
-                                            className="so-respond-btn"
-                                            disabled={!medHistory.trim()}
-                                            onClick={() => {
-                                                if (!medHistory.trim()) return;
-                                                setRespondSent(true);
-                                                setTimeout(() => setRespondSent(false), 3000);
-                                            }}
+                                            key={s}
+                                            className={`so-spec-chip ${specialtyFilter === s ? 'active' : ''}`}
+                                            onClick={() => setSpecialtyFilter(s)}
                                         >
-                                            Respond
+                                            {s}
                                         </button>
-                                    )}
+                                    ))}
                                 </div>
-                            </div>
 
-                            <div className="so-history-extra">
-                                <span className="so-volume-text">Volume: rahments Genricatedn… 11,789</span>
-                                <button className="so-action-btn so-action-dashed">
-                                    <FaPlus size={10} /> Attach Guidelines or Study
-                                </button>
-                            </div>
-                            <p className="so-char-hint">Characters: (9,1,4,200&amp;l)</p>
-                        </div>
-
-                        {/* ── Update Records ── */}
-                        <div className="so-card">
-                            <div className="so-card-head">
-                                <div className="so-card-head-left">
-                                    <h3 className="so-card-title">Update Records</h3>
-                                    <FaCheckCircle size={13} color="#005c55" />
-                                </div>
-                                <div className="so-card-head-right">
-                                    <button className="so-action-btn">
-                                        <FaPlus size={10} /> Add Research / Reports
-                                    </button>
-                                    <FaChevronDown size={10} color="#bbb" />
-                                </div>
-                            </div>
-
-                            {/* Record 1 */}
-                            <div className="so-record">
-                                <div className="so-record-av so-av-teal">W</div>
-                                <div className="so-record-body">
-                                    <div className="so-record-top">
-                                        <span className="so-record-name">Weight</span>
-                                        <span className="so-record-val">185 lbs</span>
-                                        <span className="so-record-img-count">1 image</span>
-                                    </div>
-                                    <p className="so-record-desc">
-                                        Cor atses with prahe with are angoing inprerationl, dry cough that
-                                        has sated for case to ra provth. Could the boce sign, phucing
-                                        consiltont? Sencern that hailth roncors.
-                                    </p>
-                                    <div className="so-record-tags">
-                                        <span className="so-tag-chip">#Cmost</span>
-                                        <span className="so-tag-chip">Pulmonology</span>
-                                        <button className="so-mini-btn so-mini-credid">Credid</button>
-                                        <button className="so-mini-btn so-mini-select">Select ›</button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Record 2 */}
-                            <div className="so-record">
-                                <div className="so-record-av so-av-blue">P</div>
-                                <div className="so-record-body">
-                                    <div className="so-record-top">
-                                        <span className="so-record-name">Dr. Patel</span>
-                                        <span className="so-record-val">185 lbs</span>
-                                        <span className="so-record-img-count">1 image</span>
-                                        <FaChevronDown size={10} color="#bbb" style={{ marginLeft: 'auto' }} />
-                                    </div>
-                                    <p className="so-record-desc">
-                                        I aperteniores, Nguien ating ceve, sit tibe for baine recommeneded
-                                        conseter checking if thae that ory plmual medical historn. U dasnges
-                                        mut boud flor deulingthat atoms.
-                                    </p>
-                                    <div className="so-record-tags">
-                                        <span className="so-tag-chip">#Cmost</span>
-                                        <span className="so-tag-chip">Pulmonology</span>
-                                        <button className="so-mini-btn so-mini-source">Sourcel</button>
-                                        <button className="so-mini-btn so-mini-select">Select ›</button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* FAQ mini row */}
-                            <div className="so-record-faq-row">
-                                <span className="so-rfaq-label">FAQs</span>
-                                <span className="so-rfaq-item">How does a second opinion response?</span>
-                                <span className="so-rfaq-sep">·</span>
-                                <span className="so-rfaq-item">Movical litatitor s…</span>
-                                <span className="so-rfaq-sep">·</span>
-                                <span className="so-rfaq-item">Write resviws my crase?</span>
-                            </div>
-                        </div>
-
-                        {/* ── FAQs ── */}
-                        <div className="so-card">
-                            <h3 className="so-card-title" style={{ marginBottom: '0.75rem' }}>FAQs</h3>
-                            {FAQS.map((faq, i) => (
-                                <div key={i} className="so-faq-item">
-                                    <button className="so-faq-btn" onClick={() => toggleFaq(i)}>
-                                        <span className="so-faq-icon">{faqOpen[i] ? '−' : '+'}</span>
-                                        <span className="so-faq-q">{faq.q}</span>
-                                        <FaChevronRight
-                                            size={10}
-                                            className={`so-faq-chevron ${faqOpen[i] ? 'so-faq-open' : ''}`}
+                                {/* Search doctors */}
+                                <form className="so-doctor-search" onSubmit={handleDoctorSearch}>
+                                    <div className="so-search-wrap">
+                                        <FaSearch className="so-search-icon" />
+                                        <input
+                                            className="so-search-input"
+                                            placeholder="Search doctors by name or specialty…"
+                                            value={doctorSearch}
+                                            onChange={e => setDoctorSearch(e.target.value)}
                                         />
-                                    </button>
-                                    {faqOpen[i] && (
-                                        <p className="so-faq-answer">{faq.a}</p>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
+                                    </div>
+                                </form>
 
-                    </div>
-
-                    {/* ════ RIGHT SIDEBAR ════ */}
-                    <aside className="so-sidebar">
-
-                        {/* ── Choose Physician Specialty ── */}
-                        <div className="so-card">
-                            <h4 className="so-sidebar-title">Choose Physician Specialty</h4>
-
-                            {/* Featured */}
-                            <div className="so-featured-doc">
-                                <div className="so-featured-av" style={{ background: selectedDoc.color }}>
-                                    {selectedDoc.initials}
-                                </div>
-                                <div>
-                                    <p className="so-featured-name">{selectedDoc.name}</p>
-                                    <span className="so-featured-badge">{selectedDoc.specialty}</span>
-                                </div>
+                                {/* Doctors list */}
+                                {loadingDoctors ? (
+                                    <p className="so-loading">Loading doctors…</p>
+                                ) : doctors.length === 0 ? (
+                                    <div className="so-empty-doctors">
+                                        <FaUserMd size={40} color="#ccc" />
+                                        <p>No verified doctors found for this specialty yet.</p>
+                                        <p className="so-empty-hint">Are you a doctor? <button className="so-link-btn" onClick={() => navigate('/doctor-portal')}>Register here</button></p>
+                                    </div>
+                                ) : (
+                                    <div className="so-doctors-list">
+                                        {doctors.map(doc => (
+                                            <div
+                                                key={doc.id}
+                                                className={`so-doctor-card ${selectedDoctor?.id === doc.id ? 'selected' : ''}`}
+                                                onClick={() => { setSelectedDoctor(doc); setSubmitted(false); }}
+                                            >
+                                                <UserAvatar name={doc.name} avatarUrl={doc.avatarUrl} size={48} />
+                                                <div className="so-doctor-info">
+                                                    <div className="so-doctor-name-row">
+                                                        <span className="so-doctor-name">{doc.name}</span>
+                                                        <span className="so-verified-badge"><FaCheckCircle size={11} /> Verified</span>
+                                                    </div>
+                                                    {doc.doctorSpecialties?.length > 0 && (
+                                                        <div className="so-doctor-specs">
+                                                            {doc.doctorSpecialties.slice(0, 3).map(s => (
+                                                                <span key={s} className="so-spec-pill">{s}</span>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                    {doc.doctorBio && <p className="so-doctor-bio">{doc.doctorBio}</p>}
+                                                    <div className="so-doctor-meta">
+                                                        {doc.yearsExperience > 0 && <span><FaStar size={11} color="#f9a825" /> {doc.yearsExperience} yrs experience</span>}
+                                                        <span>{doc.completedConsultations} consultations completed</span>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    className={`so-select-btn ${selectedDoctor?.id === doc.id ? 'active' : ''}`}
+                                                    onClick={(e) => { e.stopPropagation(); setSelectedDoctor(doc); setSubmitted(false); }}
+                                                >
+                                                    {selectedDoctor?.id === doc.id ? '✓ Selected' : 'Select'}
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
-                            <p className="so-featured-tag">{selectedDoc.tag}</p>
 
-                            {/* List */}
-                            <div className="so-doc-list">
-                                {filteredDoctors.map(doc => (
-                                    <div
-                                        key={doc.id}
-                                        className={`so-doc-row ${selectedDoc.id === doc.id ? 'so-doc-row-active' : ''}`}
-                                    >
-                                        <div className="so-doc-av" style={{ background: doc.color }}>
-                                            {doc.initials}
+                            {/* Right panel — request form / FAQs */}
+                            <div className="so-find-sidebar">
+                                {/* Request form */}
+                                {selectedDoctor && !submitted ? (
+                                    <div className="so-request-panel">
+                                        <h3 className="so-panel-title">Request Consultation</h3>
+                                        <div className="so-selected-doc-row">
+                                            <UserAvatar name={selectedDoctor.name} avatarUrl={selectedDoctor.avatarUrl} size={36} />
+                                            <div>
+                                                <p className="so-selected-doc-name">{selectedDoctor.name}</p>
+                                                <p className="so-selected-doc-spec">{selectedDoctor.doctorSpecialties?.slice(0,2).join(', ')}</p>
+                                            </div>
+                                            <button className="so-deselect-btn" onClick={() => setSelectedDoctor(null)}>
+                                                <FaTimes size={12} />
+                                            </button>
                                         </div>
-                                        <div className="so-doc-info">
-                                            <p className="so-doc-name">{doc.name}</p>
-                                            <span className="so-doc-spec">{doc.specialty}</span>
-                                        </div>
-                                        <button
-                                            className={`so-select-btn ${selectedDoc.id === doc.id ? 'so-selected' : ''}`}
-                                            onClick={() => setSelectedDoc(doc)}
-                                        >
-                                            {selectedDoc.id === doc.id ? 'Selected' : 'Select'}
+                                        <form onSubmit={handleRequestConsultation}>
+                                            <label className="so-form-label">Describe your concern *</label>
+                                            <textarea
+                                                className="so-concern-textarea"
+                                                rows={5}
+                                                placeholder="Describe your symptoms, diagnosis, or the question you'd like a second opinion on…"
+                                                value={concern}
+                                                onChange={e => setConcern(e.target.value)}
+                                                required
+                                                maxLength={2000}
+                                            />
+                                            <button
+                                                type="submit"
+                                                className="so-submit-btn"
+                                                disabled={submitting || !concern.trim()}
+                                            >
+                                                {submitting ? 'Sending…' : 'Send Consultation Request'}
+                                            </button>
+                                        </form>
+                                    </div>
+                                ) : submitted ? (
+                                    <div className="so-submitted-panel">
+                                        <FaCheckCircle size={36} color="#2e7d32" />
+                                        <h3>Request Sent!</h3>
+                                        <p>Your consultation request has been sent to <strong>{selectedDoctor?.name}</strong>. They will respond within 24–48 hours.</p>
+                                        <button className="so-new-request-btn" onClick={() => { setSubmitted(false); setSelectedDoctor(null); setTab('my-consultations'); }}>
+                                            View My Requests
                                         </button>
                                     </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* ── Help & Resources ── */}
-                        <div className="so-card">
-                            <div className="so-card-head">
-                                <h4 className="so-sidebar-title" style={{ margin: 0 }}>Help &amp; Resources</h4>
-                                <button className="so-mini-btn so-mini-select">Select</button>
-                            </div>
-                            <div className="so-resource-list">
-                                {RESOURCES.map((r, i) => (
-                                    <div key={i} className="so-resource-row">
-                                        <div className="so-resource-thumb" />
-                                        <span className="so-resource-label">{r}</span>
+                                ) : (
+                                    <div className="so-select-prompt">
+                                        <FaUserMd size={32} color="#ccc" />
+                                        <p>Select a doctor to request a consultation</p>
                                     </div>
-                                ))}
+                                )}
+
+                                {/* FAQs */}
+                                <div className="so-faqs-panel">
+                                    <h3 className="so-panel-title">Frequently Asked Questions</h3>
+                                    {FAQS.map((f, i) => (
+                                        <div key={i} className="so-faq-item">
+                                            <button className="so-faq-q" onClick={() => setOpenFaq(openFaq === i ? null : i)}>
+                                                {f.q}
+                                                {openFaq === i ? <FaChevronUp size={11} /> : <FaChevronDown size={11} />}
+                                            </button>
+                                            {openFaq === i && <p className="so-faq-a">{f.a}</p>}
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
+                    )}
 
-                        {/* ── Summarize & Submit ── */}
-                        <div className="so-card">
-                            <h4 className="so-sidebar-title">Summarize &amp; Submit Case</h4>
-
-                            <p className="so-submit-caption">Selected Opinion</p>
-                            <div className="so-submit-doc-row">
-                                <div className="so-doc-av" style={{ background: selectedDoc.color }}>
-                                    {selectedDoc.initials}
-                                </div>
-                                <div className="so-doc-info">
-                                    <p className="so-doc-name">{selectedDoc.name}</p>
-                                    <span className="so-doc-spec">{selectedDoc.specialty}</span>
-                                </div>
-                            </div>
-
-                            <div className="so-submit-tags">
-                                <span className="so-submit-tag">✓ {selectedDoc.specialty}</span>
-                                <span className="so-submit-tag">✓ Persistent dry cough</span>
-                            </div>
-
-                            <p className="so-submit-note">
-                                <em>Sattgorrial Reports</em> — if oftas chalise: serces
-                            </p>
-
-                            <div className="so-checklist">
-                                {SUBMIT_CHECKS.map((c, i) => (
-                                    <label key={i} className="so-check-row">
-                                        <input type="checkbox" defaultChecked className="so-checkbox" />
-                                        <span>{c}</span>
-                                    </label>
-                                ))}
-                            </div>
-
-                            {submitted ? (
-                                <div className="so-success-msg">
-                                    <FaCheck size={12} /> Case submitted successfully!
+                    {/* ══ My Consultations tab ═══════════════════════════════════ */}
+                    {tab === 'my-consultations' && (
+                        <div className="so-consults-section">
+                            {loadingConsults ? (
+                                <p className="so-loading">Loading…</p>
+                            ) : consultations.length === 0 ? (
+                                <div className="so-empty-consults">
+                                    <FaCalendarAlt size={40} color="#ccc" />
+                                    <p>{isDoctor ? 'No consultation requests yet.' : "You haven't requested any consultations yet."}</p>
+                                    {!isDoctor && (
+                                        <button className="so-submit-btn" onClick={() => setTab('find')}>
+                                            Find a Doctor
+                                        </button>
+                                    )}
                                 </div>
                             ) : (
-                                <button
-                                    className="so-submit-btn"
-                                    onClick={handleSubmit}
-                                    disabled={!concern.trim() || submitting}
-                                >
-                                    {submitting ? 'Submitting…' : 'Submit Case for Review'}
-                                </button>
+                                <div className="so-consults-list">
+                                    {consultations.map(c => {
+                                        const statusMeta = STATUS_COLORS[c.status] || STATUS_COLORS.pending;
+                                        const otherName = isDoctor ? c.patientName : c.doctorName;
+                                        const otherAvatar = isDoctor ? c.patientAvatar : c.doctorAvatar;
+                                        return (
+                                            <div key={c.id} className="so-consult-card">
+                                                <div className="so-consult-header">
+                                                    <div className="so-consult-who">
+                                                        <UserAvatar name={otherName} avatarUrl={otherAvatar} size={42} />
+                                                        <div>
+                                                            <p className="so-consult-name">{otherName}</p>
+                                                            {!isDoctor && c.doctorSpecialties?.length > 0 && (
+                                                                <p className="so-consult-spec">{c.doctorSpecialties.slice(0,2).join(', ')}</p>
+                                                            )}
+                                                            {isDoctor && <p className="so-consult-spec">Patient</p>}
+                                                        </div>
+                                                    </div>
+                                                    <span className="so-status-badge" style={{ background: statusMeta.bg, color: statusMeta.color }}>
+                                                        {statusMeta.label}
+                                                    </span>
+                                                </div>
+
+                                                <p className="so-consult-concern">{c.concern}</p>
+
+                                                {c.notes && (
+                                                    <div className="so-consult-notes">
+                                                        <strong>Doctor's notes:</strong> {c.notes}
+                                                    </div>
+                                                )}
+
+                                                {/* Doctor actions */}
+                                                {isDoctor && c.status === 'pending' && (
+                                                    <div className="so-doctor-actions">
+                                                        <button className="so-accept-btn" onClick={() => updateConsultation(c.id, 'accepted')}>
+                                                            <FaCheckCircle size={13} /> Accept & Create Call Link
+                                                        </button>
+                                                        <button className="so-decline-btn" onClick={() => updateConsultation(c.id, 'declined')}>
+                                                            <FaTimes size={13} /> Decline
+                                                        </button>
+                                                    </div>
+                                                )}
+
+                                                {/* Join call button */}
+                                                {c.status === 'accepted' && c.meetingUrl && (
+                                                    <div className="so-call-row">
+                                                        <button className="so-video-btn" onClick={() => joinCall(c)}>
+                                                            <FaVideo size={14} /> Join Video Call
+                                                        </button>
+                                                        <button className="so-audio-btn" onClick={() => joinCall(c)}>
+                                                            <FaPhone size={14} /> Audio Only
+                                                        </button>
+                                                        {isDoctor && (
+                                                            <button className="so-complete-btn" onClick={() => updateConsultation(c.id, 'completed')}>
+                                                                Mark Complete
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                <p className="so-consult-date">
+                                                    {new Date(c.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                                                </p>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             )}
                         </div>
+                    )}
+                </main>
+            </div>
 
-                        {/* ── Help bottom ── */}
-                        <div className="so-card">
-                            <h4 className="so-sidebar-title">Help &amp; Resources</h4>
-                            <button
-                                className="so-support-link"
-                                onClick={() => navigate('/dashboard')}
-                            >
-                                Contact MedBuddie Support
-                                <FaChevronRight size={10} />
+            {/* ── Video call modal ─────────────────────────────────────────── */}
+            {callModal && (
+                <div className="call-modal-overlay">
+                    <div className="call-modal-box">
+                        <div className="call-modal-header">
+                            <span>Call with {callModal.doctorName}</span>
+                            <button className="call-modal-close" onClick={() => setCallModal(null)}>
+                                <FaTimes size={16} />
                             </button>
                         </div>
-
-                    </aside>
-
+                        <div className="call-modal-body">
+                            <div className="call-info-row">
+                                <FaVideo size={18} color="#005c55" />
+                                <span>Secure video call powered by Jitsi Meet</span>
+                            </div>
+                            <p className="call-room-url">{callModal.url}</p>
+                            <div className="call-actions">
+                                <a
+                                    href={callModal.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="call-open-btn"
+                                >
+                                    <FaVideo size={15} /> Open Video Call
+                                </a>
+                                <p className="call-hint">Opens in a new tab — no download required. Works on Chrome, Firefox, and Safari.</p>
+                            </div>
+                            <div className="call-tips">
+                                <strong>Before joining:</strong>
+                                <ul>
+                                    <li>Allow camera and microphone access when prompted</li>
+                                    <li>Find a quiet, private location</li>
+                                    <li>Have your medical records ready to discuss</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }

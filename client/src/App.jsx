@@ -12,25 +12,19 @@ import GuidelinesPage from './components/Guidelines/GuidelinesPage';
 import GuidelineDetail from './components/Guidelines/GuidelineDetail';
 import HealthMetricsPage from './components/Profile/HealthMetricsPage';
 import SecondOpinionPage from './components/SecondOpinion/SecondOpinionPage';
+import MedBuddiesPage from './components/MedBuddies/MedBuddiesPage';
+import CommunitiesPage from './components/Communities/CommunitiesPage';
+import CommunityDetailPage from './components/Communities/CommunityDetailPage';
+import TopArticlesPage from './components/TopArticles/TopArticlesPage';
+import DoctorPortalPage from './components/DoctorPortal/DoctorPortalPage';
 import { UserProvider, useUser } from './context/UserContext.jsx';
 
-/**
- * PrivateRoute — waits for the auth session to be restored from localStorage
- * before deciding whether to render or redirect. Without the `loading` guard,
- * a hard refresh causes user === null for one render tick, which incorrectly
- * sends the user to /signin even though they have a valid stored session.
- */
 function PrivateRoute({ element }) {
     const { user, loading } = useUser();
-    if (loading) return null;            // session not yet hydrated — render nothing
+    if (loading) return null;
     return user ? element : <Navigate to="/signin" replace />;
 }
 
-/**
- * SmartRedirect — used as the catch-all for unknown paths.
- * Logged-in users who click an unimplemented sidebar link land back on
- * the dashboard; unauthenticated visitors see the home page.
- */
 function SmartRedirect() {
     const { user, loading } = useUser();
     if (loading) return null;
@@ -46,28 +40,30 @@ function AppRoutes() {
             <Route path="/facebook-callback" element={<FacebookCallback />} />
 
             {/* Protected routes */}
-            <Route path="/dashboard"    element={<PrivateRoute element={<Dashboard />} />} />
+            <Route path="/dashboard"     element={<PrivateRoute element={<Dashboard />} />} />
             <Route path="/guidelines"    element={<PrivateRoute element={<GuidelinesPage />} />} />
             <Route path="/guidelines/:id" element={<PrivateRoute element={<GuidelineDetail />} />} />
-            <Route path="/profile"      element={<PrivateRoute element={<ProfilePage />} />} />
-            <Route path="/edit-profile"    element={<PrivateRoute element={<EditProfilePage />} />} />
-            <Route path="/health-metrics"  element={<PrivateRoute element={<HealthMetricsPage />} />} />
+            <Route path="/profile"       element={<PrivateRoute element={<ProfilePage />} />} />
+            <Route path="/edit-profile"  element={<PrivateRoute element={<EditProfilePage />} />} />
+            <Route path="/health-metrics" element={<PrivateRoute element={<HealthMetricsPage />} />} />
             <Route path="/second-opinion" element={<PrivateRoute element={<SecondOpinionPage />} />} />
 
-            {/* ── Sidebar links that redirect to implemented equivalents ── */}
-            {/* Activity, Diet, Medications → Health Metrics page */}
+            {/* New feature routes */}
+            <Route path="/medbuddies"    element={<PrivateRoute element={<MedBuddiesPage />} />} />
+            <Route path="/following"     element={<PrivateRoute element={<MedBuddiesPage />} />} />
+            <Route path="/communities"   element={<PrivateRoute element={<CommunitiesPage />} />} />
+            <Route path="/communities/:id" element={<PrivateRoute element={<CommunityDetailPage />} />} />
+            <Route path="/top-articles"  element={<PrivateRoute element={<TopArticlesPage />} />} />
+            <Route path="/doctor-portal" element={<PrivateRoute element={<DoctorPortalPage />} />} />
+
+            {/* Health metrics sub-routes */}
             <Route path="/activity"    element={<PrivateRoute element={<HealthMetricsPage />} />} />
             <Route path="/diet"        element={<PrivateRoute element={<HealthMetricsPage />} />} />
             <Route path="/medications" element={<PrivateRoute element={<HealthMetricsPage />} />} />
-            {/* Top Articles, Recommended → Guidelines */}
-            <Route path="/top-articles"  element={<PrivateRoute element={<GuidelinesPage />} />} />
-            <Route path="/recommended"   element={<PrivateRoute element={<GuidelinesPage />} />} />
-            {/* MedBuddies, Following, Communities → Dashboard (coming soon) */}
-            <Route path="/medbuddies"  element={<PrivateRoute element={<Dashboard />} />} />
-            <Route path="/following"   element={<PrivateRoute element={<Dashboard />} />} />
-            <Route path="/communities" element={<PrivateRoute element={<Dashboard />} />} />
 
-            {/* Any unknown path: logged-in → dashboard, logged-out → home */}
+            {/* Recommended → Guidelines */}
+            <Route path="/recommended" element={<PrivateRoute element={<GuidelinesPage />} />} />
+
             <Route path="*" element={<SmartRedirect />} />
         </Routes>
     );

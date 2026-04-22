@@ -1473,23 +1473,44 @@
 .post-menu-delete { color: #c0392b; }
 .post-menu-delete:hover { background: #fff5f5; }
 
+/* Author row with avatar */
+.post-card-author-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0.3rem;
+}
+
 /* Author name */
 .post-card-author {
     font-size: 0.87rem;
     font-weight: 700;
     color: #0a2a33;
-    margin: 0 0 0.3rem;
+    margin: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
 .post-badge {
-    display: inline;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
     background: none;
     color: #005c55;
     font-size: 0.76rem;
     font-weight: 500;
+}
+
+.post-badge-doctor {
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 1px 6px;
+    border-radius: 20px;
+    font-size: 0.72rem;
 }
 
 /* Content preview: 3-line clamp */

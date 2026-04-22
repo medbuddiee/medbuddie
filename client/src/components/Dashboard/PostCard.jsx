@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import './Dashboard.css';
 import {
     FaCommentAlt, FaHeart, FaEllipsisH, FaTrash, FaLink,
-    FaUserMd, FaUser, FaQuestion, FaChevronRight,
+    FaUserMd, FaUser, FaQuestion, FaChevronRight, FaCheckCircle,
 } from 'react-icons/fa';
+import UserAvatar from '../common/UserAvatar';
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
 function timeAgo(iso) {
@@ -188,13 +189,21 @@ export default function PostCard({ post, currentUserId, onLike, onDelete, onComm
                         </div>
                     </div>
 
-                    {/* Author name + physician badge */}
-                    <p className="post-card-author">
-                        {post.author || post.username}
-                        {post.type === 'medical_opinion' && (
-                            <span className="post-badge"> · Physician</span>
-                        )}
-                    </p>
+                    {/* Author row: avatar + name + badge */}
+                    <div className="post-card-author-row">
+                        <UserAvatar name={post.author} avatarUrl={post.authorAvatar} size={28} />
+                        <p className="post-card-author">
+                            {post.author || post.username}
+                            {post.authorIsDoctor && (
+                                <span className="post-badge post-badge-doctor">
+                                    <FaCheckCircle size={9} /> Verified Doctor
+                                </span>
+                            )}
+                            {!post.authorIsDoctor && post.type === 'medical_opinion' && (
+                                <span className="post-badge"> · Physician</span>
+                            )}
+                        </p>
+                    </div>
 
                     {/* Post content preview */}
                     <p className="post-card-preview">{post.content}</p>
@@ -248,9 +257,7 @@ export default function PostCard({ post, currentUserId, onLike, onDelete, onComm
 
                     {comments.map(c => (
                         <div key={c.id} className="comment-item">
-                            <div className="comment-avatar">
-                                {c.author?.[0]?.toUpperCase() || 'U'}
-                            </div>
+                            <UserAvatar name={c.author} avatarUrl={c.authorAvatar} size={30} />
                             <div className="comment-body">
                                 <span className="comment-author">{c.author}</span>
                                 <p className="comment-text">{c.content}</p>

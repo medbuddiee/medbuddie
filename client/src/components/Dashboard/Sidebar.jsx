@@ -5,19 +5,20 @@ import logo from '../../../assets/medbuddie_logo.png';
 import {
     FaHome, FaBookOpen, FaStar, FaNewspaper,
     FaUserFriends, FaUsers, FaComments, FaChartLine,
-    FaRunning, FaAppleAlt, FaPills, FaSearch,
+    FaRunning, FaAppleAlt, FaPills, FaSearch, FaUserMd,
 } from 'react-icons/fa';
 import { MdOutlinePersonSearch } from 'react-icons/md';
 
 const NAV_TOP = [
-    { icon: <FaHome />, label: 'Health Feed', path: '/dashboard' },
-    { icon: <FaBookOpen />, label: 'Current Guidelines', path: '/guidelines' },
-    { icon: <FaStar />, label: 'Top Articles of the Week', path: '/top-articles' },
-    { icon: <FaNewspaper />, label: 'Recommended Articles', path: '/recommended' },
-    { icon: <FaUserFriends />, label: 'MedBuddies', path: '/medbuddies' },
+    { icon: <FaHome />,     label: 'Health Feed',            path: '/dashboard' },
+    { icon: <FaBookOpen />, label: 'Current Guidelines',     path: '/guidelines' },
+    { icon: <FaStar />,     label: 'Top Articles of the Week', path: '/top-articles' },
+    { icon: <FaNewspaper />, label: 'Recommended Articles',  path: '/recommended' },
+    { icon: <FaUserFriends />, label: 'MedBuddies',          path: '/medbuddies' },
     { icon: <MdOutlinePersonSearch size={16} />, label: 'Following', path: '/following' },
-    { icon: <FaUsers />, label: 'Communities', path: '/communities' },
-    { icon: <FaComments />, label: 'Second Opinion', path: '/second-opinion' },
+    { icon: <FaUsers />,    label: 'Communities',            path: '/communities' },
+    { icon: <FaComments />, label: 'Second Opinion',         path: '/second-opinion' },
+    { icon: <FaUserMd />,   label: 'Doctor Portal',          path: '/doctor-portal' },
 ];
 
 const NAV_BOTTOM = [

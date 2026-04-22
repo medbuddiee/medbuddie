@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import './Dashboard.css';
 import logo from '../../../assets/medbuddie_logo.png';
-import { FaSearch, FaCog, FaBell, FaUserCircle, FaTimes, FaUser } from 'react-icons/fa';
+import { FaSearch, FaCog, FaBell, FaTimes, FaUser } from 'react-icons/fa';
+import UserAvatar from '../common/UserAvatar';
 import { MdArticle } from 'react-icons/md';
 
 /** Truncate a string to maxLen chars, appending "…" if needed */
@@ -257,7 +258,7 @@ export default function TopNav({ searchQuery, onSearch }) {
                     onClick={handleLogout}
                     title={`Signed in as ${user?.name || user?.email} — click to sign out`}
                 >
-                    <FaUserCircle size={28} />
+                    <UserAvatar name={user?.name} avatarUrl={user?.avatarUrl} size={32} />
                 </button>
             </div>
         </header>
