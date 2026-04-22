@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
+import Sidebar from '../Dashboard/Sidebar';
+import TopNav from '../Dashboard/TopNav';
 import './Guidelines.css';
-import logo from '../../../assets/medbuddie_logo.png';
 import {
-    FaBell, FaCog, FaUserCircle, FaChevronRight, FaChevronLeft,
+    FaChevronRight, FaChevronLeft,
     FaBookmark, FaExternalLinkAlt, FaHeart,
 } from 'react-icons/fa';
 
@@ -131,9 +132,14 @@ export default function GuidelineDetail() {
     // ── Loading ───────────────────────────────────────────────────────────────
     if (loading) {
         return (
-            <div className="gl-shell">
-                <TopBar user={user} onLogout={handleLogout} onBack={() => navigate('/guidelines')} />
-                <div className="gd-loading-wrap"><p className="gl-loading">Loading guideline…</p></div>
+            <div className="dashboard-shell">
+                <TopNav searchQuery="" onSearch={() => {}} />
+                <div className="dashboard-body">
+                <Sidebar />
+                <div className="gl-shell-inner">
+                    <div className="gd-loading-wrap"><p className="gl-loading">Loading guideline…</p></div>
+                </div>
+                </div>
             </div>
         );
     }
@@ -141,29 +147,34 @@ export default function GuidelineDetail() {
     // ── Error states ──────────────────────────────────────────────────────────
     if (error) {
         return (
-            <div className="gl-shell">
-                <TopBar user={user} onLogout={handleLogout} onBack={() => navigate('/guidelines')} />
-                <div className="gd-loading-wrap">
-                    {error === 'no-content' ? (
-                        <div className="gd-error-box">
-                            <p className="gd-error-title">Full content not yet available</p>
-                            <p className="gd-error-sub">
-                                Detailed content for this guideline has not been added yet.
-                                Check back soon or browse other guidelines.
-                            </p>
-                            <button className="gd-back-btn" onClick={() => navigate('/guidelines')}>
-                                <FaChevronLeft size={12} /> Back to Guidelines
-                            </button>
-                        </div>
-                    ) : (
-                        <div className="gd-error-box">
-                            <p className="gd-error-title">Could not load guideline</p>
-                            <p className="gd-error-sub">Please try again later.</p>
-                            <button className="gd-back-btn" onClick={() => navigate('/guidelines')}>
-                                <FaChevronLeft size={12} /> Back to Guidelines
-                            </button>
-                        </div>
-                    )}
+            <div className="dashboard-shell">
+                <TopNav searchQuery="" onSearch={() => {}} />
+                <div className="dashboard-body">
+                <Sidebar />
+                <div className="gl-shell-inner">
+                    <div className="gd-loading-wrap">
+                        {error === 'no-content' ? (
+                            <div className="gd-error-box">
+                                <p className="gd-error-title">Full content not yet available</p>
+                                <p className="gd-error-sub">
+                                    Detailed content for this guideline has not been added yet.
+                                    Check back soon or browse other guidelines.
+                                </p>
+                                <button className="gd-back-btn" onClick={() => navigate('/guidelines')}>
+                                    <FaChevronLeft size={12} /> Back to Guidelines
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="gd-error-box">
+                                <p className="gd-error-title">Could not load guideline</p>
+                                <p className="gd-error-sub">Please try again later.</p>
+                                <button className="gd-back-btn" onClick={() => navigate('/guidelines')}>
+                                    <FaChevronLeft size={12} /> Back to Guidelines
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
                 </div>
             </div>
         );
@@ -172,9 +183,11 @@ export default function GuidelineDetail() {
     const currentSection = guideline.sections?.find(s => s.id === activeSection);
 
     return (
-        <div className="gl-shell">
-            {/* ── Top nav ── */}
-            <TopBar user={user} onLogout={handleLogout} onBack={() => navigate('/guidelines')} />
+        <div className="dashboard-shell">
+            <TopNav searchQuery="" onSearch={() => {}} />
+            <div className="dashboard-body">
+            <Sidebar />
+            <div className="gl-shell-inner">
 
             {/* ── Hero ── */}
             <div className="gd-hero">
@@ -366,11 +379,13 @@ export default function GuidelineDetail() {
                     <span className="gl-footer-links">DOI: {guideline.doi}</span>
                 )}
             </footer>
+            </div>
+            </div>
         </div>
     );
 }
 
-/** Shared top nav for the detail page */
+/** Shared top nav for the detail page (kept for reference, no longer used) */
 function TopBar({ user, onLogout, onBack }) {
     const navigate = useNavigate();
     return (

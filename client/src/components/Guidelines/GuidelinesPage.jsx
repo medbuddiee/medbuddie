@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
+import Sidebar from '../Dashboard/Sidebar';
+import TopNav from '../Dashboard/TopNav';
 import './Guidelines.css';
-import logo from '../../../assets/medbuddie_logo.png';
 import {
-    FaSearch, FaCog, FaBell, FaUserCircle, FaHeart,
+    FaSearch, FaHeart,
     FaWind, FaSyringe, FaBrain, FaBone, FaTint,
     FaRibbon, FaVirus, FaUserMd, FaLeaf, FaBookmark,
     FaChevronRight, FaFilter,
@@ -172,31 +173,11 @@ export default function GuidelinesPage() {
     const meta = (spec) => SPECIALTY_META[spec] || { icon: FaHeart, color: '#005c55', bg: '#e0f2f1' };
 
     return (
-        <div className="gl-shell">
-
-            {/* ── Top nav ── */}
-            <header className="gl-topnav">
-                <div className="gl-topnav-left" onClick={() => navigate('/dashboard')} style={{ cursor: 'pointer' }}>
-                    <img src={logo} alt="MedBuddie" width="28" height="28" />
-                    <span className="gl-topnav-brand">MedBuddie</span>
-                </div>
-                <nav className="gl-subnav">
-                    <button className="gl-subnav-item" onClick={() => navigate('/dashboard')}>Dashboard</button>
-                    <button className="gl-subnav-item" onClick={() => navigate('/second-opinion')}>Community Forum</button>
-                    <button className="gl-subnav-item gl-subnav-active">Most Recent Guidelines</button>
-                </nav>
-                <div className="gl-topnav-right">
-                    <button className="gl-icon-btn" aria-label="Notifications"><FaBell /></button>
-                    <button className="gl-icon-btn" aria-label="Settings"><FaCog /></button>
-                    <button
-                        className="gl-avatar-btn"
-                        onClick={handleLogout}
-                        title={`${user?.name || user?.email} — click to sign out`}
-                    >
-                        <FaUserCircle size={26} />
-                    </button>
-                </div>
-            </header>
+        <div className="dashboard-shell">
+            <TopNav searchQuery="" onSearch={() => {}} />
+            <div className="dashboard-body">
+            <Sidebar />
+            <div className="gl-shell-inner">
 
             {/* ── Hero ── */}
             <div className="gl-hero">
@@ -423,6 +404,8 @@ export default function GuidelinesPage() {
                     Medications &bull; Infectious Media &bull; MedBuddie Discussions
                 </span>
             </footer>
+            </div>
+            </div>
         </div>
     );
 }

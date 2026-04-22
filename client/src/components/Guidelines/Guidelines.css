@@ -4,13 +4,13 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    PAGE SHELL
    ══════════════════════════════════════════════════════════════════════════ */
-.gl-shell {
-    min-height: 100vh;
+.gl-shell { display: none; } /* replaced by dashboard-shell */
+
+.gl-shell-inner {
+    flex: 1;
+    overflow-y: auto;
+    min-width: 0;
     background: #f5f7fa;
-    font-family: 'Inter', 'Segoe UI', sans-serif;
-    color: #1a1a1a;
-    display: flex;
-    flex-direction: column;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

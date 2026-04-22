@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
+import Sidebar from '../Dashboard/Sidebar';
+import TopNav from '../Dashboard/TopNav';
 import './Profile.css';
-import logo from '../../../assets/medbuddie_logo.png';
-import { FaCog } from 'react-icons/fa';
 
 const FREQUENCIES = ['Once daily', 'Twice daily', 'Three times daily', 'Weekly', 'As needed'];
 
@@ -105,29 +105,11 @@ export default function EditProfilePage() {
     if (!form) return <div className="loading">Loading profile…</div>;
 
     return (
-        <div className="edit-page-shell">
-            {/* ── Header ── */}
-            <header className="edit-header">
-                <div
-                    className="edit-header-logo"
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => navigate('/dashboard')}
-                >
-                    <img src={logo} alt="MedBuddie" width="32" height="32" />
-                    <span className="edit-brand">MedBuddie</span>
-                </div>
-                <button
-                    className="icon-btn"
-                    aria-label="Settings"
-                    title="Settings"
-                    onClick={() => navigate('/edit-profile')}
-                >
-                    <FaCog size={20} color="#888" />
-                </button>
-            </header>
-
-            {/* ── Form ── */}
-            <div className="edit-profile-page">
+        <div className="dashboard-shell">
+            <TopNav searchQuery="" onSearch={() => {}} />
+            <div className="dashboard-body">
+            <Sidebar />
+            <div className="edit-profile-page profile-page-scrollable">
                 <form className="edit-profile-form" onSubmit={handleSubmit}>
                     {/* Avatar */}
                     <div className="avatar-container">
@@ -283,6 +265,7 @@ export default function EditProfilePage() {
                         </button>
                     </div>
                 </form>
+            </div>
             </div>
         </div>
     );

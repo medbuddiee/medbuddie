@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
+import Sidebar from '../Dashboard/Sidebar';
+import TopNav from '../Dashboard/TopNav';
 import './Profile.css';
-import logo from '../../../assets/medbuddie_logo.png';
-import { FaSearch, FaCog, FaUserCircle } from 'react-icons/fa';
 
 const TABS = ['Health Overview', 'My Posts', 'Communities & Followers', 'Second Opinions'];
 
@@ -82,46 +82,11 @@ export default function ProfilePage() {
     const meds = display.medications?.filter((m) => m.name) || [];
 
     return (
-        <div className="profile-shell">
-            {/* ── Top Navigation ── */}
-            <header className="profile-topnav">
-                <div
-                    className="profile-topnav-left"
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => navigate('/dashboard')}
-                >
-                    <img src={logo} alt="MedBuddie" width="32" height="32" />
-                    <span className="profile-topnav-brand">MedBuddie</span>
-                </div>
-                <div className="profile-topnav-right">
-                    <button
-                        className="icon-btn"
-                        aria-label="Search"
-                        title="Go to dashboard to search"
-                        onClick={() => navigate('/dashboard')}
-                    >
-                        <FaSearch />
-                    </button>
-                    <button
-                        className="icon-btn"
-                        aria-label="Settings"
-                        title="Edit profile"
-                        onClick={() => navigate('/edit-profile')}
-                    >
-                        <FaCog />
-                    </button>
-                    <button
-                        className="icon-btn"
-                        aria-label="Dashboard"
-                        title="Back to dashboard"
-                        onClick={() => navigate('/dashboard')}
-                    >
-                        <FaUserCircle size={24} />
-                    </button>
-                </div>
-            </header>
-
-            <div className="profile-page">
+        <div className="dashboard-shell">
+            <TopNav searchQuery="" onSearch={() => {}} />
+            <div className="dashboard-body">
+            <Sidebar />
+            <div className="profile-page profile-page-scrollable">
                 {/* ── Profile Header ── */}
                 <div className="profile-header">
                     <div className="profile-info">
@@ -315,6 +280,7 @@ export default function ProfilePage() {
                         <p className="empty-text">No second opinions requested yet.</p>
                     </div>
                 )}
+            </div>
             </div>
         </div>
     );

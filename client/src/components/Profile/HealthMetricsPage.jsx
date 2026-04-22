@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
+import Sidebar from '../Dashboard/Sidebar';
+import TopNav from '../Dashboard/TopNav';
 import './Profile.css';
 import './HealthMetrics.css';
-import logo from '../../../assets/medbuddie_logo.png';
 import {
-    FaArrowLeft, FaHeartbeat, FaRunning, FaAppleAlt,
+    FaHeartbeat, FaRunning, FaAppleAlt,
     FaPills, FaWeight, FaChartLine, FaTint, FaFire,
 } from 'react-icons/fa';
 
@@ -88,20 +89,11 @@ export default function HealthMetricsPage() {
     const calDietPct  = Math.round((diet.calories  / diet.caloriesGoal)  * 100);
 
     return (
-        <div className="profile-shell">
-
-            {/* ── Top nav ── */}
-            <header className="profile-topnav">
-                <div className="profile-topnav-left" style={{ cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>
-                    <img src={logo} alt="MedBuddie" width="32" height="32" />
-                    <span className="profile-topnav-brand">MedBuddie</span>
-                </div>
-                <button className="hm-back-btn" onClick={() => navigate('/dashboard')}>
-                    <FaArrowLeft size={12} /> Back to Dashboard
-                </button>
-            </header>
-
-            <div className="hm-page">
+        <div className="dashboard-shell">
+            <TopNav searchQuery="" onSearch={() => {}} />
+            <div className="dashboard-body">
+            <Sidebar />
+            <div className="hm-page profile-page-scrollable">
 
                 {/* ── Page title ── */}
                 <div className="hm-page-title-row">
@@ -404,6 +396,7 @@ export default function HealthMetricsPage() {
                     </button>
                 </div>
 
+            </div>
             </div>
         </div>
     );

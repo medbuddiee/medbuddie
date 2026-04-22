@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import './Dashboard.css';
 import logo from '../../../assets/medbuddie_logo.png';
-import { FaSearch, FaCog, FaBell, FaTimes, FaUser } from 'react-icons/fa';
+import { FaSearch, FaCog, FaBell, FaTimes, FaUser, FaUserCircle, FaSignOutAlt, FaEdit } from 'react-icons/fa';
 import UserAvatar from '../common/UserAvatar';
 import { MdArticle } from 'react-icons/md';
 
@@ -29,22 +29,25 @@ export default function TopNav({ searchQuery, onSearch }) {
     const [dropdownResults, setDropdownResults] = useState({ posts: [], users: [] });
     const [showDropdown, setShowDropdown]   = useState(false);
     const [searching, setSearching]         = useState(false);
+    const [showUserMenu, setShowUserMenu]   = useState(false);
 
-    const containerRef = useRef(null);
-    const inputRef     = useRef(null);
-    const debounceRef  = useRef(null);
+    const containerRef  = useRef(null);
+    const inputRef      = useRef(null);
+    const debounceRef   = useRef(null);
+    const userMenuRef   = useRef(null);
 
     // Keep input in sync when Feed search is cleared externally (e.g. "Back to feed")
     useEffect(() => {
         if (!searchQuery) setInputValue('');
     }, [searchQuery]);
 
-    // Close dropdown when clicking outside the search container
+    // Close dropdowns when clicking outside
     useEffect(() => {
         const handleOutsideClick = (e) => {
-            if (containerRef.current && !containerRef.current.contains(e.target)) {
+            if (containerRef.current && !containerRef.current.contains(e.target))
                 setShowDropdown(false);
-            }
+            if (userMenuRef.current && !userMenuRef.current.contains(e.target))
+                setShowUserMenu(false);
         };
         document.addEventListener('mousedown', handleOutsideClick);
         return () => document.removeEventListener('mousedown', handleOutsideClick);
@@ -237,29 +240,48 @@ export default function TopNav({ searchQuery, onSearch }) {
 
             {/* ── Right icons ── */}
             <div className="topnav-right">
-                <button
-                    className="topnav-icon-btn"
-                    aria-label="Notifications"
-                    title="Notifications (coming soon)"
-                    onClick={() => navigate('/dashboard')}
-                >
+                <button className="topnav-icon-btn" aria-label="Notifications" title="Notifications (coming soon)" onClick={() => navigate('/dashboard')}>
                     <FaBell />
                 </button>
-                <button
-                    className="topnav-icon-btn"
-                    aria-label="Settings"
-                    title="Settings"
-                    onClick={() => navigate('/edit-profile')}
-                >
+                <button className="topnav-icon-btn" aria-label="Settings" title="Settings" onClick={() => navigate('/edit-profile')}>
                     <FaCog />
                 </button>
-                <button
-                    className="topnav-avatar-btn"
-                    onClick={handleLogout}
-                    title={`Signed in as ${user?.name || user?.email} — click to sign out`}
-                >
-                    <UserAvatar name={user?.name} avatarUrl={user?.avatarUrl} size={32} />
-                </button>
+
+                {/* Avatar + dropdown menu */}
+                <div className="topnav-user-menu-wrap" ref={userMenuRef}>
+                    <button
+                        className="topnav-avatar-btn"
+                        onClick={() => setShowUserMenu(m => !m)}
+                        title={`Signed in as ${user?.name || user?.email}`}
+                        aria-label="User menu"
+                        aria-expanded={showUserMenu}
+                    >
+                        <UserAvatar name={user?.name} avatarUrl={user?.avatarUrl} size={32} />
+                    </button>
+
+                    {showUserMenu && (
+                        <div className="topnav-user-dropdown">
+                            <div className="topnav-user-info">
+                                <UserAvatar name={user?.name} avatarUrl={user?.avatarUrl} size={38} />
+                                <div>
+                                    <p className="topnav-user-name">{user?.name || 'User'}</p>
+                                    <p className="topnav-user-email">{user?.email}</p>
+                                </div>
+                            </div>
+                            <div className="topnav-menu-divider" />
+                            <button className="topnav-menu-item" onClick={() => { setShowUserMenu(false); navigate('/profile'); }}>
+                                <FaUserCircle size={14} /> My Profile
+                            </button>
+                            <button className="topnav-menu-item" onClick={() => { setShowUserMenu(false); navigate('/edit-profile'); }}>
+                                <FaEdit size={14} /> Edit Profile
+                            </button>
+                            <div className="topnav-menu-divider" />
+                            <button className="topnav-menu-item topnav-menu-signout" onClick={handleLogout}>
+                                <FaSignOutAlt size={14} /> Sign Out
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
         </header>
     );
