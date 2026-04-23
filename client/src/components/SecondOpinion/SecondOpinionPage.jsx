@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import Sidebar from '../Dashboard/Sidebar';
@@ -72,6 +72,37 @@ export default function SecondOpinionPage() {
     const chatEndRef = useRef(null);
 
     const isDoctor = user?.isDoctor || user?.isVerifiedDoctor;
+
+    // Group patient consultations by doctorId — same doctor appears once in sidebar
+    const CONSULT_PRIORITY = { pending: 3, accepted: 2, completed: 1, declined: 0 };
+    const bestConsult = (list) =>
+        [...list].sort((a, b) => (CONSULT_PRIORITY[b.status] ?? 0) - (CONSULT_PRIORITY[a.status] ?? 0))[0];
+
+    const doctorGroups = useMemo(() => {
+        const map = new Map();
+        for (const c of consultations) {
+            if (!map.has(c.doctorId)) {
+                map.set(c.doctorId, {
+                    doctorId: c.doctorId,
+                    doctorName: c.doctorName,
+                    doctorAvatar: c.doctorAvatar,
+                    doctorSpecialties: c.doctorSpecialties,
+                    consultations: [],
+                });
+            }
+            map.get(c.doctorId).consultations.push(c);
+        }
+        return Array.from(map.values());
+    }, [consultations]);
+
+    const selectDoctorGroup = (group) => {
+        setSelectedConsult(bestConsult(group.consultations));
+    };
+
+    // All consultations with the currently selected doctor (for the switcher tabs)
+    const selectedDoctorConsults = useMemo(() =>
+        consultations.filter(c => c.doctorId === selectedConsult?.doctorId),
+    [consultations, selectedConsult?.doctorId]);
 
     // Load doctors
     useEffect(() => {
@@ -444,24 +475,31 @@ export default function SecondOpinionPage() {
                                         <FaComments size={13} style={{ marginRight: 6 }} />
                                         My Consultations
                                     </div>
-                                    {consultations.map(c => {
-                                        const sm = STATUS_COLORS[c.status] || STATUS_COLORS.pending;
+                                    {doctorGroups.map(group => {
+                                        const best = bestConsult(group.consultations);
+                                        const sm = STATUS_COLORS[best.status] || STATUS_COLORS.pending;
+                                        const isActive = group.consultations.some(c => c.id === selectedConsult?.id);
                                         return (
                                             <div
-                                                key={c.id}
-                                                className={`so-chat-item ${selectedConsult?.id === c.id ? 'active' : ''}`}
-                                                onClick={() => setSelectedConsult(c)}
+                                                key={group.doctorId}
+                                                className={`so-chat-item ${isActive ? 'active' : ''}`}
+                                                onClick={() => selectDoctorGroup(group)}
                                             >
-                                                <UserAvatar name={c.doctorName} avatarUrl={c.doctorAvatar} size={38} />
+                                                <UserAvatar name={group.doctorName} avatarUrl={group.doctorAvatar} size={38} />
                                                 <div className="so-chat-item-body">
                                                     <div className="so-chat-item-row">
-                                                        <span className="so-chat-item-name">{c.doctorName}</span>
+                                                        <span className="so-chat-item-name">{group.doctorName}</span>
                                                         <span className="so-chat-status-dot" style={{ background: sm.color }} title={sm.label} />
                                                     </div>
                                                     <p className="so-chat-item-concern">
-                                                        {c.concern?.slice(0, 50)}{c.concern?.length > 50 ? '…' : ''}
+                                                        {best.concern?.slice(0, 50)}{best.concern?.length > 50 ? '…' : ''}
                                                     </p>
-                                                    <span className="so-chat-item-time">{timeAgo(c.createdAt)}</span>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                        <span className="so-chat-item-time">{timeAgo(best.createdAt)}</span>
+                                                        {group.consultations.length > 1 && (
+                                                            <span className="so-chat-multi-badge">{group.consultations.length} requests</span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         );
@@ -507,6 +545,27 @@ export default function SecondOpinionPage() {
                                                     </a>
                                                 )}
                                             </div>
+
+                                            {/* Request switcher — shown when patient has multiple consultations with same doctor */}
+                                            {selectedDoctorConsults.length > 1 && (
+                                                <div className="so-chat-switcher">
+                                                    {selectedDoctorConsults.map((c, i) => {
+                                                        const sm = STATUS_COLORS[c.status] || STATUS_COLORS.pending;
+                                                        return (
+                                                            <button
+                                                                key={c.id}
+                                                                className={`so-chat-switch-tab ${selectedConsult.id === c.id ? 'active' : ''}`}
+                                                                onClick={() => setSelectedConsult(c)}
+                                                            >
+                                                                Request {i + 1}
+                                                                <span style={{ marginLeft: 5, color: sm.color, fontSize: '0.72rem' }}>
+                                                                    {sm.label}
+                                                                </span>
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
 
                                             {/* Concern + notes */}
                                             <div className="so-chat-concern-bar">

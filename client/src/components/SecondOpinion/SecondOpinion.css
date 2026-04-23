@@ -1421,6 +1421,29 @@
     background: #f9f9f9; outline: none; font-family: inherit;
     transition: border-color 0.2s;
 }
+/* Multiple-requests badge in sidebar */
+.so-chat-multi-badge {
+    font-size: 0.68rem; background: #e0f2f1; color: #005c55;
+    padding: 1px 7px; border-radius: 10px; font-weight: 700;
+}
+
+/* Request switcher tabs (same doctor, multiple consultations) */
+.so-chat-switcher {
+    display: flex; border-bottom: 1px solid #e8e8e8;
+    background: #fafafa; flex-shrink: 0; overflow-x: auto;
+}
+.so-chat-switch-tab {
+    padding: 0.45rem 1.1rem; background: none; border: none;
+    border-bottom: 2px solid transparent; font-size: 0.8rem;
+    color: #777; cursor: pointer; white-space: nowrap;
+    transition: all 0.15s; font-family: inherit;
+}
+.so-chat-switch-tab:hover { color: #005c55; background: #f0faf9; }
+.so-chat-switch-tab.active {
+    color: #005c55; border-bottom-color: #005c55;
+    font-weight: 700; background: #fff;
+}
+
 .so-chat-input:focus    { border-color: #005c55; background: #fff; }
 .so-chat-input:disabled { color: #aaa; cursor: not-allowed; }
 .so-chat-send-btn {
