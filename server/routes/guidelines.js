@@ -1,6 +1,7 @@
 const express = require('express');
 const pool    = require('../config/db');
 const { getGuidelineContent } = require('../storage');
+const { generateGuidelineContent } = require('../guidelineContent');
 
 const router = express.Router();
 
@@ -168,14 +169,16 @@ router.get('/:id/content', async (req, res) => {
 
     try {
         const { rows } = await pool.query(
-            'SELECT id, title, specialty, source, file_key FROM guidelines WHERE id = $1',
+            'SELECT id, title, specialty, source, summary, tags, file_key FROM guidelines WHERE id = $1',
             [id]
         );
         if (!rows.length) return res.status(404).json({ error: 'Guideline not found' });
 
         const guideline = rows[0];
+
         if (!guideline.file_key) {
-            return res.status(404).json({ error: 'No detailed content available for this guideline' });
+            const generated = generateGuidelineContent(guideline);
+            return res.json(generated);
         }
 
         const content = await getGuidelineContent(guideline.file_key);
