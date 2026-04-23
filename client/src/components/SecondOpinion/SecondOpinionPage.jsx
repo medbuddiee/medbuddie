@@ -118,6 +118,41 @@ export default function SecondOpinionPage() {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [chatMessages]);
 
+    // Poll for new messages every 4 s while a consultation is open
+    useEffect(() => {
+        if (!selectedConsult) return;
+        const id = setInterval(() => {
+            fetch(`/api/consultations/${selectedConsult.id}/messages`, {
+                headers: { Authorization: `Bearer ${token}` },
+            })
+                .then(r => r.ok ? r.json() : null)
+                .then(data => { if (Array.isArray(data)) setChatMessages(data); })
+                .catch(() => {});
+        }, 4000);
+        return () => clearInterval(id);
+    }, [selectedConsult?.id, token]);
+
+    // Poll consultation list every 8 s on the My Consultations tab so status
+    // changes (e.g. doctor accepts) appear without a manual refresh
+    useEffect(() => {
+        if (tab !== 'my-consultations') return;
+        const id = setInterval(() => {
+            fetch('/api/consultations', { headers: { Authorization: `Bearer ${token}` } })
+                .then(r => r.json())
+                .then(d => {
+                    if (!Array.isArray(d)) return;
+                    setConsultations(d);
+                    // Keep selectedConsult in sync with latest server data
+                    setSelectedConsult(prev => {
+                        if (!prev) return prev;
+                        return d.find(c => c.id === prev.id) ?? prev;
+                    });
+                })
+                .catch(() => {});
+        }, 8000);
+        return () => clearInterval(id);
+    }, [tab, token]);
+
     const sendChatMessage = async (e) => {
         e.preventDefault();
         if (!chatMsgInput.trim() || !selectedConsult || chatSending) return;

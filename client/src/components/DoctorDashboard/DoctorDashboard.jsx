@@ -63,6 +63,20 @@ export default function DoctorDashboard() {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
+    // Poll for new messages every 4 s while a consultation is open
+    useEffect(() => {
+        if (!selected) return;
+        const id = setInterval(() => {
+            fetch(`/api/consultations/${selected.id}/messages`, {
+                headers: { Authorization: `Bearer ${token}` },
+            })
+                .then(r => r.ok ? r.json() : null)
+                .then(data => { if (Array.isArray(data)) setMessages(data); })
+                .catch(() => {});
+        }, 4000);
+        return () => clearInterval(id);
+    }, [selected?.id, token]);
+
     const loadConsultations = async () => {
         setLoading(true);
         try {
