@@ -16,7 +16,6 @@ import MedBuddiesPage from './components/MedBuddies/MedBuddiesPage';
 import CommunitiesPage from './components/Communities/CommunitiesPage';
 import CommunityDetailPage from './components/Communities/CommunityDetailPage';
 import TopArticlesPage from './components/TopArticles/TopArticlesPage';
-import DoctorPortalPage from './components/DoctorPortal/DoctorPortalPage';
 import PhysicianPortalPage from './components/PhysicianPortal/PhysicianPortalPage';
 import DoctorDashboard from './components/DoctorDashboard/DoctorDashboard';
 import { UserProvider, useUser } from './context/UserContext.jsx';
@@ -71,7 +70,6 @@ function AppRoutes() {
             <Route path="/communities"   element={<PrivateRoute element={<CommunitiesPage />} />} />
             <Route path="/communities/:id" element={<PrivateRoute element={<CommunityDetailPage />} />} />
             <Route path="/top-articles"  element={<PrivateRoute element={<TopArticlesPage />} />} />
-            <Route path="/doctor-portal" element={<PrivateRoute element={<DoctorPortalPage />} />} />
 
             {/* Health metrics sub-routes */}
             <Route path="/activity"    element={<PrivateRoute element={<HealthMetricsPage />} />} />

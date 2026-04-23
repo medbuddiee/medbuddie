@@ -5,7 +5,7 @@ import logo from '../../../assets/medbuddie_logo.png';
 import {
     FaHome, FaBookOpen, FaStar, FaNewspaper,
     FaUserFriends, FaUsers, FaComments, FaChartLine,
-    FaRunning, FaAppleAlt, FaPills, FaSearch, FaUserMd,
+    FaRunning, FaAppleAlt, FaPills, FaSearch,
 } from 'react-icons/fa';
 import { MdOutlinePersonSearch } from 'react-icons/md';
 
@@ -18,7 +18,6 @@ const NAV_TOP = [
     { icon: <MdOutlinePersonSearch size={16} />, label: 'Following', path: '/following' },
     { icon: <FaUsers />,    label: 'Communities',            path: '/communities' },
     { icon: <FaComments />, label: 'Second Opinion',         path: '/second-opinion' },
-    { icon: <FaUserMd />,   label: 'Doctor Portal',          path: '/doctor-portal' },
 ];
 
 const NAV_BOTTOM = [
