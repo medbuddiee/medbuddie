@@ -1,28 +1,14 @@
 const express = require('express');
 const pool    = require('../config/db');
 const multer  = require('multer');
-const path    = require('path');
-const fs      = require('fs');
 const { authenticate } = require('../middleware/auth');
 
 const router = express.Router();
 
-/* ── Multer — avatar upload ──────────────────────────────────────────────── */
-const UPLOAD_DIR = path.join(__dirname, '..', 'uploads', 'avatars');
-fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-
-const storage = multer.diskStorage({
-    destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
-    filename:    (req,  file,  cb) => {
-        const ext  = path.extname(file.originalname).toLowerCase() || '.jpg';
-        const name = `user_${req.user?.id || 'unknown'}_${Date.now()}${ext}`;
-        cb(null, name);
-    },
-});
-
+/* ── Multer — avatar upload (memory storage → base64 in DB) ─────────────── */
 const upload = multer({
-    storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 3 * 1024 * 1024 }, // 3 MB
     fileFilter: (_req, file, cb) => {
         if (/^image\//.test(file.mimetype)) cb(null, true);
         else cb(new Error('Only image files are allowed'));
@@ -96,12 +82,13 @@ router.put('/', authenticate, async (req, res) => {
 router.post('/avatar', authenticate, upload.single('avatar'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
-    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+    // Store as base64 data URL so it works on any host (no ephemeral filesystem)
+    const dataUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
     try {
         const { rows } = await pool.query(
             `UPDATE users SET avatar_url = $1 WHERE id = $2
              RETURNING id, avatar_url AS "avatarUrl"`,
-            [avatarUrl, req.user.id]
+            [dataUrl, req.user.id]
         );
         if (!rows.length) return res.status(404).json({ error: 'User not found' });
         res.json({ avatarUrl: rows[0].avatarUrl });
