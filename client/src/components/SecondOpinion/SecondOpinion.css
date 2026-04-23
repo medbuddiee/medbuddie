@@ -1256,3 +1256,20 @@
 .call-tips { background: #f5f7fa; border-radius: 8px; padding: 0.85rem 1rem; font-size: 0.82rem; color: #555; }
 .call-tips ul { margin: 0.5rem 0 0; padding-left: 1.25rem; }
 .call-tips li { margin-bottom: 0.25rem; line-height: 1.4; }
+
+/* Doctor portal redirect banner */
+.so-doctor-banner {
+    display: flex; align-items: center; gap: 1rem;
+    background: linear-gradient(135deg, #005c55 0%, #00897b 100%);
+    color: #fff; border-radius: 12px; padding: 1rem 1.25rem;
+    margin-bottom: 1rem; flex-wrap: wrap;
+}
+.so-doctor-banner-title { font-size: 0.9rem; font-weight: 700; margin: 0 0 2px; }
+.so-doctor-banner-sub   { font-size: 0.8rem; opacity: 0.85; margin: 0; }
+.so-doctor-banner-btn {
+    margin-left: auto; background: rgba(255,255,255,0.2); color: #fff;
+    border: 1px solid rgba(255,255,255,0.4); border-radius: 8px;
+    padding: 7px 16px; font-size: 0.83rem; font-weight: 700;
+    cursor: pointer; white-space: nowrap; transition: background 0.15s;
+}
+.so-doctor-banner-btn:hover { background: rgba(255,255,255,0.35); }

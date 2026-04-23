@@ -17,12 +17,23 @@ import CommunitiesPage from './components/Communities/CommunitiesPage';
 import CommunityDetailPage from './components/Communities/CommunityDetailPage';
 import TopArticlesPage from './components/TopArticles/TopArticlesPage';
 import DoctorPortalPage from './components/DoctorPortal/DoctorPortalPage';
+import PhysicianPortalPage from './components/PhysicianPortal/PhysicianPortalPage';
+import DoctorDashboard from './components/DoctorDashboard/DoctorDashboard';
 import { UserProvider, useUser } from './context/UserContext.jsx';
 
 function PrivateRoute({ element }) {
     const { user, loading } = useUser();
     if (loading) return null;
     return user ? element : <Navigate to="/signin" replace />;
+}
+
+// Doctor-only route — redirects non-doctors to /dashboard
+function DoctorRoute({ element }) {
+    const { user, loading } = useUser();
+    if (loading) return null;
+    if (!user) return <Navigate to="/physician" replace />;
+    if (!user.isDoctor && !user.isVerifiedDoctor) return <Navigate to="/dashboard" replace />;
+    return element;
 }
 
 function SmartRedirect() {
@@ -39,7 +50,13 @@ function AppRoutes() {
             <Route path="/signup" element={<SignUp />} />
             <Route path="/facebook-callback" element={<FacebookCallback />} />
 
-            {/* Protected routes */}
+            {/* Physician portal — public auth page for doctors */}
+            <Route path="/physician" element={<PhysicianPortalPage />} />
+
+            {/* Doctor-only workspace */}
+            <Route path="/doctor-dashboard" element={<DoctorRoute element={<DoctorDashboard />} />} />
+
+            {/* Protected patient routes */}
             <Route path="/dashboard"     element={<PrivateRoute element={<Dashboard />} />} />
             <Route path="/guidelines"    element={<PrivateRoute element={<GuidelinesPage />} />} />
             <Route path="/guidelines/:id" element={<PrivateRoute element={<GuidelineDetail />} />} />

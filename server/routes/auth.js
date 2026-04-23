@@ -92,6 +92,44 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// POST /api/doctor-signup — dedicated physician registration
+router.post('/doctor-signup', async (req, res) => {
+    const { name, email, password, licenseNumber, specialties, doctorBio, yearsExperience } = req.body;
+    if (!name || !email || !password || !licenseNumber)
+        return res.status(400).json({ error: 'Name, email, password and license number are required' });
+    if (!specialties?.length)
+        return res.status(400).json({ error: 'At least one specialty is required' });
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const { rows } = await pool.query(
+            `INSERT INTO users
+                (name, email, password, username, is_doctor, is_verified_doctor,
+                 license_number, doctor_specialties, doctor_bio, years_experience)
+             VALUES ($1,$2,$3,$4, true, true, $5,$6,$7,$8)
+             RETURNING id, name, email, username, bio, weight, height, bmi,
+                       blood_pressure AS "bloodPressure", hba1c,
+                       lipid_panel    AS "lipidPanel", medications,
+                       avatar_url     AS "avatarUrl",
+                       is_doctor      AS "isDoctor",
+                       is_verified_doctor AS "isVerifiedDoctor",
+                       doctor_specialties AS "doctorSpecialties",
+                       doctor_bio     AS "doctorBio",
+                       years_experience AS "yearsExperience",
+                       license_number AS "licenseNumber"`,
+            [name, email, hashedPassword, email.split('@')[0],
+             licenseNumber, specialties, doctorBio || '', yearsExperience || 0]
+        );
+        const user = rows[0];
+        user.medications = user.medications || [];
+        const token = makeToken(user);
+        res.status(201).json({ user, token });
+    } catch (err) {
+        if (err.code === '23505') return res.status(400).json({ error: 'Email already registered' });
+        console.error('Doctor signup error:', err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 // POST /api/google-login
 router.post('/google-login', async (req, res) => {
     const { token } = req.body;

@@ -1,0 +1,162 @@
+/* PhysicianPortal.css */
+*, *::before, *::after { box-sizing: border-box; }
+
+.pp-shell {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #f5f7fa;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+/* ── Header ── */
+.pp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    height: 58px;
+    background: #fff;
+    border-bottom: 1px solid #e8e8e8;
+    flex-shrink: 0;
+}
+.pp-logo { display: flex; align-items: center; gap: 10px; }
+.pp-brand { font-size: 1.1rem; font-weight: 700; color: #005c55; }
+.pp-header-right { display: flex; align-items: center; gap: 10px; }
+.pp-header-hint { font-size: 0.82rem; color: #888; }
+.pp-header-btn {
+    padding: 6px 14px; border-radius: 20px; font-size: 0.83rem; font-weight: 600;
+    border: 1px solid #005c55; color: #005c55; background: none; cursor: pointer;
+    transition: background 0.15s;
+}
+.pp-header-btn:hover { background: #e8f5f4; }
+.pp-header-btn-filled { background: #005c55; color: #fff; }
+.pp-header-btn-filled:hover { background: #00796b; }
+
+/* ── Body ── */
+.pp-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+}
+
+/* ── Left branding panel ── */
+.pp-left {
+    width: 420px;
+    flex-shrink: 0;
+    background: linear-gradient(160deg, #005c55 0%, #00897b 60%, #00acc1 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2.5rem;
+}
+.pp-left-inner { color: #fff; max-width: 320px; }
+.pp-icon-circle {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: rgba(255,255,255,0.18);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 1.5rem;
+}
+.pp-left-title { font-size: 1.9rem; font-weight: 700; margin: 0 0 0.75rem; }
+.pp-left-sub { font-size: 0.93rem; opacity: 0.88; line-height: 1.6; margin: 0 0 1.5rem; }
+.pp-features { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.pp-features li { font-size: 0.88rem; opacity: 0.92; }
+
+/* ── Right auth panel ── */
+.pp-right {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    overflow-y: auto;
+}
+.pp-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.09);
+    width: 100%;
+    max-width: 520px;
+    overflow: hidden;
+}
+
+/* ── Tabs ── */
+.pp-tabs {
+    display: flex;
+    border-bottom: 2px solid #f0f0f0;
+}
+.pp-tab {
+    flex: 1; padding: 1rem; background: none; border: none;
+    font-size: 0.9rem; font-weight: 600; color: #888; cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -2px;
+    transition: color 0.15s, border-color 0.15s;
+}
+.pp-tab.active { color: #005c55; border-bottom-color: #005c55; }
+
+/* ── Form ── */
+.pp-form { padding: 1.75rem; display: flex; flex-direction: column; gap: 1rem; }
+.pp-register-form { padding: 1.5rem 1.75rem; }
+.pp-form-hint { font-size: 0.82rem; color: #888; margin: 0; }
+.pp-error {
+    background: #fff3f3; color: #c62828; border: 1px solid #ffcdd2;
+    border-radius: 8px; padding: 0.6rem 0.85rem; font-size: 0.83rem;
+}
+
+/* Icon-field row */
+.pp-field {
+    display: flex; align-items: center; gap: 0;
+    border: 1px solid #ddd; border-radius: 10px; overflow: hidden;
+    background: #fafafa; transition: border-color 0.2s;
+}
+.pp-field:focus-within { border-color: #005c55; background: #fff; }
+.pp-field-icon { flex-shrink: 0; padding: 0 12px; color: #aaa; font-size: 0.9rem; }
+.pp-field input {
+    flex: 1; border: none; background: none; padding: 0.7rem 0.75rem 0.7rem 0;
+    font-size: 0.9rem; color: #1a1a1a; outline: none;
+}
+
+/* Label-field group */
+.pp-field-group { display: flex; flex-direction: column; gap: 5px; }
+.pp-field-group label { font-size: 0.78rem; font-weight: 600; color: #555; }
+.pp-field-group input,
+.pp-field-group textarea {
+    border: 1px solid #ddd; border-radius: 8px; padding: 0.6rem 0.75rem;
+    font-size: 0.88rem; color: #1a1a1a; background: #fafafa;
+    outline: none; transition: border-color 0.2s; font-family: inherit; resize: vertical;
+}
+.pp-field-group input:focus,
+.pp-field-group textarea:focus { border-color: #005c55; background: #fff; }
+
+.pp-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; }
+
+/* Specialty chips */
+.pp-selected-count { font-weight: 400; color: #005c55; }
+.pp-specialty-grid {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    max-height: 160px; overflow-y: auto;
+    padding: 8px; border: 1px solid #e8e8e8; border-radius: 8px; background: #fafafa;
+}
+.pp-spec-chip {
+    padding: 4px 11px; border-radius: 20px; font-size: 0.78rem; font-weight: 500;
+    border: 1px solid #ddd; background: #fff; color: #555; cursor: pointer;
+    transition: all 0.15s;
+}
+.pp-spec-chip.active { background: #005c55; color: #fff; border-color: #005c55; }
+.pp-spec-chip:hover:not(.active) { border-color: #005c55; color: #005c55; }
+
+.pp-submit {
+    width: 100%; padding: 0.85rem; background: #005c55; color: #fff;
+    border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 700;
+    cursor: pointer; transition: background 0.2s; margin-top: 0.25rem;
+}
+.pp-submit:hover:not(:disabled) { background: #00796b; }
+.pp-submit:disabled { opacity: 0.65; cursor: not-allowed; }
+
+.pp-switch-hint { font-size: 0.81rem; color: #888; text-align: center; margin: 0; }
+.pp-link { background: none; border: none; color: #005c55; font-weight: 600; cursor: pointer; font-size: inherit; padding: 0; }
+
+/* ── Responsive ── */
+@media (max-width: 720px) {
+    .pp-left { display: none; }
+    .pp-2col { grid-template-columns: 1fr; }
+}

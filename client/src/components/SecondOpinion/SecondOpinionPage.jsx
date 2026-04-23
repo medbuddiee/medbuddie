@@ -52,7 +52,7 @@ export default function SecondOpinionPage() {
     const [doctorTab, setDoctorTab]         = useState('accept'); // for doctor: pending vs history
     const iframeRef = useRef(null);
 
-    const isDoctor = user?.isDoctor && user?.isVerifiedDoctor;
+    const isDoctor = user?.isDoctor || user?.isVerifiedDoctor;
 
     // Load doctors
     useEffect(() => {
@@ -145,17 +145,26 @@ export default function SecondOpinionPage() {
             <div className="dashboard-body">
                 <Sidebar />
                 <main className="so-main-new">
+                    {/* Doctor redirect banner */}
+                    {isDoctor && (
+                        <div className="so-doctor-banner">
+                            <FaUserMd size={18} />
+                            <div>
+                                <p className="so-doctor-banner-title">You're logged in as a verified physician</p>
+                                <p className="so-doctor-banner-sub">Manage patient requests, messages and calls from your dedicated portal.</p>
+                            </div>
+                            <button className="so-doctor-banner-btn" onClick={() => navigate('/doctor-dashboard')}>
+                                Go to Physician Portal →
+                            </button>
+                        </div>
+                    )}
+
                     {/* Header */}
                     <div className="so-header-new">
                         <div>
                             <h2 className="so-title-new">Second Opinion</h2>
                             <p className="so-sub-new">Connect with verified doctors for a professional second opinion on your health concerns.</p>
                         </div>
-                        {!isDoctor && (
-                            <button className="so-doctor-register-btn" onClick={() => navigate('/doctor-portal')}>
-                                <FaUserMd size={13} /> Register as a Doctor
-                            </button>
-                        )}
                     </div>
 
                     {/* Tabs */}

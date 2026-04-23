@@ -104,6 +104,16 @@ async function runMigrations() {
         )`,
         `CREATE INDEX IF NOT EXISTS idx_consultations_patient ON consultations(patient_id)`,
         `CREATE INDEX IF NOT EXISTS idx_consultations_doctor  ON consultations(doctor_id)`,
+
+        // ── Consultation messages (in-app chat) ─────────────────────────────
+        `CREATE TABLE IF NOT EXISTS consultation_messages (
+            id              SERIAL PRIMARY KEY,
+            consultation_id INTEGER NOT NULL REFERENCES consultations(id) ON DELETE CASCADE,
+            sender_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            content         TEXT NOT NULL,
+            created_at      TIMESTAMPTZ DEFAULT NOW()
+        )`,
+        `CREATE INDEX IF NOT EXISTS idx_consult_messages_consult ON consultation_messages(consultation_id)`,
     ];
 
     for (const sql of migrations) {

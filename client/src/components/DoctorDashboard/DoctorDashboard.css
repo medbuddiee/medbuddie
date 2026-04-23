@@ -1,0 +1,241 @@
+/* DoctorDashboard.css */
+*, *::before, *::after { box-sizing: border-box; }
+
+.dd-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    background: #f5f7fa;
+    color: #1a1a1a;
+}
+
+/* ── Top bar ── */
+.dd-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 1.5rem; height: 56px; background: #fff;
+    border-bottom: 1px solid #e8e8e8; flex-shrink: 0; z-index: 100;
+}
+.dd-topbar-left { display: flex; align-items: center; gap: 10px; }
+.dd-brand { font-size: 1.1rem; font-weight: 700; color: #005c55; }
+.dd-portal-label {
+    font-size: 0.75rem; color: #fff; background: #005c55;
+    padding: 2px 9px; border-radius: 20px; font-weight: 600;
+}
+.dd-topbar-right { display: flex; align-items: center; gap: 12px; }
+.dd-pending-badge {
+    background: #fff8e1; color: #f57f17; border: 1px solid #ffe082;
+    font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+}
+
+/* User chip */
+.dd-user-wrap { position: relative; }
+.dd-user-chip {
+    display: flex; align-items: center; gap: 7px; background: #f0faf9;
+    border: 1px solid #b2dfdb; border-radius: 20px; padding: 4px 10px 4px 5px;
+    cursor: pointer; color: #005c55; font-size: 0.83rem; font-weight: 600;
+    transition: background 0.2s; white-space: nowrap;
+}
+.dd-user-chip:hover { background: #e0f2f1; }
+.dd-user-dropdown {
+    position: absolute; top: calc(100% + 8px); right: 0;
+    background: #fff; border-radius: 12px; box-shadow: 0 6px 24px rgba(0,0,0,0.14);
+    border: 1px solid #e8e8e8; min-width: 220px; z-index: 500; overflow: hidden;
+}
+.dd-user-info { display: flex; align-items: center; gap: 10px; padding: 0.85rem 1rem; background: #f9f9f9; }
+.dd-user-name { font-size: 0.88rem; font-weight: 700; color: #0a2a33; margin: 0 0 2px; }
+.dd-user-email { font-size: 0.75rem; color: #888; margin: 0; }
+.dd-user-specs { display: flex; flex-wrap: wrap; gap: 4px; padding: 0.5rem 1rem; }
+.dd-spec-pill { background: #e0f2f1; color: #005c55; font-size: 0.72rem; padding: 2px 8px; border-radius: 12px; }
+.dd-user-divider { height: 1px; background: #f0f0f0; }
+.dd-user-menu-item {
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    padding: 0.65rem 1rem; background: none; border: none;
+    font-size: 0.86rem; color: #333; cursor: pointer; transition: background 0.15s;
+}
+.dd-user-menu-item:hover { background: #f5f5f5; }
+.dd-signout { color: #c62828; }
+.dd-signout:hover { background: #ffebee; }
+
+/* ── Body ── */
+.dd-body { display: flex; flex: 1; overflow: hidden; }
+
+/* ── Left sidebar ── */
+.dd-sidebar {
+    width: 300px; flex-shrink: 0;
+    border-right: 1px solid #e8e8e8; background: #fff;
+    display: flex; flex-direction: column; overflow: hidden;
+}
+.dd-sidebar-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 1.25rem 0.5rem; flex-shrink: 0;
+}
+.dd-sidebar-title { font-size: 1rem; font-weight: 700; color: #0a2a33; margin: 0; }
+.dd-refresh-btn {
+    background: none; border: none; cursor: pointer; font-size: 1.1rem;
+    color: #888; padding: 4px 6px; border-radius: 6px;
+}
+.dd-refresh-btn:hover { color: #005c55; background: #f0f0f0; }
+
+/* Filter tabs */
+.dd-filter-tabs { display: flex; border-bottom: 1px solid #f0f0f0; padding: 0 0.75rem; flex-shrink: 0; }
+.dd-filter-tab {
+    flex: 1; padding: 0.5rem 0.25rem; background: none; border: none;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    font-size: 0.78rem; font-weight: 600; color: #888; cursor: pointer;
+    transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 4px;
+}
+.dd-filter-tab.active { color: #005c55; border-bottom-color: #005c55; }
+.dd-tab-badge {
+    background: #f57f17; color: #fff; font-size: 0.65rem; font-weight: 700;
+    padding: 1px 6px; border-radius: 10px;
+}
+
+/* Consultation list */
+.dd-consult-list { flex: 1; overflow-y: auto; }
+.dd-list-empty { color: #aaa; font-size: 0.85rem; text-align: center; padding: 2rem 1rem; }
+.dd-consult-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 0.9rem 1.25rem; border-bottom: 1px solid #f5f5f5;
+    cursor: pointer; transition: background 0.15s;
+}
+.dd-consult-item:hover { background: #f9fffe; }
+.dd-consult-item.active { background: #e8f5f4; border-left: 3px solid #005c55; }
+.dd-consult-item-body { flex: 1; min-width: 0; }
+.dd-consult-item-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
+.dd-consult-item-name { font-size: 0.88rem; font-weight: 600; color: #0a2a33; }
+.dd-status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dd-consult-item-concern { font-size: 0.78rem; color: #666; margin: 0 0 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dd-consult-item-time { font-size: 0.72rem; color: #aaa; }
+
+/* ── Main panel ── */
+.dd-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+.dd-empty-state {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 0.75rem; color: #aaa;
+}
+.dd-empty-state h3 { font-size: 1.1rem; color: #555; margin: 0; }
+.dd-empty-state p { font-size: 0.88rem; text-align: center; max-width: 300px; margin: 0; }
+
+/* Detail layout */
+.dd-detail { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* Patient header */
+.dd-detail-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 1.5rem; border-bottom: 1px solid #e8e8e8;
+    background: #fff; flex-shrink: 0; flex-wrap: wrap; gap: 0.75rem;
+}
+.dd-detail-who { display: flex; align-items: center; gap: 12px; }
+.dd-detail-name { font-size: 1rem; font-weight: 700; color: #0a2a33; margin: 0 0 4px; }
+.dd-detail-status {
+    font-size: 0.72rem; font-weight: 700; padding: 2px 9px; border-radius: 12px;
+    margin-right: 8px;
+}
+.dd-detail-date { font-size: 0.75rem; color: #aaa; }
+.dd-detail-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.dd-accept-btn, .dd-decline-btn, .dd-video-btn, .dd-complete-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 8px; font-size: 0.83rem; font-weight: 600;
+    border: none; cursor: pointer; transition: all 0.15s; text-decoration: none;
+}
+.dd-accept-btn   { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+.dd-accept-btn:hover { background: #c8e6c9; }
+.dd-decline-btn  { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+.dd-decline-btn:hover { background: #ffcdd2; }
+.dd-video-btn    { background: #005c55; color: #fff; }
+.dd-video-btn:hover { background: #00796b; }
+.dd-complete-btn { background: #e8eaf6; color: #3949ab; border: 1px solid #9fa8da; }
+.dd-complete-btn:hover { background: #c5cae9; }
+
+/* Concern card */
+.dd-concern-card {
+    margin: 1rem 1.5rem; padding: 1rem 1.25rem;
+    background: #fff; border-radius: 12px; border: 1px solid #e8e8e8;
+    flex-shrink: 0;
+}
+.dd-concern-label { font-size: 0.75rem; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 6px; }
+.dd-concern-text { font-size: 0.9rem; color: #1a1a1a; line-height: 1.6; margin: 0 0 0.5rem; }
+.dd-meeting-row { display: flex; align-items: center; gap: 7px; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #f0f0f0; }
+.dd-meeting-label { font-size: 0.8rem; color: #555; font-weight: 600; }
+.dd-meeting-link {
+    font-size: 0.8rem; color: #005c55; font-weight: 700; text-decoration: none;
+    display: flex; align-items: center; gap: 4px;
+}
+.dd-meeting-link:hover { text-decoration: underline; }
+
+/* Chat */
+.dd-chat {
+    flex: 1; display: flex; flex-direction: column;
+    margin: 0 1.5rem 1rem; background: #fff;
+    border-radius: 12px; border: 1px solid #e8e8e8; overflow: hidden;
+    min-height: 0;
+}
+.dd-chat-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 0.65rem 1rem; border-bottom: 1px solid #f0f0f0;
+    font-size: 0.83rem; font-weight: 700; color: #555; flex-shrink: 0;
+}
+.dd-messages { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 10px; }
+.dd-msg-loading, .dd-msg-empty { font-size: 0.83rem; color: #aaa; text-align: center; padding: 1rem; }
+
+.dd-msg { display: flex; align-items: flex-end; gap: 8px; }
+.dd-msg-me { flex-direction: row-reverse; }
+.dd-msg-bubble { max-width: 70%; }
+.dd-msg-sender { font-size: 0.72rem; color: #888; display: block; margin-bottom: 2px; }
+.dd-msg-text {
+    padding: 0.55rem 0.85rem; border-radius: 14px;
+    font-size: 0.88rem; line-height: 1.5; margin: 0 0 2px;
+    background: #f0f0f0; color: #1a1a1a;
+}
+.dd-msg-me .dd-msg-text { background: #005c55; color: #fff; border-radius: 14px 14px 4px 14px; }
+.dd-msg-them .dd-msg-text { border-radius: 14px 14px 14px 4px; }
+.dd-msg-time { font-size: 0.68rem; color: #bbb; display: block; }
+.dd-msg-me .dd-msg-time { text-align: right; }
+
+.dd-msg-form {
+    display: flex; align-items: center; gap: 8px;
+    padding: 0.75rem 1rem; border-top: 1px solid #f0f0f0; flex-shrink: 0;
+}
+.dd-msg-input {
+    flex: 1; border: 1px solid #e0e0e0; border-radius: 20px;
+    padding: 0.55rem 1rem; font-size: 0.88rem; color: #1a1a1a;
+    background: #f9f9f9; outline: none; font-family: inherit;
+    transition: border-color 0.2s;
+}
+.dd-msg-input:focus { border-color: #005c55; background: #fff; }
+.dd-msg-input:disabled { color: #aaa; cursor: not-allowed; }
+.dd-msg-send {
+    width: 38px; height: 38px; border-radius: 50%; background: #005c55; color: #fff;
+    border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: background 0.2s;
+}
+.dd-msg-send:hover:not(:disabled) { background: #00796b; }
+.dd-msg-send:disabled { background: #ccc; cursor: not-allowed; }
+
+/* Modal */
+.dd-modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center; z-index: 1000;
+}
+.dd-modal { background: #fff; border-radius: 16px; width: 420px; overflow: hidden; }
+.dd-modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 1.25rem; border-bottom: 1px solid #e8e8e8; font-weight: 700;
+}
+.dd-modal-header button { background: none; border: none; cursor: pointer; color: #888; font-size: 1rem; }
+.dd-modal-body { padding: 1.5rem; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+.dd-modal-join-btn {
+    display: flex; align-items: center; gap: 8px;
+    background: #005c55; color: #fff; text-decoration: none;
+    padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 700; font-size: 0.95rem;
+}
+.dd-modal-hint { font-size: 0.82rem; color: #888; text-align: center; margin: 0; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .dd-sidebar { width: 100%; height: 240px; border-right: none; border-bottom: 1px solid #e8e8e8; }
+    .dd-body { flex-direction: column; }
+}

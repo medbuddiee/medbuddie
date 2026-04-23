@@ -104,4 +104,62 @@ router.put('/:id', authenticate, async (req, res) => {
     }
 });
 
+/* ── GET /api/consultations/:id/messages ────────────────────────────────── */
+router.get('/:id/messages', authenticate, async (req, res) => {
+    const meId = req.user.id;
+    try {
+        // Must be patient or doctor of this consultation
+        const access = await pool.query(
+            'SELECT id FROM consultations WHERE id=$1 AND (patient_id=$2 OR doctor_id=$2)',
+            [req.params.id, meId]
+        );
+        if (!access.rows.length) return res.status(403).json({ error: 'Not authorized' });
+
+        const { rows } = await pool.query(`
+            SELECT m.id, m.content, m.created_at AS "createdAt",
+                   u.id AS "senderId", u.name AS "senderName",
+                   u.avatar_url AS "senderAvatar",
+                   u.is_verified_doctor AS "senderIsDoctor"
+            FROM consultation_messages m
+            JOIN users u ON u.id = m.sender_id
+            WHERE m.consultation_id = $1
+            ORDER BY m.created_at ASC
+        `, [req.params.id]);
+        res.json(rows);
+    } catch (err) {
+        console.error('GET messages error:', err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+/* ── POST /api/consultations/:id/messages ───────────────────────────────── */
+router.post('/:id/messages', authenticate, async (req, res) => {
+    const meId = req.user.id;
+    const { content } = req.body;
+    if (!content?.trim()) return res.status(400).json({ error: 'Message content required' });
+    try {
+        const access = await pool.query(
+            'SELECT id FROM consultations WHERE id=$1 AND (patient_id=$2 OR doctor_id=$2)',
+            [req.params.id, meId]
+        );
+        if (!access.rows.length) return res.status(403).json({ error: 'Not authorized' });
+
+        const { rows } = await pool.query(`
+            INSERT INTO consultation_messages (consultation_id, sender_id, content)
+            VALUES ($1,$2,$3)
+            RETURNING id, content, created_at AS "createdAt", sender_id AS "senderId"
+        `, [req.params.id, meId, content.trim()]);
+
+        const msg = rows[0];
+        const userRow = await pool.query(
+            'SELECT name, avatar_url AS "senderAvatar", is_verified_doctor AS "senderIsDoctor" FROM users WHERE id=$1',
+            [meId]
+        );
+        res.status(201).json({ ...msg, senderName: userRow.rows[0].name, ...userRow.rows[0] });
+    } catch (err) {
+        console.error('POST messages error:', err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 module.exports = router;
