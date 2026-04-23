@@ -8,8 +8,19 @@ import './SecondOpinion.css';
 import {
     FaUserMd, FaCheckCircle, FaVideo, FaPhone,
     FaSearch, FaStar, FaTimes, FaChevronDown, FaChevronUp,
-    FaPaperclip, FaCalendarAlt,
+    FaPaperclip, FaCalendarAlt, FaComments, FaPaperPlane,
 } from 'react-icons/fa';
+
+function timeAgo(iso) {
+    if (!iso) return '';
+    const diff = Date.now() - new Date(iso).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return 'just now';
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    return `${Math.floor(h / 24)}d ago`;
+}
 
 const SPECIALTIES_FILTER = ['All', 'Cardiology', 'Neurology', 'Oncology', 'Endocrinology',
     'Gastroenterology', 'Pulmonology', 'Orthopedics', 'Dermatology',
@@ -52,6 +63,14 @@ export default function SecondOpinionPage() {
     const [doctorTab, setDoctorTab]         = useState('accept'); // for doctor: pending vs history
     const iframeRef = useRef(null);
 
+    // Patient chat state (My Consultations tab)
+    const [selectedConsult, setSelectedConsult] = useState(null);
+    const [chatMessages, setChatMessages]       = useState([]);
+    const [chatMsgInput, setChatMsgInput]       = useState('');
+    const [chatSending, setChatSending]         = useState(false);
+    const [chatMsgLoading, setChatMsgLoading]   = useState(false);
+    const chatEndRef = useRef(null);
+
     const isDoctor = user?.isDoctor || user?.isVerifiedDoctor;
 
     // Load doctors
@@ -80,6 +99,50 @@ export default function SecondOpinionPage() {
             .catch(() => {})
             .finally(() => setLoadingConsults(false));
     }, [tab, token]);
+
+    // Load messages when a consultation is selected in the My Consultations tab
+    useEffect(() => {
+        if (!selectedConsult) return;
+        setChatMsgLoading(true);
+        setChatMessages([]);
+        fetch(`/api/consultations/${selectedConsult.id}/messages`, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+            .then(r => r.json())
+            .then(d => { if (Array.isArray(d)) setChatMessages(d); })
+            .catch(() => {})
+            .finally(() => setChatMsgLoading(false));
+    }, [selectedConsult?.id, token]);
+
+    useEffect(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [chatMessages]);
+
+    const sendChatMessage = async (e) => {
+        e.preventDefault();
+        if (!chatMsgInput.trim() || !selectedConsult || chatSending) return;
+        setChatSending(true);
+        const optimistic = {
+            id: Date.now(),
+            content: chatMsgInput.trim(),
+            senderId: user.id,
+            senderName: user.name,
+            createdAt: new Date().toISOString(),
+        };
+        setChatMessages(prev => [...prev, optimistic]);
+        setChatMsgInput('');
+        try {
+            const res = await fetch(`/api/consultations/${selectedConsult.id}/messages`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ content: optimistic.content }),
+            });
+            if (res.ok) {
+                const saved = await res.json();
+                setChatMessages(prev => prev.map(m => m.id === optimistic.id ? { ...m, ...saved } : m));
+            }
+        } catch { /* keep optimistic */ } finally { setChatSending(false); }
+    };
 
     const handleDoctorSearch = (e) => {
         e.preventDefault();
@@ -326,91 +389,160 @@ export default function SecondOpinionPage() {
                         </div>
                     )}
 
-                    {/* ══ My Consultations tab ═══════════════════════════════════ */}
+                    {/* ══ My Consultations tab — two-panel chat layout ══════════ */}
                     {tab === 'my-consultations' && (
-                        <div className="so-consults-section">
-                            {loadingConsults ? (
-                                <p className="so-loading">Loading…</p>
-                            ) : consultations.length === 0 ? (
-                                <div className="so-empty-consults">
-                                    <FaCalendarAlt size={40} color="#ccc" />
-                                    <p>{isDoctor ? 'No consultation requests yet.' : "You haven't requested any consultations yet."}</p>
-                                    {!isDoctor && (
-                                        <button className="so-submit-btn" onClick={() => setTab('find')}>
-                                            Find a Doctor
-                                        </button>
-                                    )}
-                                </div>
-                            ) : (
-                                <div className="so-consults-list">
+                        loadingConsults ? (
+                            <p className="so-loading">Loading…</p>
+                        ) : consultations.length === 0 ? (
+                            <div className="so-empty-consults">
+                                <FaCalendarAlt size={40} color="#ccc" />
+                                <p>You haven't requested any consultations yet.</p>
+                                <button className="so-submit-btn" onClick={() => setTab('find')}>
+                                    Find a Doctor
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="so-chat-layout">
+                                {/* Left: conversation list */}
+                                <div className="so-chat-sidebar">
+                                    <div className="so-chat-sidebar-header">
+                                        <FaComments size={13} style={{ marginRight: 6 }} />
+                                        My Consultations
+                                    </div>
                                     {consultations.map(c => {
-                                        const statusMeta = STATUS_COLORS[c.status] || STATUS_COLORS.pending;
-                                        const otherName = isDoctor ? c.patientName : c.doctorName;
-                                        const otherAvatar = isDoctor ? c.patientAvatar : c.doctorAvatar;
+                                        const sm = STATUS_COLORS[c.status] || STATUS_COLORS.pending;
                                         return (
-                                            <div key={c.id} className="so-consult-card">
-                                                <div className="so-consult-header">
-                                                    <div className="so-consult-who">
-                                                        <UserAvatar name={otherName} avatarUrl={otherAvatar} size={42} />
-                                                        <div>
-                                                            <p className="so-consult-name">{otherName}</p>
-                                                            {!isDoctor && c.doctorSpecialties?.length > 0 && (
-                                                                <p className="so-consult-spec">{c.doctorSpecialties.slice(0,2).join(', ')}</p>
-                                                            )}
-                                                            {isDoctor && <p className="so-consult-spec">Patient</p>}
-                                                        </div>
+                                            <div
+                                                key={c.id}
+                                                className={`so-chat-item ${selectedConsult?.id === c.id ? 'active' : ''}`}
+                                                onClick={() => setSelectedConsult(c)}
+                                            >
+                                                <UserAvatar name={c.doctorName} avatarUrl={c.doctorAvatar} size={38} />
+                                                <div className="so-chat-item-body">
+                                                    <div className="so-chat-item-row">
+                                                        <span className="so-chat-item-name">{c.doctorName}</span>
+                                                        <span className="so-chat-status-dot" style={{ background: sm.color }} title={sm.label} />
                                                     </div>
-                                                    <span className="so-status-badge" style={{ background: statusMeta.bg, color: statusMeta.color }}>
-                                                        {statusMeta.label}
-                                                    </span>
+                                                    <p className="so-chat-item-concern">
+                                                        {c.concern?.slice(0, 50)}{c.concern?.length > 50 ? '…' : ''}
+                                                    </p>
+                                                    <span className="so-chat-item-time">{timeAgo(c.createdAt)}</span>
                                                 </div>
-
-                                                <p className="so-consult-concern">{c.concern}</p>
-
-                                                {c.notes && (
-                                                    <div className="so-consult-notes">
-                                                        <strong>Doctor's notes:</strong> {c.notes}
-                                                    </div>
-                                                )}
-
-                                                {/* Doctor actions */}
-                                                {isDoctor && c.status === 'pending' && (
-                                                    <div className="so-doctor-actions">
-                                                        <button className="so-accept-btn" onClick={() => updateConsultation(c.id, 'accepted')}>
-                                                            <FaCheckCircle size={13} /> Accept & Create Call Link
-                                                        </button>
-                                                        <button className="so-decline-btn" onClick={() => updateConsultation(c.id, 'declined')}>
-                                                            <FaTimes size={13} /> Decline
-                                                        </button>
-                                                    </div>
-                                                )}
-
-                                                {/* Join call button */}
-                                                {c.status === 'accepted' && c.meetingUrl && (
-                                                    <div className="so-call-row">
-                                                        <button className="so-video-btn" onClick={() => joinCall(c)}>
-                                                            <FaVideo size={14} /> Join Video Call
-                                                        </button>
-                                                        <button className="so-audio-btn" onClick={() => joinCall(c)}>
-                                                            <FaPhone size={14} /> Audio Only
-                                                        </button>
-                                                        {isDoctor && (
-                                                            <button className="so-complete-btn" onClick={() => updateConsultation(c.id, 'completed')}>
-                                                                Mark Complete
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                )}
-
-                                                <p className="so-consult-date">
-                                                    {new Date(c.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                                                </p>
                                             </div>
                                         );
                                     })}
                                 </div>
-                            )}
-                        </div>
+
+                                {/* Right: chat panel */}
+                                <div className="so-chat-main">
+                                    {!selectedConsult ? (
+                                        <div className="so-chat-empty-state">
+                                            <FaComments size={40} color="#ccc" />
+                                            <p>Select a conversation to view messages</p>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {/* Doctor info header */}
+                                            <div className="so-chat-header">
+                                                <UserAvatar name={selectedConsult.doctorName} avatarUrl={selectedConsult.doctorAvatar} size={38} />
+                                                <div>
+                                                    <p className="so-chat-doctor-name">{selectedConsult.doctorName}</p>
+                                                    {selectedConsult.doctorSpecialties?.length > 0 && (
+                                                        <p className="so-chat-doctor-spec">{selectedConsult.doctorSpecialties.slice(0,2).join(', ')}</p>
+                                                    )}
+                                                </div>
+                                                <span
+                                                    className="so-status-badge"
+                                                    style={{
+                                                        background: STATUS_COLORS[selectedConsult.status]?.bg,
+                                                        color: STATUS_COLORS[selectedConsult.status]?.color,
+                                                        marginLeft: 'auto',
+                                                    }}
+                                                >
+                                                    {STATUS_COLORS[selectedConsult.status]?.label}
+                                                </span>
+                                                {selectedConsult.status === 'accepted' && selectedConsult.meetingUrl && (
+                                                    <a
+                                                        href={selectedConsult.meetingUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="so-chat-video-btn"
+                                                    >
+                                                        <FaVideo size={13} /> Join Call
+                                                    </a>
+                                                )}
+                                            </div>
+
+                                            {/* Concern + notes */}
+                                            <div className="so-chat-concern-bar">
+                                                <p className="so-chat-concern-label">Your concern</p>
+                                                <p className="so-chat-concern-text">{selectedConsult.concern}</p>
+                                                {selectedConsult.notes && (
+                                                    <div className="so-chat-notes">
+                                                        <strong>Doctor's notes:</strong> {selectedConsult.notes}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Messages */}
+                                            <div className="so-chat-messages">
+                                                {chatMsgLoading ? (
+                                                    <p className="so-chat-msg-hint">Loading messages…</p>
+                                                ) : chatMessages.length === 0 ? (
+                                                    <p className="so-chat-msg-hint">
+                                                        {selectedConsult.status === 'pending'
+                                                            ? 'Waiting for the doctor to accept your request before you can message.'
+                                                            : 'No messages yet. Send one to start the conversation.'}
+                                                    </p>
+                                                ) : (
+                                                    chatMessages.map(m => {
+                                                        const isMe = m.senderId === user?.id;
+                                                        return (
+                                                            <div key={m.id} className={`so-chat-msg ${isMe ? 'so-chat-msg-me' : 'so-chat-msg-them'}`}>
+                                                                {!isMe && (
+                                                                    <UserAvatar name={m.senderName} avatarUrl={m.senderAvatar} size={26} />
+                                                                )}
+                                                                <div className="so-chat-msg-bubble">
+                                                                    {!isMe && <span className="so-chat-msg-sender">{m.senderName}</span>}
+                                                                    <p className="so-chat-msg-text">{m.content}</p>
+                                                                    <span className="so-chat-msg-time">{timeAgo(m.createdAt)}</span>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })
+                                                )}
+                                                <div ref={chatEndRef} />
+                                            </div>
+
+                                            {/* Message input */}
+                                            {selectedConsult.status !== 'declined' && selectedConsult.status !== 'completed' && (
+                                                <form className="so-chat-input-row" onSubmit={sendChatMessage}>
+                                                    <input
+                                                        className="so-chat-input"
+                                                        placeholder={
+                                                            selectedConsult.status === 'pending'
+                                                                ? 'Waiting for doctor to accept…'
+                                                                : 'Type a message…'
+                                                        }
+                                                        value={chatMsgInput}
+                                                        onChange={e => setChatMsgInput(e.target.value)}
+                                                        disabled={selectedConsult.status === 'pending' || chatSending}
+                                                        maxLength={2000}
+                                                    />
+                                                    <button
+                                                        type="submit"
+                                                        className="so-chat-send-btn"
+                                                        disabled={!chatMsgInput.trim() || selectedConsult.status === 'pending' || chatSending}
+                                                    >
+                                                        <FaPaperPlane size={13} />
+                                                    </button>
+                                                </form>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        )
                     )}
                 </main>
             </div>

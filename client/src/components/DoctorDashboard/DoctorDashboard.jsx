@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import UserAvatar from '../common/UserAvatar';
@@ -132,11 +132,44 @@ export default function DoctorDashboard() {
         } catch { /* keep optimistic */ } finally { setSending(false); }
     };
 
-    const filtered = filter === 'all'
-        ? consultations
-        : consultations.filter(c => c.status === filter);
-
     const pendingCount = consultations.filter(c => c.status === 'pending').length;
+
+    // Group consultations by patient so the same patient appears once in the sidebar
+    const patientGroups = useMemo(() => {
+        const source = filter === 'all'
+            ? consultations
+            : consultations.filter(c => c.status === filter);
+        const map = new Map();
+        for (const c of source) {
+            if (!map.has(c.patientId)) {
+                map.set(c.patientId, {
+                    patientId: c.patientId,
+                    patientName: c.patientName,
+                    patientAvatar: c.patientAvatar,
+                    consultations: [],
+                });
+            }
+            map.get(c.patientId).consultations.push(c);
+        }
+        return Array.from(map.values());
+    }, [consultations, filter]);
+
+    // All consultations for the currently selected patient (for the switcher tabs)
+    const selectedPatientConsults = useMemo(() =>
+        consultations.filter(c => c.patientId === selected?.patientId),
+    [consultations, selected?.patientId]);
+
+    const PRIORITY = { pending: 3, accepted: 2, completed: 1, declined: 0 };
+
+    const bestConsultation = (consults) =>
+        [...consults].sort((a, b) => (PRIORITY[b.status] ?? 0) - (PRIORITY[a.status] ?? 0))[0];
+
+    const selectPatientGroup = (group) => {
+        const best = bestConsultation(group.consultations);
+        setSelected(best);
+        setMsgInput('');
+        loadMessages(best.id);
+    };
 
     const handleLogout = () => { logout(); navigate('/physician'); };
 
@@ -216,26 +249,33 @@ export default function DoctorDashboard() {
 
                     {loading ? (
                         <p className="dd-list-empty">Loading…</p>
-                    ) : filtered.length === 0 ? (
+                    ) : patientGroups.length === 0 ? (
                         <p className="dd-list-empty">No {filter !== 'all' ? filter : ''} consultations.</p>
                     ) : (
                         <div className="dd-consult-list">
-                            {filtered.map(c => {
-                                const sm = STATUS_META[c.status] || STATUS_META.pending;
+                            {patientGroups.map(group => {
+                                const best = bestConsultation(group.consultations);
+                                const sm = STATUS_META[best.status] || STATUS_META.pending;
+                                const isActive = group.consultations.some(c => c.id === selected?.id);
                                 return (
                                     <div
-                                        key={c.id}
-                                        className={`dd-consult-item ${selected?.id === c.id ? 'active' : ''}`}
-                                        onClick={() => selectConsultation(c)}
+                                        key={group.patientId}
+                                        className={`dd-consult-item ${isActive ? 'active' : ''}`}
+                                        onClick={() => selectPatientGroup(group)}
                                     >
-                                        <UserAvatar name={c.patientName} avatarUrl={c.patientAvatar} size={38} />
+                                        <UserAvatar name={group.patientName} avatarUrl={group.patientAvatar} size={38} />
                                         <div className="dd-consult-item-body">
                                             <div className="dd-consult-item-row">
-                                                <span className="dd-consult-item-name">{c.patientName || 'Patient'}</span>
+                                                <span className="dd-consult-item-name">{group.patientName || 'Patient'}</span>
                                                 <span className="dd-status-dot" style={{ background: sm.color }} title={sm.label} />
                                             </div>
-                                            <p className="dd-consult-item-concern">{c.concern?.slice(0, 60)}{c.concern?.length > 60 ? '…' : ''}</p>
-                                            <span className="dd-consult-item-time">{timeAgo(c.createdAt)}</span>
+                                            <p className="dd-consult-item-concern">{best.concern?.slice(0, 55)}{best.concern?.length > 55 ? '…' : ''}</p>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <span className="dd-consult-item-time">{timeAgo(best.createdAt)}</span>
+                                                {group.consultations.length > 1 && (
+                                                    <span className="dd-multi-badge">{group.consultations.length} requests</span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 );
@@ -300,6 +340,24 @@ export default function DoctorDashboard() {
                                     )}
                                 </div>
                             </div>
+
+                            {/* Request switcher — shown when same patient has multiple consultations */}
+                            {selectedPatientConsults.length > 1 && (
+                                <div className="dd-consult-switcher">
+                                    {selectedPatientConsults.map((c, i) => (
+                                        <button
+                                            key={c.id}
+                                            className={`dd-consult-switch-tab ${selected.id === c.id ? 'active' : ''}`}
+                                            onClick={() => { setSelected(c); setMsgInput(''); loadMessages(c.id); }}
+                                        >
+                                            Request {i + 1}
+                                            <span style={{ marginLeft: 5, color: STATUS_META[c.status]?.color, fontSize: '0.72rem' }}>
+                                                {STATUS_META[c.status]?.label}
+                                            </span>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
 
                             {/* Concern card */}
                             <div className="dd-concern-card">

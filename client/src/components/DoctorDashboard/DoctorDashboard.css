@@ -234,6 +234,29 @@
 }
 .dd-modal-hint { font-size: 0.82rem; color: #888; text-align: center; margin: 0; }
 
+/* Multiple-requests badge in sidebar */
+.dd-multi-badge {
+    font-size: 0.68rem; background: #e0f2f1; color: #005c55;
+    padding: 1px 7px; border-radius: 10px; font-weight: 700;
+}
+
+/* Consultation switcher tabs (when same patient has multiple requests) */
+.dd-consult-switcher {
+    display: flex; gap: 0; border-bottom: 1px solid #e8e8e8;
+    background: #fafafa; flex-shrink: 0; overflow-x: auto;
+}
+.dd-consult-switch-tab {
+    padding: 0.5rem 1.1rem; background: none; border: none;
+    border-bottom: 2px solid transparent; font-size: 0.81rem;
+    color: #777; cursor: pointer; white-space: nowrap;
+    transition: all 0.15s; font-family: inherit;
+}
+.dd-consult-switch-tab:hover { color: #005c55; background: #f0faf9; }
+.dd-consult-switch-tab.active {
+    color: #005c55; border-bottom-color: #005c55;
+    font-weight: 700; background: #fff;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .dd-sidebar { width: 100%; height: 240px; border-right: none; border-bottom: 1px solid #e8e8e8; }
