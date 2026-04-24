@@ -62,10 +62,31 @@ router.get('/', authenticate, async (req, res) => {
     }
 });
 
-/* ── PUT /api/consultations/:id — doctor accepts/declines ───────────────── */
+/* ── PUT /api/consultations/:id — doctor updates status or meeting link ──── */
 router.put('/:id', authenticate, async (req, res) => {
-    const { status, scheduledAt, notes } = req.body;
+    const { status, scheduledAt, notes, meetingUrl: customMeetingUrl } = req.body;
     const meId = req.user.id;
+
+    // Allow meeting URL-only updates (no status change required)
+    if (!status && customMeetingUrl !== undefined) {
+        try {
+            const check = await pool.query(
+                'SELECT id FROM consultations WHERE id=$1 AND doctor_id=$2',
+                [req.params.id, meId]
+            );
+            if (!check.rows.length) return res.status(403).json({ error: 'Not authorized' });
+
+            const { rows } = await pool.query(`
+                UPDATE consultations SET meeting_url = $1 WHERE id = $2
+                RETURNING id, status, meeting_url AS "meetingUrl",
+                          scheduled_at AS "scheduledAt", notes
+            `, [customMeetingUrl || null, req.params.id]);
+            return res.json(rows[0]);
+        } catch (err) {
+            console.error('PUT meeting_url error:', err);
+            return res.status(500).json({ error: 'Server error' });
+        }
+    }
 
     const allowed = ['accepted', 'declined', 'completed'];
     if (!allowed.includes(status))
@@ -74,16 +95,17 @@ router.put('/:id', authenticate, async (req, res) => {
     try {
         // Only the assigned doctor can update
         const check = await pool.query(
-            'SELECT id, patient_id FROM consultations WHERE id=$1 AND doctor_id=$2',
+            'SELECT id, patient_id, meeting_url FROM consultations WHERE id=$1 AND doctor_id=$2',
             [req.params.id, meId]
         );
         if (!check.rows.length)
             return res.status(403).json({ error: 'Not authorized' });
 
-        // Generate Jitsi meeting URL when accepting
-        let meetingUrl = null;
-        if (status === 'accepted') {
-            meetingUrl = `https://meet.jit.si/medbuddie-consult-${req.params.id}-${Date.now()}`;
+        // Generate a meeting URL when accepting (only if one doesn't exist yet)
+        let meetingUrl = customMeetingUrl || null;
+        if (status === 'accepted' && !check.rows[0].meeting_url && !meetingUrl) {
+            const roomName = `medbuddie-${req.params.id}-${Math.random().toString(36).slice(2, 8)}`;
+            meetingUrl = `https://meet.jit.si/${roomName}`;
         }
 
         const { rows } = await pool.query(`

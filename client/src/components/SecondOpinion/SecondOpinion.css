@@ -1364,6 +1364,11 @@
 }
 .so-chat-video-btn:hover { background: #00796b; }
 
+.so-chat-awaiting-link {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 0.78rem; color: #999; font-style: italic;
+}
+
 /* Concern bar */
 .so-chat-concern-bar {
     padding: 0.75rem 1.25rem;

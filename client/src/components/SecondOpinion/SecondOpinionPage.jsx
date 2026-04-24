@@ -540,9 +540,15 @@ export default function SecondOpinionPage() {
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="so-chat-video-btn"
+                                                        title={selectedConsult.meetingUrl}
                                                     >
-                                                        <FaVideo size={13} /> Join Call
+                                                        <FaVideo size={13} /> Join Video Call
                                                     </a>
+                                                )}
+                                                {selectedConsult.status === 'accepted' && !selectedConsult.meetingUrl && (
+                                                    <span className="so-chat-awaiting-link">
+                                                        <FaVideo size={12} /> Awaiting call link from doctor…
+                                                    </span>
                                                 )}
                                             </div>
 
@@ -654,7 +660,7 @@ export default function SecondOpinionPage() {
                         <div className="call-modal-body">
                             <div className="call-info-row">
                                 <FaVideo size={18} color="#005c55" />
-                                <span>Secure video call powered by Jitsi Meet</span>
+                                <span>Video call with {callModal.doctorName}</span>
                             </div>
                             <p className="call-room-url">{callModal.url}</p>
                             <div className="call-actions">
@@ -664,9 +670,9 @@ export default function SecondOpinionPage() {
                                     rel="noopener noreferrer"
                                     className="call-open-btn"
                                 >
-                                    <FaVideo size={15} /> Open Video Call
+                                    <FaVideo size={15} /> Join Video Call
                                 </a>
-                                <p className="call-hint">Opens in a new tab — no download required. Works on Chrome, Firefox, and Safari.</p>
+                                <p className="call-hint">Opens in a new tab. Allow camera and microphone access when prompted.</p>
                             </div>
                             <div className="call-tips">
                                 <strong>Before joining:</strong>

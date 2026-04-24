@@ -42,6 +42,8 @@ export default function DoctorDashboard() {
     const [sending, setSending]             = useState(false);
     const [filter, setFilter]               = useState('all'); // 'all' | 'pending' | 'accepted' | 'completed'
     const [callModal, setCallModal]         = useState(null);
+    const [editingLink, setEditingLink]     = useState(false);
+    const [linkInput, setLinkInput]         = useState('');
     const [showUserMenu, setShowUserMenu]   = useState(false);
     const messagesEndRef = useRef(null);
     const userMenuRef    = useRef(null);
@@ -144,6 +146,24 @@ export default function DoctorDashboard() {
                 setMessages(prev => prev.map(m => m.id === optimistic.id ? { ...m, ...saved } : m));
             }
         } catch { /* keep optimistic */ } finally { setSending(false); }
+    };
+
+    const saveMeetingLink = async (url) => {
+        if (!selected) return;
+        try {
+            const res = await fetch(`/api/consultations/${selected.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ meetingUrl: url }),
+            });
+            if (res.ok) {
+                const updated = await res.json();
+                setConsultations(prev => prev.map(c => c.id === selected.id ? { ...c, ...updated } : c));
+                setSelected(prev => ({ ...prev, ...updated }));
+            }
+        } catch { /* silent */ }
+        setEditingLink(false);
+        setLinkInput('');
     };
 
     const pendingCount = consultations.filter(c => c.status === 'pending').length;
@@ -337,20 +357,51 @@ export default function DoctorDashboard() {
                                             </button>
                                         </>
                                     )}
-                                    {selected.status === 'accepted' && selected.meetingUrl && (
+                                    {selected.status === 'accepted' && (
                                         <>
-                                            <a className="dd-video-btn" href={selected.meetingUrl} target="_blank" rel="noopener noreferrer">
-                                                <FaVideo size={13} /> Video Call
-                                            </a>
-                                            <button className="dd-complete-btn" onClick={() => updateStatus(selected.id, 'completed')}>
-                                                <FaCheckCircle size={12} /> Mark Complete
-                                            </button>
+                                            {editingLink ? (
+                                                <div className="dd-link-edit-row">
+                                                    <input
+                                                        className="dd-link-input"
+                                                        type="url"
+                                                        placeholder="Paste Zoom / Google Meet / Teams URL…"
+                                                        value={linkInput}
+                                                        onChange={e => setLinkInput(e.target.value)}
+                                                        autoFocus
+                                                    />
+                                                    <button
+                                                        className="dd-accept-btn"
+                                                        onClick={() => saveMeetingLink(linkInput.trim())}
+                                                        disabled={!linkInput.trim()}
+                                                    >
+                                                        <FaCheck size={11} /> Save
+                                                    </button>
+                                                    <button
+                                                        className="dd-decline-btn"
+                                                        onClick={() => { setEditingLink(false); setLinkInput(''); }}
+                                                    >
+                                                        <FaTimes size={11} /> Cancel
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    {selected.meetingUrl ? (
+                                                        <a className="dd-video-btn" href={selected.meetingUrl} target="_blank" rel="noopener noreferrer">
+                                                            <FaVideo size={13} /> Join Call
+                                                        </a>
+                                                    ) : null}
+                                                    <button
+                                                        className="dd-complete-btn"
+                                                        onClick={() => { setLinkInput(selected.meetingUrl || ''); setEditingLink(true); }}
+                                                    >
+                                                        <FaVideo size={12} /> {selected.meetingUrl ? 'Change Link' : 'Set Meeting Link'}
+                                                    </button>
+                                                    <button className="dd-complete-btn" onClick={() => updateStatus(selected.id, 'completed')}>
+                                                        <FaCheckCircle size={12} /> Mark Complete
+                                                    </button>
+                                                </>
+                                            )}
                                         </>
-                                    )}
-                                    {selected.status === 'accepted' && !selected.meetingUrl && (
-                                        <button className="dd-video-btn" onClick={() => updateStatus(selected.id, 'accepted')}>
-                                            <FaVideo size={13} /> Generate Call Link
-                                        </button>
                                     )}
                                 </div>
                             </div>
