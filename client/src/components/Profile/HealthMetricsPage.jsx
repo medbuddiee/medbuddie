@@ -81,9 +81,25 @@ export default function HealthMetricsPage() {
     const goalWeight = 155;
     const weightPct  = weightNum ? Math.round((goalWeight / weightNum) * 100) : 0;
 
-    /* Static activity/diet for now — would come from a dedicated API */
-    const activity = { steps: 7856, stepsGoal: 10000, calories: 480, workout: 40 };
-    const diet     = { calories: 1850, caloriesGoal: 2200, carbs: 235, protein: 96, fat: 56 };
+    /* Activity/diet goals from localStorage (set via Edit Health Metrics page) */
+    const savedGoals = (() => {
+        try { return JSON.parse(localStorage.getItem('hm_activity_diet') || '{}'); } catch { return {}; }
+    })();
+    const activity = {
+        steps: 7856,
+        stepsGoal:  savedGoals.stepsGoal          || 10000,
+        calories:   480,
+        calGoal:    savedGoals.caloriesBurnedGoal  || 600,
+        workout:    40,
+        workoutGoal: savedGoals.workoutGoal        || 60,
+    };
+    const diet = {
+        calories:     1850,
+        caloriesGoal: savedGoals.caloriesIntakeGoal || 2200,
+        carbs:        235, carbsGoal: savedGoals.carbsGoal   || 300,
+        protein:       96, proteinGoal: savedGoals.proteinGoal || 130,
+        fat:           56, fatGoal:   savedGoals.fatGoal     || 70,
+    };
 
     const stepsPct    = Math.round((activity.steps / activity.stepsGoal) * 100);
     const calDietPct  = Math.round((diet.calories  / diet.caloriesGoal)  * 100);
@@ -106,7 +122,7 @@ export default function HealthMetricsPage() {
                             Detailed overview of your health data — updated from your profile.
                         </p>
                     </div>
-                    <button className="edit-button" onClick={() => navigate('/edit-profile')}>
+                    <button className="edit-button" onClick={() => navigate('/edit-health-metrics')}>
                         Update Data
                     </button>
                 </div>
@@ -226,8 +242,8 @@ export default function HealthMetricsPage() {
                         <div className="hm-activity-stats">
                             {[
                                 { label: 'Steps Today',     val: activity.steps.toLocaleString(), goal: `/ ${activity.stepsGoal.toLocaleString()}`, pct: stepsPct, color: '#1565c0' },
-                                { label: 'Calories Burned', val: `${activity.calories} kcal`,     goal: '/ 600 kcal goal', pct: 80, color: '#e65100' },
-                                { label: 'Workout Time',    val: `${activity.workout} min`,        goal: '/ 60 min goal',   pct: 67, color: '#005c55' },
+                                { label: 'Calories Burned', val: `${activity.calories} kcal`,     goal: `/ ${activity.calGoal} kcal goal`, pct: Math.round((activity.calories / activity.calGoal) * 100), color: '#e65100' },
+                                { label: 'Workout Time',    val: `${activity.workout} min`,        goal: `/ ${activity.workoutGoal} min goal`, pct: Math.round((activity.workout / activity.workoutGoal) * 100), color: '#005c55' },
                             ].map(a => (
                                 <div key={a.label} className="hm-activity-row">
                                     <div className="hm-activity-row-top">
@@ -283,9 +299,9 @@ export default function HealthMetricsPage() {
                         <div className="hm-macro-grid">
                             {[
                                 { label: 'Calories',      val: `${diet.calories}`,  unit: 'kcal', goal: diet.caloriesGoal, color: '#e65100' },
-                                { label: 'Carbohydrates', val: `${diet.carbs}`,     unit: 'g',    goal: 300,              color: '#f9a825' },
-                                { label: 'Protein',       val: `${diet.protein}`,   unit: 'g',    goal: 130,              color: '#1565c0' },
-                                { label: 'Fat',           val: `${diet.fat}`,       unit: 'g',    goal: 70,               color: '#c62828' },
+                                { label: 'Carbohydrates', val: `${diet.carbs}`,     unit: 'g',    goal: diet.carbsGoal,   color: '#f9a825' },
+                                { label: 'Protein',       val: `${diet.protein}`,   unit: 'g',    goal: diet.proteinGoal, color: '#1565c0' },
+                                { label: 'Fat',           val: `${diet.fat}`,       unit: 'g',    goal: diet.fatGoal,     color: '#c62828' },
                             ].map(m => {
                                 const pct = Math.round((parseInt(m.val) / m.goal) * 100);
                                 return (
@@ -348,7 +364,7 @@ export default function HealthMetricsPage() {
                         )}
 
                         <div className="hm-med-cta">
-                            <button className="edit-button" onClick={() => navigate('/edit-profile')}>
+                            <button className="edit-button" onClick={() => navigate('/edit-health-metrics')}>
                                 Manage Medications
                             </button>
                         </div>
@@ -366,10 +382,10 @@ export default function HealthMetricsPage() {
 
                     <div className="hm-goals-grid">
                         {[
-                            { icon: '🏃', title: 'Daily Steps',      target: '10,000 steps',   current: `${activity.steps.toLocaleString()} steps`,   pct: stepsPct,    color: '#1565c0' },
+                            { icon: '🏃', title: 'Daily Steps',      target: `${activity.stepsGoal.toLocaleString()} steps`, current: `${activity.steps.toLocaleString()} steps`, pct: stepsPct, color: '#1565c0' },
                             { icon: '⚖',  title: 'Target Weight',    target: `${goalWeight} lbs`, current: display.weight ? `${display.weight} lbs` : '—', pct: weightPct, color: '#005c55' },
-                            { icon: '🍎', title: 'Calorie Intake',   target: `${diet.caloriesGoal} kcal`, current: `${diet.calories} kcal`, pct: calDietPct,  color: '#e65100' },
-                            { icon: '💊', title: 'Medication Streak', target: '30 days',        current: '14 days',                                       pct: 47,          color: '#6a1b9a' },
+                            { icon: '🍎', title: 'Calorie Intake',   target: `${diet.caloriesGoal} kcal`, current: `${diet.calories} kcal`, pct: calDietPct, color: '#e65100' },
+                            { icon: '💊', title: 'Medication Streak', target: '30 days',        current: '14 days',                                      pct: 47,          color: '#6a1b9a' },
                         ].map(g => (
                             <div key={g.title} className="hm-goal-card">
                                 <div className="hm-goal-icon">{g.icon}</div>
@@ -385,7 +401,7 @@ export default function HealthMetricsPage() {
 
                 {/* ══ CTA row ══ */}
                 <div className="hm-cta-row">
-                    <button className="save-button" onClick={() => navigate('/edit-profile')}>
+                    <button className="save-button" onClick={() => navigate('/edit-health-metrics')}>
                         Update Health Data
                     </button>
                     <button className="cancel-button" onClick={() => navigate('/profile')}>

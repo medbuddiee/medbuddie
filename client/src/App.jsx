@@ -8,6 +8,7 @@ import FacebookCallback from './components/SignUp/FacebookCallback';
 import Dashboard from './components/Dashboard/Dashboard';
 import ProfilePage from './components/Profile/ProfilePage';
 import EditProfilePage from './components/Profile/EditProfilePage';
+import EditHealthMetricsPage from './components/Profile/EditHealthMetricsPage';
 import GuidelinesPage from './components/Guidelines/GuidelinesPage';
 import GuidelineDetail from './components/Guidelines/GuidelineDetail';
 import HealthMetricsPage from './components/Profile/HealthMetricsPage';
@@ -61,6 +62,7 @@ function AppRoutes() {
             <Route path="/guidelines/:id" element={<PrivateRoute element={<GuidelineDetail />} />} />
             <Route path="/profile"       element={<PrivateRoute element={<ProfilePage />} />} />
             <Route path="/edit-profile"  element={<PrivateRoute element={<EditProfilePage />} />} />
+            <Route path="/edit-health-metrics" element={<PrivateRoute element={<EditHealthMetricsPage />} />} />
             <Route path="/health-metrics" element={<PrivateRoute element={<HealthMetricsPage />} />} />
             <Route path="/second-opinion" element={<PrivateRoute element={<SecondOpinionPage />} />} />
 

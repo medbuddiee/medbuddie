@@ -440,6 +440,97 @@
     flex-wrap: wrap;
 }
 
+/* ── Edit Health Metrics page ─────────────────────────────────────────────── */
+.ehm-form {
+    max-width: 860px;
+}
+
+.ehm-section-card {
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.25rem;
+}
+
+.ehm-hint {
+    display: block;
+    font-size: 0.75rem;
+    color: #999;
+    margin-top: 3px;
+}
+
+.ehm-med-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-bottom: 0.75rem;
+}
+
+.ehm-med-row {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+}
+
+.ehm-med-name {
+    flex: 2;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.88rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+}
+.ehm-med-name:focus { border-color: #005c55; }
+
+.ehm-med-freq {
+    flex: 1;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.88rem;
+    font-family: inherit;
+    outline: none;
+    background: #fff;
+    transition: border-color 0.2s;
+}
+.ehm-med-freq:focus { border-color: #005c55; }
+
+.ehm-remove-btn {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #ffcdd2;
+    border-radius: 6px;
+    background: #fff;
+    color: #c62828;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s;
+}
+.ehm-remove-btn:hover:not(:disabled) { background: #ffebee; }
+.ehm-remove-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.ehm-add-med-btn {
+    display: flex;
+    align-items: center;
+    background: none;
+    border: 1.5px dashed #b2dfdb;
+    border-radius: 8px;
+    padding: 0.45rem 1rem;
+    font-size: 0.83rem;
+    color: #005c55;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 600;
+    transition: background 0.15s;
+}
+.ehm-add-med-btn:hover { background: #e0f2f1; }
+
 /* ── Responsive ───────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
     .hm-rings-row    { grid-template-columns: repeat(2, 1fr); }
