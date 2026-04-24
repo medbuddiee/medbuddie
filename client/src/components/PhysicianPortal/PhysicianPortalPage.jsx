@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import './PhysicianPortal.css';
 import logo from '../../../assets/medbuddie_logo.png';
-import { FaUserMd, FaLock, FaEnvelope, FaIdCard, FaChevronDown } from 'react-icons/fa';
+import { FaUserMd, FaLock, FaEnvelope, FaIdCard, FaChevronDown, FaCheckCircle, FaTimesCircle, FaSpinner } from 'react-icons/fa';
 
 const ALL_SPECIALTIES = [
     'Cardiology', 'Dermatology', 'Endocrinology', 'Gastroenterology',
@@ -28,11 +28,49 @@ export default function PhysicianPortalPage() {
     // Register state
     const [reg, setReg] = useState({
         name: '', email: '', password: '', confirmPassword: '',
-        licenseNumber: '', yearsExperience: '', doctorBio: '',
+        npiNumber: '', licenseNumber: '', yearsExperience: '', doctorBio: '',
     });
     const [regSpecialties, setRegSpecialties] = useState([]);
     const [regError, setRegError]   = useState('');
-    const [regLoading, setRegLoading] = useState('');
+    const [regLoading, setRegLoading] = useState(false);
+
+    // NPI verification state
+    const [npiStatus, setNpiStatus]   = useState(null); // null | 'checking' | 'verified' | 'error'
+    const [npiResult, setNpiResult]   = useState(null); // NPPES provider data
+    const [npiError, setNpiError]     = useState('');
+
+    const verifyNpi = async () => {
+        const npi = reg.npiNumber.trim().replace(/\D/g, '');
+        if (npi.length !== 10) {
+            setNpiError('NPI must be exactly 10 digits');
+            setNpiStatus('error');
+            return;
+        }
+        setNpiStatus('checking');
+        setNpiError('');
+        setNpiResult(null);
+        try {
+            const res = await fetch(`/api/npi/verify?npi=${npi}`);
+            const data = await res.json();
+            if (!res.ok || !data.verified) {
+                setNpiStatus('error');
+                setNpiError(data.error || 'NPI verification failed');
+                return;
+            }
+            setNpiStatus('verified');
+            setNpiResult(data);
+            // Auto-suggest specialties from NPPES taxonomy
+            if (data.specialties?.length) {
+                setRegSpecialties(prev => {
+                    const merged = [...new Set([...prev, ...data.specialties.filter(s => ALL_SPECIALTIES.includes(s))])];
+                    return merged;
+                });
+            }
+        } catch {
+            setNpiStatus('error');
+            setNpiError('Could not reach verification service. Try again.');
+        }
+    };
 
     const handleSignIn = async (e) => {
         e.preventDefault();
@@ -72,6 +110,8 @@ export default function PhysicianPortalPage() {
             return setRegError('Password must be at least 8 characters');
         if (!regSpecialties.length)
             return setRegError('Select at least one specialty');
+        if (npiStatus !== 'verified')
+            return setRegError('Please verify your NPI number before registering');
         setRegLoading(true);
         try {
             const res = await fetch('/api/doctor-signup', {
@@ -81,6 +121,8 @@ export default function PhysicianPortalPage() {
                     name: reg.name,
                     email: reg.email,
                     password: reg.password,
+                    npiNumber: reg.npiNumber.trim().replace(/\D/g, ''),
+                    npiVerified: true,
                     licenseNumber: reg.licenseNumber,
                     specialties: regSpecialties,
                     doctorBio: reg.doctorBio,
@@ -183,7 +225,7 @@ export default function PhysicianPortalPage() {
                         {/* ── Register ── */}
                         {tab === 'register' && (
                             <form className="pp-form pp-register-form" onSubmit={handleRegister}>
-                                <p className="pp-form-hint">All accounts are verified against your license number before patient-facing activation.</p>
+                                <p className="pp-form-hint">Your NPI is verified against the NPPES federal registry in real time.</p>
                                 {regError && <div className="pp-error">{regError}</div>}
 
                                 <div className="pp-field-group">
@@ -204,10 +246,65 @@ export default function PhysicianPortalPage() {
                                         <input name="confirmPassword" type="password" placeholder="Repeat password" value={reg.confirmPassword} onChange={handleRegChange} required />
                                     </div>
                                 </div>
+
+                                {/* ── NPI Verification ── */}
+                                <div className="pp-field-group">
+                                    <label><FaIdCard size={12} /> NPI Number * <span className="pp-npi-hint">(10-digit National Provider Identifier)</span></label>
+                                    <div className="pp-npi-row">
+                                        <input
+                                            name="npiNumber"
+                                            placeholder="e.g. 1234567890"
+                                            value={reg.npiNumber}
+                                            onChange={e => {
+                                                handleRegChange(e);
+                                                setNpiStatus(null);
+                                                setNpiResult(null);
+                                                setNpiError('');
+                                            }}
+                                            maxLength={10}
+                                            className={npiStatus === 'verified' ? 'pp-input-verified' : npiStatus === 'error' ? 'pp-input-error' : ''}
+                                            required
+                                        />
+                                        <button
+                                            type="button"
+                                            className="pp-verify-btn"
+                                            onClick={verifyNpi}
+                                            disabled={npiStatus === 'checking' || !reg.npiNumber.trim()}
+                                        >
+                                            {npiStatus === 'checking' ? 'Verifying…' : 'Verify NPI'}
+                                        </button>
+                                    </div>
+
+                                    {/* Verification result badge */}
+                                    {npiStatus === 'verified' && npiResult && (
+                                        <div className="pp-npi-badge pp-npi-verified">
+                                            <FaCheckCircle size={14} />
+                                            <div className="pp-npi-badge-body">
+                                                <strong>NPI Verified</strong> — {npiResult.name}{npiResult.credential ? `, ${npiResult.credential}` : ''}
+                                                {npiResult.state && <span className="pp-npi-state"> · {npiResult.city ? `${npiResult.city}, ` : ''}{npiResult.state}</span>}
+                                                {npiResult.taxonomies?.length > 0 && (
+                                                    <div className="pp-npi-taxonomy">{npiResult.taxonomies.join(' · ')}</div>
+                                                )}
+                                                {npiResult.specialties?.length > 0 && (
+                                                    <div className="pp-npi-specialties-added">
+                                                        ✓ Specialties auto-filled from NPPES
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {npiStatus === 'error' && (
+                                        <div className="pp-npi-badge pp-npi-error">
+                                            <FaTimesCircle size={14} />
+                                            <span>{npiError}</span>
+                                        </div>
+                                    )}
+                                </div>
+
                                 <div className="pp-2col">
                                     <div className="pp-field-group">
-                                        <label><FaIdCard size={12} /> Medical License Number *</label>
-                                        <input name="licenseNumber" placeholder="e.g. MD-2024-001234" value={reg.licenseNumber} onChange={handleRegChange} required />
+                                        <label>State License Number <span className="pp-optional">(optional)</span></label>
+                                        <input name="licenseNumber" placeholder="e.g. MD-CA-001234" value={reg.licenseNumber} onChange={handleRegChange} />
                                     </div>
                                     <div className="pp-field-group">
                                         <label>Years of Experience</label>
@@ -239,8 +336,8 @@ export default function PhysicianPortalPage() {
                                     />
                                 </div>
 
-                                <button type="submit" className="pp-submit" disabled={regLoading}>
-                                    {regLoading ? 'Creating account…' : 'Create Physician Account'}
+                                <button type="submit" className="pp-submit" disabled={regLoading || npiStatus !== 'verified'}>
+                                    {regLoading ? 'Creating account…' : 'Create Verified Physician Account'}
                                 </button>
                                 <p className="pp-switch-hint">
                                     Already have an account? <button type="button" className="pp-link" onClick={() => setTab('signin')}>Sign in →</button>

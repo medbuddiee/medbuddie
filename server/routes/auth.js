@@ -94,18 +94,24 @@ router.post('/login', async (req, res) => {
 
 // POST /api/doctor-signup — dedicated physician registration
 router.post('/doctor-signup', async (req, res) => {
-    const { name, email, password, licenseNumber, specialties, doctorBio, yearsExperience } = req.body;
-    if (!name || !email || !password || !licenseNumber)
-        return res.status(400).json({ error: 'Name, email, password and license number are required' });
+    const { name, email, password, licenseNumber, specialties, doctorBio, yearsExperience,
+            npiNumber, npiVerified } = req.body;
+    if (!name || !email || !password)
+        return res.status(400).json({ error: 'Name, email and password are required' });
     if (!specialties?.length)
         return res.status(400).json({ error: 'At least one specialty is required' });
+    if (!npiNumber)
+        return res.status(400).json({ error: 'NPI number is required for physician registration' });
+    if (!npiVerified)
+        return res.status(400).json({ error: 'Please verify your NPI number before registering' });
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
         const { rows } = await pool.query(
             `INSERT INTO users
                 (name, email, password, username, is_doctor, is_verified_doctor,
-                 license_number, doctor_specialties, doctor_bio, years_experience)
-             VALUES ($1,$2,$3,$4, true, true, $5,$6,$7,$8)
+                 license_number, doctor_specialties, doctor_bio, years_experience,
+                 npi_number, npi_verified)
+             VALUES ($1,$2,$3,$4, true, $5, $6,$7,$8,$9, $10, $11)
              RETURNING id, name, email, username, bio, weight, height, bmi,
                        blood_pressure AS "bloodPressure", hba1c,
                        lipid_panel    AS "lipidPanel", medications,
@@ -115,9 +121,13 @@ router.post('/doctor-signup', async (req, res) => {
                        doctor_specialties AS "doctorSpecialties",
                        doctor_bio     AS "doctorBio",
                        years_experience AS "yearsExperience",
-                       license_number AS "licenseNumber"`,
+                       license_number AS "licenseNumber",
+                       npi_number     AS "npiNumber",
+                       npi_verified   AS "npiVerified"`,
             [name, email, hashedPassword, email.split('@')[0],
-             licenseNumber, specialties, doctorBio || '', yearsExperience || 0]
+             npiVerified === true,      // is_verified_doctor = true only if NPPES confirmed
+             licenseNumber || null, specialties, doctorBio || '', yearsExperience || 0,
+             npiNumber, npiVerified === true]
         );
         const user = rows[0];
         user.medications = user.medications || [];

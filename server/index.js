@@ -14,6 +14,7 @@ const secondOpinionsRouter   = require('./routes/secondOpinions');
 const usersRouter            = require('./routes/users');
 const communitiesRouter      = require('./routes/communities');
 const consultationsRouter    = require('./routes/consultations');
+const npiRouter              = require('./routes/npi');
 
 const app  = express();
 const port = process.env.PORT || 5000;
@@ -57,6 +58,8 @@ async function runMigrations() {
         `ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified_doctor BOOLEAN DEFAULT FALSE`,
         `ALTER TABLE users ADD COLUMN IF NOT EXISTS doctor_bio TEXT`,
         `ALTER TABLE users ADD COLUMN IF NOT EXISTS years_experience INTEGER`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS npi_number VARCHAR(10)`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS npi_verified BOOLEAN DEFAULT FALSE`,
 
         // ── Followers ───────────────────────────────────────────────────────
         `CREATE TABLE IF NOT EXISTS user_followers (
@@ -151,6 +154,7 @@ async function start() {
     app.use('/api/users',           usersRouter);          // people / follow system
     app.use('/api/communities',     communitiesRouter);    // communities
     app.use('/api/consultations',   consultationsRouter);  // doctor consultations
+    app.use('/api/npi',             npiRouter);            // NPPES NPI verification
 
     // Backward-compat alias
     app.post('/login', (req, res, next) => {
