@@ -102,18 +102,15 @@ const SEEDS = [
             return;
         }
 
-        // Build a single multi-row INSERT using interval expressions for dates
-        const values = SEEDS.map(
-            ([title, specialty, source, summary, tags, bk, cr, pub, fk]) => {
-                const fkVal = fk ? `'${fk}'` : 'NULL';
-                return `('${title.replace(/'/g, "''")}', '${specialty}', '${source}', '${summary.replace(/'/g, "''")}', ARRAY[${tags.map(t => `'${t.replace(/'/g, "''")}'`).join(',')}], ${bk}, ${cr}, ${pub}, ${fkVal})`;
-            }
-        ).join(',\n');
-
-        await pool.query(
-            `INSERT INTO guidelines (title, specialty, source, summary, tags, bookmark_count, community_recs, published_at, file_key)
-             VALUES ${values}`
-        );
+        // Parameterized bulk insert — safe against SQL injection
+        for (const [title, specialty, source, summary, tags, bk, cr, pub, fk] of SEEDS) {
+            await pool.query(
+                `INSERT INTO guidelines
+                    (title, specialty, source, summary, tags, bookmark_count, community_recs, published_at, file_key)
+                 VALUES ($1,$2,$3,$4,$5,$6,$7,${pub},$8)`,
+                [title, specialty, source, summary, tags, bk, cr, fk || null]
+            );
+        }
         console.log(`✓ Guidelines seeded (${SEEDS.length} rows)`);
     } catch (err) {
         console.error('Guidelines seed error:', err.message);

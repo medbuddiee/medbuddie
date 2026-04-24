@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors    = require('cors');
+const helmet  = require('helmet');
 const path    = require('path');
 const pool    = require('./config/db');
 
@@ -136,8 +137,33 @@ async function runMigrations() {
 async function start() {
     await runMigrations();
 
-    app.use(cors());
-    app.use(express.json());
+    // Security headers
+    app.use(helmet({
+        contentSecurityPolicy: false, // React app handles its own CSP
+        crossOriginEmbedderPolicy: false,
+    }));
+
+    // CORS — allow only known origins
+    const allowedOrigins = process.env.ALLOWED_ORIGINS
+        ? process.env.ALLOWED_ORIGINS.split(',')
+        : ['http://localhost:5173', 'http://localhost:3000'];
+    app.use(cors({
+        origin: (origin, cb) => {
+            // allow server-to-server (no origin) and listed origins
+            if (!origin || allowedOrigins.some(o => origin.startsWith(o.trim()))) {
+                cb(null, true);
+            } else {
+                cb(new Error(`CORS: origin ${origin} not allowed`));
+            }
+        },
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+    }));
+
+    // Body size limit — prevent oversized payloads
+    app.use(express.json({ limit: '1mb' }));
+    app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
     // Serve uploaded files (avatars, etc.)
     app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -169,10 +195,13 @@ async function start() {
         app.get('*', (_req, res) => res.sendFile(path.join(clientBuild, 'index.html')));
     }
 
-    // Global error handler
+    // Global error handler — never leak internals to clients in production
     app.use((err, _req, res, _next) => {
         console.error('Unhandled error:', err);
-        res.status(500).json({ error: err.message || 'Internal server error' });
+        const isDev = process.env.NODE_ENV !== 'production';
+        res.status(err.status || 500).json({
+            error: isDev ? (err.message || 'Internal server error') : 'Internal server error',
+        });
     });
 
     app.listen(port, () => {

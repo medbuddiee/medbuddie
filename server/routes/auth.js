@@ -1,10 +1,20 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
 const { OAuth2Client } = require('google-auth-library');
 const pool = require('../config/db');
 
 const router = express.Router();
+
+// Strict rate limit for auth endpoints — 10 attempts per 15 min per IP
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many attempts. Please try again in 15 minutes.' },
+});
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const JWT_SECRET = process.env.JWT_SECRET || 'medbuddie_dev_secret_change_in_production';
 
@@ -17,11 +27,17 @@ function makeToken(user) {
 }
 
 // POST /api/signup
-router.post('/signup', async (req, res) => {
+router.post('/signup', authLimiter, async (req, res) => {
     const { name, email, password, username, dob, isCaregiver } = req.body;
     if (!email || !password) {
         return res.status(400).json({ error: 'Email and password are required' });
     }
+    if (typeof email !== 'string' || email.length > 254)
+        return res.status(400).json({ error: 'Invalid email' });
+    if (typeof password !== 'string' || password.length < 8 || password.length > 128)
+        return res.status(400).json({ error: 'Password must be 8–128 characters' });
+    if (name && (typeof name !== 'string' || name.length > 100))
+        return res.status(400).json({ error: 'Name must be under 100 characters' });
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
         const result = await pool.query(
@@ -44,11 +60,15 @@ router.post('/signup', async (req, res) => {
 });
 
 // POST /api/login
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) {
         return res.status(400).json({ error: 'Email and password are required' });
     }
+    if (typeof email !== 'string' || email.length > 254)
+        return res.status(400).json({ error: 'Invalid email' });
+    if (typeof password !== 'string' || password.length > 128)
+        return res.status(400).json({ error: 'Invalid password' });
     try {
         // Fetch password hash separately, then return camelCase profile
         const { rows } = await pool.query(
@@ -93,11 +113,19 @@ router.post('/login', async (req, res) => {
 });
 
 // POST /api/doctor-signup — dedicated physician registration
-router.post('/doctor-signup', async (req, res) => {
+router.post('/doctor-signup', authLimiter, async (req, res) => {
     const { name, email, password, licenseNumber, specialties, doctorBio, yearsExperience,
             npiNumber, npiVerified } = req.body;
     if (!name || !email || !password)
         return res.status(400).json({ error: 'Name, email and password are required' });
+    if (typeof email !== 'string' || email.length > 254)
+        return res.status(400).json({ error: 'Invalid email' });
+    if (typeof password !== 'string' || password.length < 8 || password.length > 128)
+        return res.status(400).json({ error: 'Password must be 8–128 characters' });
+    if (typeof name !== 'string' || name.length > 100)
+        return res.status(400).json({ error: 'Name must be under 100 characters' });
+    if (doctorBio && (typeof doctorBio !== 'string' || doctorBio.length > 2000))
+        return res.status(400).json({ error: 'Bio must be under 2000 characters' });
     if (!specialties?.length)
         return res.status(400).json({ error: 'At least one specialty is required' });
     if (!npiNumber)

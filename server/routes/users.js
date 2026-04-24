@@ -126,6 +126,9 @@ router.get('/doctors/list', softAuthenticate, async (req, res) => {
 
 /* ── GET /api/users/:id — single user profile ───────────────────────────── */
 router.get('/:id', softAuthenticate, async (req, res) => {
+    const userId = parseInt(req.params.id);
+    if (!Number.isFinite(userId) || userId < 1)
+        return res.status(400).json({ error: 'Invalid user ID' });
     const meId = req.user?.id || null;
     try {
         const { rows } = await pool.query(`
@@ -153,6 +156,8 @@ router.get('/:id', softAuthenticate, async (req, res) => {
 /* ── POST /api/users/:id/follow — toggle follow ─────────────────────────── */
 router.post('/:id/follow', authenticate, async (req, res) => {
     const followingId = parseInt(req.params.id);
+    if (!Number.isFinite(followingId) || followingId < 1)
+        return res.status(400).json({ error: 'Invalid user ID' });
     const followerId  = req.user.id;
 
     if (followingId === followerId)

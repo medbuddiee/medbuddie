@@ -10,6 +10,8 @@ router.post('/', authenticate, async (req, res) => {
 
     if (!doctorId || !concern?.trim())
         return res.status(400).json({ error: 'Doctor and concern are required' });
+    if (concern.length > 5000)
+        return res.status(400).json({ error: 'Concern must be under 5,000 characters' });
 
     // Verify doctor exists and is verified
     const doc = await pool.query(
@@ -159,6 +161,7 @@ router.post('/:id/messages', authenticate, async (req, res) => {
     const meId = req.user.id;
     const { content } = req.body;
     if (!content?.trim()) return res.status(400).json({ error: 'Message content required' });
+    if (content.length > 4000) return res.status(400).json({ error: 'Message must be under 4,000 characters' });
     try {
         const access = await pool.query(
             'SELECT id FROM consultations WHERE id=$1 AND (patient_id=$2 OR doctor_id=$2)',

@@ -89,6 +89,8 @@ router.post('/', authenticate, async (req, res) => {
     if (!content || !content.trim()) {
         return res.status(400).json({ error: 'Content is required' });
     }
+    if (content.length > 10000)
+        return res.status(400).json({ error: 'Post content must be under 10,000 characters' });
 
     // Accept any valid type; fall back to 'personal'
     const VALID_TYPES = ['medical_opinion', 'medical_question', 'personal'];
@@ -230,6 +232,8 @@ router.post('/:id/comments', authenticate, async (req, res) => {
     if (!content || !content.trim()) {
         return res.status(400).json({ error: 'Comment content is required' });
     }
+    if (content.length > 2000)
+        return res.status(400).json({ error: 'Comment must be under 2,000 characters' });
 
     const client = await pool.connect();
     try {

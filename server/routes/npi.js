@@ -84,8 +84,9 @@ router.get('/verify', async (req, res) => {
     }
 
     try {
+        const params = new URLSearchParams({ number: npi.trim(), version: '2.1' });
         const apiRes = await fetch(
-            `https://npiregistry.cms.hhs.gov/api/?number=${npi.trim()}&version=2.1`,
+            `https://npiregistry.cms.hhs.gov/api/?${params.toString()}`,
             { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(8000) }
         );
 
