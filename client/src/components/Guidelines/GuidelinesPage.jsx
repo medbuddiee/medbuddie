@@ -284,9 +284,9 @@ export default function GuidelinesPage() {
                                                     <div className="gl-item-row">
                                                         <span className="gl-item-dot" style={{ background: color }} />
                                                         <span
-                                                            className={`gl-item-title${item.file_key ? ' gl-item-title-link' : ''}`}
-                                                            onClick={() => item.file_key && navigate(`/guidelines/${item.id}`)}
-                                                            title={item.file_key ? 'View full guideline' : undefined}
+                                                            className="gl-item-title gl-item-title-link"
+                                                            onClick={() => navigate(`/guidelines/${item.id}`)}
+                                                            title="View full guideline"
                                                         >
                                                             {item.title}
                                                         </span>
