@@ -5,7 +5,7 @@ import logo from '../../../assets/medbuddie_logo.png';
 import {
     FaHome, FaBookOpen, FaStar, FaNewspaper,
     FaUserFriends, FaUsers, FaComments, FaChartLine,
-    FaRunning, FaAppleAlt, FaPills, FaSearch,
+    FaRunning, FaPills, FaSearch,
 } from 'react-icons/fa';
 import { MdOutlinePersonSearch } from 'react-icons/md';
 
@@ -23,7 +23,6 @@ const NAV_TOP = [
 const NAV_BOTTOM = [
     { icon: <FaChartLine />, label: 'Personal Stats', path: '/profile' },
     { icon: <FaRunning />, label: 'Activity', path: '/activity' },
-    { icon: <FaAppleAlt />, label: 'Diet', path: '/diet' },
     { icon: <FaPills />, label: 'Medications', path: '/medications' },
 ];
 
