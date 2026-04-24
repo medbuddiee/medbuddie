@@ -12,29 +12,41 @@ export default function SignIn() {
     const { login } = useUser();
 
     useEffect(() => {
-        if (!window.google) return;
-        window.google.accounts.id.initialize({
-            client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-            callback: async (response) => {
-                try {
-                    const res = await fetch('/api/google-login', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ token: response.credential }),
-                    });
-                    const data = await res.json();
-                    if (res.ok) {
-                        login(data.user);
-                        localStorage.setItem('token', data.token);
-                        navigate('/dashboard');
-                    } else {
-                        alert(data.error || 'Google sign-in failed');
+        const initGoogle = () => {
+            if (!window.google?.accounts?.id) return;
+            window.google.accounts.id.initialize({
+                client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+                callback: async (response) => {
+                    try {
+                        const res = await fetch('/api/google-login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ token: response.credential }),
+                        });
+                        const data = await res.json();
+                        if (res.ok) {
+                            login(data.user);
+                            localStorage.setItem('token', data.token);
+                            navigate('/dashboard');
+                        } else {
+                            alert(data.error || 'Google sign-in failed');
+                        }
+                    } catch {
+                        alert('Server error during Google sign-in');
                     }
-                } catch {
-                    alert('Server error during Google sign-in');
-                }
-            },
-        });
+                },
+            });
+        };
+
+        if (window.google?.accounts?.id) {
+            initGoogle();
+        } else {
+            const script = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
+            if (script) {
+                script.addEventListener('load', initGoogle);
+                return () => script.removeEventListener('load', initGoogle);
+            }
+        }
     }, [login, navigate]);
 
     const handleChange = (e) => {
@@ -121,13 +133,22 @@ export default function SignIn() {
 
                         <div className="or-divider"><span>or</span></div>
 
-                        <button className="social-btn apple">
+                        <button
+                            className="social-btn apple"
+                            onClick={() => alert('Apple Sign In is not yet available. Please sign in with email or Google.')}
+                        >
                             <img src={appleIcon} alt="Apple" />
                             Sign in with Apple
                         </button>
                         <button
                             className="social-btn google"
-                            onClick={() => window.google?.accounts.id.prompt()}
+                            onClick={() => {
+                                if (window.google?.accounts?.id) {
+                                    window.google.accounts.id.prompt();
+                                } else {
+                                    alert('Google Sign In is still loading. Please wait a moment and try again.');
+                                }
+                            }}
                         >
                             <img src={googleIcon} alt="Google" />
                             Sign in with Google

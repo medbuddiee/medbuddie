@@ -10,6 +10,8 @@ export default function SignUp() {
     const navigate = useNavigate();
     const { login } = useUser();
 
+    const [googleReady, setGoogleReady] = useState(false);
+
     const [form, setForm] = useState({
         email: '',
         password: '',
@@ -19,29 +21,43 @@ export default function SignUp() {
         acceptedTerms: false,
     });
     useEffect(() => {
-        if (!window.google) return;
-        window.google.accounts.id.initialize({
-            client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-            callback: async (response) => {
-                try {
-                    const res = await fetch('/api/google-login', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ token: response.credential }),
-                    });
-                    const data = await res.json();
-                    if (res.ok) {
-                        login(data.user);
-                        localStorage.setItem('token', data.token);
-                        navigate('/dashboard');
-                    } else {
-                        alert(data.error || 'Google sign-up failed');
+        const initGoogle = () => {
+            if (!window.google?.accounts?.id) return;
+            window.google.accounts.id.initialize({
+                client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+                callback: async (response) => {
+                    try {
+                        const res = await fetch('/api/google-login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ token: response.credential }),
+                        });
+                        const data = await res.json();
+                        if (res.ok) {
+                            login(data.user);
+                            localStorage.setItem('token', data.token);
+                            navigate('/dashboard');
+                        } else {
+                            alert(data.error || 'Google sign-up failed');
+                        }
+                    } catch {
+                        alert('Server error during Google sign-up');
                     }
-                } catch {
-                    alert('Server error during Google sign-up');
-                }
-            },
-        });
+                },
+            });
+        };
+
+        if (window.google?.accounts?.id) {
+            initGoogle();
+            setGoogleReady(true);
+        } else {
+            const script = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
+            if (script) {
+                const onLoad = () => { initGoogle(); setGoogleReady(true); };
+                script.addEventListener('load', onLoad);
+                return () => script.removeEventListener('load', onLoad);
+            }
+        }
     }, [login, navigate]);
 
     const handleChange = (e) => {
@@ -225,13 +241,22 @@ export default function SignUp() {
                         <img src={facebookIcon} alt="Facebook" />
                         Sign up with Facebook
                     </button>
-                    <button className="social-btn apple">
+                    <button
+                        className="social-btn apple"
+                        onClick={() => alert('Apple Sign In is not yet available. Please sign up with email or Google.')}
+                    >
                         <img src={appleIcon} alt="Apple" />
                         Sign up with Apple
                     </button>
                     <button
                         className="social-btn google"
-                        onClick={() => window.google?.accounts.id.prompt()}
+                        onClick={() => {
+                            if (window.google?.accounts?.id) {
+                                window.google.accounts.id.prompt();
+                            } else {
+                                alert('Google Sign In is still loading. Please wait a moment and try again.');
+                            }
+                        }}
                     >
                         <span className="google-g">G</span>
                         Sign up with Google
