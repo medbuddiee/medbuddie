@@ -143,14 +143,23 @@ async function start() {
         crossOriginEmbedderPolicy: false,
     }));
 
-    // CORS — allow only known origins
+    // CORS — allow only known origins.
+    // In production on Railway the frontend is served by this same Express server
+    // (same origin), so most requests never hit CORS at all. The allowlist matters
+    // for local dev and any future separate-domain frontend.
     const allowedOrigins = process.env.ALLOWED_ORIGINS
-        ? process.env.ALLOWED_ORIGINS.split(',')
+        ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
         : ['http://localhost:5173', 'http://localhost:3000'];
+
+    // Always allow the Railway public domain of this service itself
+    if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+        allowedOrigins.push(`https://${process.env.RAILWAY_PUBLIC_DOMAIN}`);
+    }
+
     app.use(cors({
         origin: (origin, cb) => {
-            // allow server-to-server (no origin) and listed origins
-            if (!origin || allowedOrigins.some(o => origin.startsWith(o.trim()))) {
+            // allow server-to-server (no Origin header) and allowlisted origins
+            if (!origin || allowedOrigins.some(o => origin.startsWith(o))) {
                 cb(null, true);
             } else {
                 cb(new Error(`CORS: origin ${origin} not allowed`));
