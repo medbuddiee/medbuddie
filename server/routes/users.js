@@ -1,6 +1,7 @@
 const express = require('express');
 const pool    = require('../config/db');
 const { authenticate, softAuthenticate } = require('../middleware/auth');
+const { emit } = require('../socket');
 
 const router = express.Router();
 
@@ -169,19 +170,41 @@ router.post('/:id/follow', authenticate, async (req, res) => {
             [followerId, followingId]
         );
 
+        let following;
         if (existing.rows.length) {
             await pool.query(
                 'DELETE FROM user_followers WHERE follower_id=$1 AND following_id=$2',
                 [followerId, followingId]
             );
-            res.json({ following: false });
+            following = false;
         } else {
             await pool.query(
                 'INSERT INTO user_followers (follower_id, following_id) VALUES ($1,$2)',
                 [followerId, followingId]
             );
-            res.json({ following: true });
+            following = true;
         }
+
+        // Get updated follower count for the target user
+        const { rows: countRows } = await pool.query(
+            `SELECT
+                (SELECT COUNT(*) FROM user_followers WHERE following_id=$1)::int AS "followersCount",
+                (SELECT COUNT(*) FROM user_followers WHERE follower_id=$1)::int  AS "followingCount"
+             FROM users WHERE id=$1`,
+            [followingId]
+        );
+        const counts = countRows[0] || {};
+
+        const payload = { followingId, followerId, following, ...counts };
+
+        // Notify the target user (their followers count changed)
+        emit(`user:${followingId}`, 'follow:changed', payload);
+        // Notify the follower (their following count changed)
+        emit(`user:${followerId}`, 'follow:changed', payload);
+        // Broadcast to everyone on the MedBuddies/people listing
+        emit('feed', 'follow:changed', payload);
+
+        res.json({ following });
     } catch (err) {
         console.error('POST /api/users/:id/follow error:', err);
         res.status(500).json({ error: 'Server error' });

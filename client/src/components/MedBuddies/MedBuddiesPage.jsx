@@ -4,6 +4,7 @@ import Sidebar from '../Dashboard/Sidebar';
 import TopNav from '../Dashboard/TopNav';
 import UserAvatar from '../common/UserAvatar';
 import { useUser } from '../../context/UserContext';
+import { getSocket } from '../../../utils/socket';
 import { FaUserPlus, FaUserCheck, FaSearch, FaUserMd } from 'react-icons/fa';
 import './MedBuddies.css';
 
@@ -39,6 +40,20 @@ export default function MedBuddiesPage() {
         e.preventDefault();
         fetchPeople(query);
     };
+
+    // Real-time follow count updates
+    useEffect(() => {
+        const socket = getSocket();
+        const onFollowChanged = ({ followingId, followerId, following, followersCount, followingCount }) => {
+            setPeople(prev => prev.map(p => {
+                if (p.id === followingId) return { ...p, followersCount };
+                if (p.id === followerId)  return { ...p, followingCount };
+                return p;
+            }));
+        };
+        socket.on('follow:changed', onFollowChanged);
+        return () => socket.off('follow:changed', onFollowChanged);
+    }, []);
 
     const toggleFollow = async (personId) => {
         if (!token) return;
