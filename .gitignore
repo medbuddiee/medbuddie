@@ -37,3 +37,6 @@ dist-ssr
 
 # Misc
 coverage/
+# Expo local state
+mobile/.expo/
+.expo/
