@@ -49,6 +49,12 @@ export default {
       'expo-secure-store',
       'expo-font',
       [
+        'expo-build-properties',
+        {
+          android: { minSdkVersion: 26 },
+        },
+      ],
+      [
         'expo-image-picker',
         {
           photosPermission:
