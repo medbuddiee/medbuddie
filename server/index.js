@@ -1,9 +1,11 @@
 require('dotenv').config();
-const express = require('express');
-const cors    = require('cors');
-const helmet  = require('helmet');
-const path    = require('path');
-const pool    = require('./config/db');
+const express    = require('express');
+const http       = require('http');
+const cors       = require('cors');
+const helmet     = require('helmet');
+const path       = require('path');
+const pool       = require('./config/db');
+const socketMgr  = require('./socket');
 
 const { router: authRouter } = require('./routes/auth');
 const profileRouter          = require('./routes/profile');
@@ -19,8 +21,9 @@ const npiRouter              = require('./routes/npi');
 const chatRouter             = require('./routes/chat');
 const healthRouter           = require('./routes/health');
 
-const app  = express();
-const port = process.env.PORT || 5000;
+const app        = express();
+const httpServer = http.createServer(app);
+const port       = process.env.PORT || 5000;
 
 /* ═══════════════════════════════════════════════════════════════════════════
    RUN ALL MIGRATIONS BEFORE ACCEPTING REQUESTS
@@ -172,7 +175,7 @@ async function start() {
         allowedOrigins.push(`https://${process.env.RAILWAY_PUBLIC_DOMAIN}`);
     }
 
-    app.use(cors({
+    const corsOptions = {
         origin: (origin, cb) => {
             // allow server-to-server (no Origin header) and allowlisted origins
             if (!origin || allowedOrigins.some(o => origin.startsWith(o))) {
@@ -184,7 +187,11 @@ async function start() {
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization'],
-    }));
+    };
+    app.use(cors(corsOptions));
+
+    // Initialise Socket.io on the shared HTTP server
+    socketMgr.init(httpServer, corsOptions);
 
     // Body size limit — prevent oversized payloads
     app.use(express.json({ limit: '1mb' }));
@@ -231,7 +238,7 @@ async function start() {
         });
     });
 
-    app.listen(port, () => {
+    httpServer.listen(port, () => {
         console.log(`MedBuddie server running on http://localhost:${port}`);
     });
 }

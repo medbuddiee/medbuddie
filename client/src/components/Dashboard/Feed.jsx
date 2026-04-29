@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { getSocket } from '../../../utils/socket';
 import PostCard from './PostCard';
 import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
@@ -114,6 +115,39 @@ export default function Feed({ userInfo, searchQuery, onClearSearch }) {
     }, [searchQuery]);
 
     useEffect(() => { fetchPosts(); }, [fetchPosts]);
+
+    // Real-time feed updates via Socket.io
+    useEffect(() => {
+        const socket = getSocket();
+
+        const onCreated = (post) => {
+            setPosts(prev => {
+                // Don't add if already exists (own post already added optimistically)
+                if (prev.some(p => p.id === post.id)) return prev;
+                return [post, ...prev];
+            });
+        };
+
+        const onLiked = ({ id, likes, likedByMe }) => {
+            setPosts(prev => prev.map(p =>
+                p.id === id ? { ...p, likes, likedByMe } : p
+            ));
+        };
+
+        const onDeleted = ({ id }) => {
+            setPosts(prev => prev.filter(p => p.id !== id));
+        };
+
+        socket.on('post:created', onCreated);
+        socket.on('post:liked',   onLiked);
+        socket.on('post:deleted', onDeleted);
+
+        return () => {
+            socket.off('post:created', onCreated);
+            socket.off('post:liked',   onLiked);
+            socket.off('post:deleted', onDeleted);
+        };
+    }, []);
 
     /* ── Fetch guidelines for leaderboard ───────────────────────────────── */
     useEffect(() => {

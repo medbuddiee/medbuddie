@@ -1,6 +1,7 @@
 const express  = require('express');
 const pool     = require('../config/db');
 const { authenticate } = require('../middleware/auth');
+const { emit } = require('../socket');
 
 const router = express.Router();
 
@@ -72,6 +73,7 @@ router.post('/sync', authenticate, async (req, res) => {
       `UPDATE users SET ${updates.join(', ')} WHERE id = $${values.length} RETURNING *`,
       values
     );
+    emit(`user:${req.user.id}`, 'health:synced', rows[0]);
     res.json({ success: true, user: rows[0] });
   } catch (err) {
     console.error('Health sync error:', err.message);

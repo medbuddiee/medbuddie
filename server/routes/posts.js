@@ -1,6 +1,7 @@
-const express = require('express');
-const pool = require('../config/db');
+const express   = require('express');
+const pool      = require('../config/db');
 const { authenticate, softAuthenticate } = require('../middleware/auth');
+const { emit }  = require('../socket');
 
 const router = express.Router();
 
@@ -118,6 +119,7 @@ router.post('/', authenticate, async (req, res) => {
             username:  req.user.name,
             likedByMe: false,
         };
+        emit('feed', 'post:created', post);
         res.status(201).json(post);
     } catch (err) {
         console.error('POST /api/posts error:', err);
@@ -135,6 +137,7 @@ router.delete('/:id', authenticate, async (req, res) => {
         if (!rows.length) {
             return res.status(404).json({ error: 'Post not found or not yours' });
         }
+        emit('feed', 'post:deleted', { id: parseInt(req.params.id) });
         res.json({ deleted: true, id: parseInt(req.params.id) });
     } catch (err) {
         console.error('DELETE /api/posts error:', err);
@@ -190,7 +193,9 @@ router.post('/:id/like', authenticate, async (req, res) => {
         await client.query('COMMIT');
 
         if (!rows.length) return res.status(404).json({ error: 'Post not found' });
-        res.json({ id: postId, likes: rows[0].likes, likedByMe });
+        const payload = { id: postId, likes: rows[0].likes, likedByMe };
+        emit('feed', 'post:liked', payload);
+        res.json(payload);
 
     } catch (err) {
         await client.query('ROLLBACK');
