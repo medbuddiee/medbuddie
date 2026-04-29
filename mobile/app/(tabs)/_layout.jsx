@@ -3,7 +3,6 @@ import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
-import { Colors } from '../../constants/colors';
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
