@@ -16,6 +16,7 @@ const usersRouter            = require('./routes/users');
 const communitiesRouter      = require('./routes/communities');
 const consultationsRouter    = require('./routes/consultations');
 const npiRouter              = require('./routes/npi');
+const chatRouter             = require('./routes/chat');
 
 const app  = express();
 const port = process.env.PORT || 5000;
@@ -190,6 +191,7 @@ async function start() {
     app.use('/api/communities',     communitiesRouter);    // communities
     app.use('/api/consultations',   consultationsRouter);  // doctor consultations
     app.use('/api/npi',             npiRouter);            // NPPES NPI verification
+    app.use('/api/chat',            chatRouter);           // AI health assistant (streaming)
 
     // Backward-compat alias
     app.post('/login', (req, res, next) => {

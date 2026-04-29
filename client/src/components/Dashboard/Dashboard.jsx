@@ -3,6 +3,7 @@ import Sidebar from './Sidebar';
 import Feed from './Feed';
 import RightSidebar from './RightSidebar';
 import TopNav from './TopNav';
+import ChatWidget from '../Chat/ChatWidget';
 import { UserContext } from '../../context/UserContext';
 import './Dashboard.css';
 
@@ -33,6 +34,7 @@ export default function Dashboard() {
                     bloodPressure: user.bloodPressure,
                 }} />
             </div>
+            <ChatWidget />
         </div>
     );
 }
