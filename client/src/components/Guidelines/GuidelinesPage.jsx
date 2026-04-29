@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import Sidebar from '../Dashboard/Sidebar';
 import TopNav from '../Dashboard/TopNav';
+import ChatWidget from '../Chat/ChatWidget';
 import './Guidelines.css';
 import {
     FaSearch, FaHeart,
@@ -406,6 +407,7 @@ export default function GuidelinesPage() {
             </footer>
             </div>
             </div>
+            <ChatWidget />
         </div>
     );
 }

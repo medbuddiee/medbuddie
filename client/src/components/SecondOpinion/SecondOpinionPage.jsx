@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import Sidebar from '../Dashboard/Sidebar';
 import TopNav from '../Dashboard/TopNav';
+import ChatWidget from '../Chat/ChatWidget';
 import UserAvatar from '../common/UserAvatar';
 import './SecondOpinion.css';
 import {
@@ -686,6 +687,7 @@ export default function SecondOpinionPage() {
                     </div>
                 </div>
             )}
+            <ChatWidget />
         </div>
     );
 }
