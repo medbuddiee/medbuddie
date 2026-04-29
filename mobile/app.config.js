@@ -70,7 +70,7 @@ export default {
       typedRoutes: false,
     },
     extra: {
-      apiUrl: 'https://medbuddie-production.up.railway.app',
+      apiUrl: 'https://medbuddie.up.railway.app',
       googleClientId: '',
       router: {},
       eas: {

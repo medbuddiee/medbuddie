@@ -1,0 +1,4 @@
+# Prevent EAS Build from using local dev environment variables.
+# The production Railway URL is hardcoded in utils/api.js as the fallback.
+.env
+.env.local
