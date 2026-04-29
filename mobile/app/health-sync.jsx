@@ -204,27 +204,100 @@ export default function HealthSyncScreen() {
           </View>
 
           {/* ── Connected devices ── */}
-          <Text style={styles.sectionTitle}>Your Devices</Text>
+          <Text style={styles.sectionTitle}>NATIVE HEALTH</Text>
 
-          {/* Phone Health */}
-          <DeviceCard
-            name={Platform.OS === 'ios' ? 'Apple Health' : 'Google Health Connect'}
-            subtitle={Platform.OS === 'ios'
-              ? 'Reads from HealthKit · includes Apple Watch'
-              : 'Reads from Health Connect · includes Wear OS'}
-            icon={<Ionicons name={Platform.OS === 'ios' ? 'heart' : 'fitness'} size={20} color={phoneEnabled ? '#fff' : Colors.textMuted} />}
-            connected={phoneEnabled}
-            onConnect={() => setPhoneEnabled(true)}
-            onDisconnect={() => setPhoneEnabled(false)}
-          />
+          {/* Apple Health (iOS) */}
+          {Platform.OS === 'ios' && (
+            <DeviceCard
+              name="Apple Health"
+              subtitle="Steps, heart rate, weight, blood pressure, HRV"
+              icon={<Ionicons name="heart" size={20} color={phoneEnabled ? '#fff' : Colors.textMuted} />}
+              connected={phoneEnabled}
+              onConnect={() => setPhoneEnabled(true)}
+              onDisconnect={() => setPhoneEnabled(false)}
+            />
+          )}
 
-          {/* Garmin notice */}
-          <View style={styles.garminNotice}>
-            <FontAwesome5 name="info-circle" size={13} color={Colors.blue} />
-            <Text style={styles.garminText}>
-              <Text style={{ fontWeight: '700' }}>Garmin users:</Text> Open Garmin Connect app → Settings → Connected Apps → enable{' '}
-              {Platform.OS === 'ios' ? 'Apple Health' : 'Google Fit'} sync. Your data will flow through automatically.
-            </Text>
+          {/* Apple Watch note (iOS) */}
+          {Platform.OS === 'ios' && (
+            <View style={styles.setupCard}>
+              <View style={styles.setupCardLeft}>
+                <View style={[styles.setupIcon, { backgroundColor: '#000' }]}>
+                  <MaterialCommunityIcons name="watch" size={18} color="#fff" />
+                </View>
+                <View style={styles.setupInfo}>
+                  <Text style={styles.setupName}>Apple Watch</Text>
+                  <Text style={styles.setupStatus}>✓ Syncs automatically via Apple Health</Text>
+                </View>
+              </View>
+              <View style={styles.autobadge}><Text style={styles.autobadgeText}>Auto</Text></View>
+            </View>
+          )}
+
+          {/* Google Health Connect (Android) */}
+          {Platform.OS === 'android' && (
+            <DeviceCard
+              name="Google Health Connect"
+              subtitle="Steps, heart rate, weight, blood pressure, sleep"
+              icon={<Ionicons name="fitness" size={20} color={phoneEnabled ? '#fff' : Colors.textMuted} />}
+              connected={phoneEnabled}
+              onConnect={() => setPhoneEnabled(true)}
+              onDisconnect={() => setPhoneEnabled(false)}
+            />
+          )}
+
+          {/* Samsung Health (Android only) */}
+          {Platform.OS === 'android' && (
+            <View style={styles.setupCard}>
+              <View style={styles.setupCardLeft}>
+                <View style={[styles.setupIcon, { backgroundColor: '#1428A0' }]}>
+                  <MaterialCommunityIcons name="samsung" size={18} color="#fff" />
+                </View>
+                <View style={styles.setupInfo}>
+                  <Text style={styles.setupName}>Samsung Health</Text>
+                  <Text style={styles.setupStatus}>Syncs via Health Connect</Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                style={styles.setupBtn}
+                onPress={() => Alert.alert(
+                  'Connect Samsung Health',
+                  '1. Open Samsung Health app\n2. Tap the three-dot menu → Settings\n3. Tap "Connected services"\n4. Tap "Health Connect"\n5. Toggle ON and grant permissions\n\nAfter this, your Samsung Health and Galaxy Watch data will appear here automatically.',
+                  [{ text: 'Got it' }]
+                )}
+              >
+                <Text style={styles.setupBtnLabel}>Setup</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          <Text style={[styles.sectionTitle, { marginTop: 20 }]}>WEARABLES & TRACKERS</Text>
+
+          {/* Garmin */}
+          <View style={styles.setupCard}>
+            <View style={styles.setupCardLeft}>
+              <View style={[styles.setupIcon, { backgroundColor: '#007CC3' }]}>
+                <MaterialCommunityIcons name="run-fast" size={18} color="#fff" />
+              </View>
+              <View style={styles.setupInfo}>
+                <Text style={styles.setupName}>Garmin</Text>
+                <Text style={styles.setupStatus}>
+                  Syncs via {Platform.OS === 'ios' ? 'Apple Health' : 'Google Fit'}
+                </Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={styles.setupBtn}
+              onPress={() => Alert.alert(
+                'Connect Garmin',
+                Platform.OS === 'ios'
+                  ? '1. Open Garmin Connect app\n2. Tap More → Settings\n3. Tap "Connected Apps"\n4. Find "Apple Health" and tap Connect\n5. Grant permissions\n\nYour Garmin and watch data will sync here automatically.'
+                  : '1. Open Garmin Connect app\n2. Tap More → Settings\n3. Tap "Connected Apps"\n4. Find "Google Fit" and tap Connect\n5. Grant permissions\n\nYour Garmin and watch data will sync here automatically.',
+                [{ text: 'Got it' }]
+              )}
+            >
+              <Text style={styles.setupBtnLabel}>Setup</Text>
+            </TouchableOpacity>
           </View>
 
           {/* Fitbit */}
@@ -362,11 +435,30 @@ const styles = StyleSheet.create({
   },
   disconnectLabel: { color: Colors.textMuted, fontSize: 13 },
 
-  garminNotice: {
-    flexDirection: 'row', gap: 8, backgroundColor: '#e3f2fd',
-    borderRadius: 12, padding: 12, marginBottom: 10, alignItems: 'flex-start',
+  setupCard: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: Colors.surface, borderRadius: 14, padding: 14, marginBottom: 10,
+    shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 }, elevation: 1,
   },
-  garminText: { flex: 1, fontSize: 12, color: '#1565c0', lineHeight: 18 },
+  setupCardLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
+  setupIcon: {
+    width: 42, height: 42, borderRadius: 21,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  setupInfo: { flex: 1 },
+  setupName: { fontSize: 15, fontWeight: '600', color: Colors.textPrimary },
+  setupStatus: { fontSize: 11, color: Colors.textMuted, marginTop: 2 },
+  setupBtn: {
+    borderWidth: 1.5, borderColor: Colors.blue,
+    borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6,
+  },
+  setupBtnLabel: { color: Colors.blue, fontWeight: '700', fontSize: 13 },
+  autobadge: {
+    backgroundColor: Colors.primaryBg,
+    borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5,
+  },
+  autobadgeText: { color: Colors.primary, fontSize: 12, fontWeight: '700' },
 
   syncBtn: {
     backgroundColor: Colors.primary, borderRadius: 14,
