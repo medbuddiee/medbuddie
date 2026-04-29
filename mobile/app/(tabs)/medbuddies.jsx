@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, TextInput,
-  StyleSheet, ActivityIndicator,
+  StyleSheet, ActivityIndicator, RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,22 +13,26 @@ import { Colors } from '../../constants/colors';
 
 export default function MedBuddiesScreen() {
   const { user } = useUser();
-  const [people, setPeople]       = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [query, setQuery]         = useState('');
-  const [following, setFollowing] = useState(new Set());
+  const [people, setPeople]         = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [query, setQuery]           = useState('');
+  const [following, setFollowing]   = useState(new Set());
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await apiFetch('/api/users');
-        const data = res.ok ? await res.json() : [];
-        setPeople(data);
-        setFollowing(new Set(data.filter((u) => u.isFollowing).map((u) => u.id)));
-      } catch { setPeople([]); }
-      finally { setLoading(false); }
-    })();
+  const fetchPeople = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    try {
+      const res = await apiFetch('/api/users');
+      const data = res.ok ? await res.json() : [];
+      setPeople(data);
+      setFollowing(new Set(data.filter((u) => u.isFollowing).map((u) => u.id)));
+    } catch { setPeople([]); }
+    finally { setLoading(false); setRefreshing(false); }
   }, []);
+
+  useEffect(() => { fetchPeople(); }, [fetchPeople]);
+
+  const handleRefresh = () => { setRefreshing(true); fetchPeople(true); };
 
   // Real-time follow count updates
   useEffect(() => {
@@ -123,6 +127,7 @@ export default function MedBuddiesScreen() {
           <Text style={styles.emptyText}>No MedBuddies found.</Text>
         }
         contentContainerStyle={styles.list}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={Colors.primary} />}
       />
     </SafeAreaView>
   );

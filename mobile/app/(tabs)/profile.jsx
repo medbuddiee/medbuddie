@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  ActivityIndicator, Alert,
+  ActivityIndicator, Alert, RefreshControl,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -16,27 +16,31 @@ const TABS = ['Health Overview', 'My Posts'];
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, logout, updateUser } = useUser();
-  const [profile, setProfile]     = useState(null);
-  const [posts, setPosts]         = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [activeTab, setActiveTab] = useState(0);
+  const [profile, setProfile]       = useState(null);
+  const [posts, setPosts]           = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [activeTab, setActiveTab]   = useState(0);
 
-  useEffect(() => {
+  const fetchProfile = useCallback(async (silent = false) => {
     if (!user) return;
-    (async () => {
-      try {
-        const res = await apiFetch('/api/profile');
-        if (res.ok) {
-          const data = await res.json();
-          setProfile(data);
-          updateUser(data);
-        } else {
-          setProfile(user);
-        }
-      } catch { setProfile(user); }
-      finally { setLoading(false); }
-    })();
+    if (!silent) setLoading(true);
+    try {
+      const res = await apiFetch('/api/profile');
+      if (res.ok) {
+        const data = await res.json();
+        setProfile(data);
+        updateUser(data);
+      } else {
+        setProfile(user);
+      }
+    } catch { setProfile(user); }
+    finally { setLoading(false); setRefreshing(false); }
   }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { fetchProfile(); }, [fetchProfile]);
+
+  const handleRefresh = () => { setRefreshing(true); fetchProfile(true); };
 
   useEffect(() => {
     if (activeTab !== 1 || !user?.id) return;
@@ -61,7 +65,10 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={Colors.primary} />}
+      >
         {/* Header */}
         <View style={styles.header}>
           <UserAvatar name={display.name} avatarUrl={display.avatarUrl} size={72} />
