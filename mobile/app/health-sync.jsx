@@ -325,7 +325,7 @@ export default function HealthSyncScreen() {
                 : 'Steps, heart rate, sleep, Galaxy Watch data'}
               icon={
                 <MaterialCommunityIcons
-                  name="samsung"
+                  name="android"
                   size={20}
                   color={samsungConnected ? '#fff' : Colors.textMuted}
                 />

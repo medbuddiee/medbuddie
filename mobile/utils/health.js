@@ -110,9 +110,12 @@ const ANDROID_PERMISSIONS = [
 ];
 
 async function fetchAndroidData() {
-  const available = await HealthConnect.getSdkStatus();
+  if (!HealthConnect) throw new Error('Health Connect requires a development build — not available in Expo Go.');
+  let available;
+  try { available = await HealthConnect.getSdkStatus(); }
+  catch { throw new Error('Health Connect native module not linked. Please build the app with EAS.'); }
   if (available !== HealthConnect.SdkAvailabilityStatus.SDK_AVAILABLE) {
-    throw new Error('Health Connect is not available on this device. Install it from the Play Store.');
+    throw new Error('Health Connect is not installed on this device. Install it from the Play Store.');
   }
   await HealthConnect.requestPermission(ANDROID_PERMISSIONS);
 
@@ -179,13 +182,14 @@ export async function fetchPhoneHealth() {
 
 // Request Health Connect permissions — used by Samsung Health connect flow
 export async function requestAndroidHealthPermissions() {
-  if (!HealthConnect) throw new Error('Health Connect not available');
-  const status = await HealthConnect.getSdkStatus();
+  if (!HealthConnect) throw new Error('Health Connect requires a development build — not available in Expo Go.');
+  let status;
+  try { status = await HealthConnect.getSdkStatus(); }
+  catch { throw new Error('Health Connect native module not linked. Please build the app with EAS.'); }
   if (status !== HealthConnect.SdkAvailabilityStatus.SDK_AVAILABLE) {
     throw new Error('Health Connect is not installed. Please install it from the Play Store.');
   }
-  const result = await HealthConnect.requestPermission(ANDROID_PERMISSIONS);
-  return result;
+  return HealthConnect.requestPermission(ANDROID_PERMISSIONS);
 }
 
 // Check if Health Connect permissions are already granted
