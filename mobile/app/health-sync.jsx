@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  ActivityIndicator, Alert, Platform, Switch,
+  ActivityIndicator, Alert, Platform, Linking, AppState,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { fetchPhoneHealth, isHealthAvailable } from '../utils/health';
+import {
+  fetchPhoneHealth, isHealthAvailable,
+  requestAndroidHealthPermissions, checkAndroidPermissions,
+} from '../utils/health';
 import {
   connectFitbit, disconnectFitbit, isFitbitConnected, fetchFitbitData,
 } from '../utils/fitbit';
@@ -63,20 +66,24 @@ function MetricRow({ label, value, unit, icon, source }) {
 export default function HealthSyncScreen() {
   const router = useRouter();
 
-  const [fitbitConnected, setFitbitConnected] = useState(false);
-  const [whoopConnected,  setWhoopConnected]  = useState(false);
-  const [phoneEnabled,    setPhoneEnabled]    = useState(isHealthAvailable());
+  const [fitbitConnected,  setFitbitConnected]  = useState(false);
+  const [whoopConnected,   setWhoopConnected]   = useState(false);
+  const [phoneEnabled,     setPhoneEnabled]     = useState(isHealthAvailable());
+  const [samsungConnected, setSamsungConnected] = useState(false);
+  const [waitingReturn,    setWaitingReturn]    = useState(false); // waiting for user to return from Samsung Health
 
-  const [syncing,   setSyncing]   = useState(false);
+  const [syncing,       setSyncing]       = useState(false);
   const [loadingDevice, setLoadingDevice] = useState(null);
-  const [lastSync,  setLastSync]  = useState(null);
-  const [preview,   setPreview]   = useState(null); // merged data before saving
+  const [lastSync,      setLastSync]      = useState(null);
+  const [preview,       setPreview]       = useState(null);
+
+  const appStateRef = useRef(AppState.currentState);
 
   // Check connection states on mount
   useEffect(() => {
     isFitbitConnected().then(setFitbitConnected);
     isWhoopConnected().then(setWhoopConnected);
-    // Load last sync time from backend
+    if (Platform.OS === 'android') checkAndroidPermissions().then(setSamsungConnected);
     apiFetch('/api/health/summary').then(async (r) => {
       if (r.ok) {
         const d = await r.json();
@@ -84,6 +91,29 @@ export default function HealthSyncScreen() {
       }
     }).catch(() => {});
   }, []);
+
+  // When user returns from Samsung Health app, request Health Connect permissions
+  useEffect(() => {
+    if (!waitingReturn) return;
+    const sub = AppState.addEventListener('change', async (nextState) => {
+      if (appStateRef.current.match(/inactive|background/) && nextState === 'active') {
+        setWaitingReturn(false);
+        sub.remove();
+        // Give Samsung Health a moment to register the sync setting
+        await new Promise(r => setTimeout(r, 800));
+        try {
+          await requestAndroidHealthPermissions();
+          setSamsungConnected(true);
+          setPhoneEnabled(true);
+          Alert.alert('Connected!', 'Samsung Health is now connected. Tap "Pull Latest Data" to sync.');
+        } catch (e) {
+          Alert.alert('Permission denied', e.message);
+        }
+      }
+      appStateRef.current = nextState;
+    });
+    return () => sub.remove();
+  }, [waitingReturn]);
 
   /* ── Gather data from all connected sources ── */
   const gatherData = async () => {
@@ -142,6 +172,46 @@ export default function HealthSyncScreen() {
   };
 
   /* ── Device connect/disconnect ── */
+  const handleSamsungConnect = async () => {
+    if (samsungConnected) {
+      Alert.alert('Disconnect Samsung Health', 'This will remove Health Connect permissions. Continue?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Disconnect', style: 'destructive', onPress: () => {
+          setSamsungConnected(false);
+          setPhoneEnabled(false);
+        }},
+      ]);
+      return;
+    }
+
+    setLoadingDevice('samsung');
+    try {
+      // Step 1: Try to open Samsung Health → Connected Services directly
+      const samsungDeepLink = 'com.sec.android.app.shealth://health/connected-services';
+      const fallbackLink    = 'com.sec.android.app.shealth://';
+      const canOpenDeep = await Linking.canOpenURL(samsungDeepLink);
+      const canOpenApp  = await Linking.canOpenURL(fallbackLink);
+
+      if (canOpenDeep) {
+        await Linking.openURL(samsungDeepLink);
+        setWaitingReturn(true); // AppState listener will handle permissions on return
+      } else if (canOpenApp) {
+        await Linking.openURL(fallbackLink);
+        setWaitingReturn(true);
+      } else {
+        // Samsung Health not installed — go straight to Health Connect permissions
+        await requestAndroidHealthPermissions();
+        setSamsungConnected(true);
+        setPhoneEnabled(true);
+        Alert.alert('Connected!', 'Health Connect permissions granted. Tap "Pull Latest Data" to sync.');
+      }
+    } catch (e) {
+      Alert.alert('Error', e.message);
+    } finally {
+      setLoadingDevice(null);
+    }
+  };
+
   const handleFitbit = async () => {
     setLoadingDevice('fitbit');
     try {
@@ -248,26 +318,32 @@ export default function HealthSyncScreen() {
 
           {/* Samsung Health (Android only) */}
           {Platform.OS === 'android' && (
-            <View style={styles.setupCard}>
-              <View style={styles.setupCardLeft}>
-                <View style={[styles.setupIcon, { backgroundColor: '#1428A0' }]}>
-                  <MaterialCommunityIcons name="samsung" size={18} color="#fff" />
-                </View>
-                <View style={styles.setupInfo}>
-                  <Text style={styles.setupName}>Samsung Health</Text>
-                  <Text style={styles.setupStatus}>Syncs via Health Connect</Text>
-                </View>
-              </View>
-              <TouchableOpacity
-                style={styles.setupBtn}
-                onPress={() => Alert.alert(
-                  'Connect Samsung Health',
-                  '1. Open Samsung Health app\n2. Tap the three-dot menu → Settings\n3. Tap "Connected services"\n4. Tap "Health Connect"\n5. Toggle ON and grant permissions\n\nAfter this, your Samsung Health and Galaxy Watch data will appear here automatically.',
-                  [{ text: 'Got it' }]
-                )}
-              >
-                <Text style={styles.setupBtnLabel}>Setup</Text>
-              </TouchableOpacity>
+            <DeviceCard
+              name="Samsung Health"
+              subtitle={samsungConnected
+                ? '● Connected · Galaxy Watch syncing'
+                : 'Steps, heart rate, sleep, Galaxy Watch data'}
+              icon={
+                <MaterialCommunityIcons
+                  name="samsung"
+                  size={20}
+                  color={samsungConnected ? '#fff' : Colors.textMuted}
+                />
+              }
+              connected={samsungConnected}
+              onConnect={handleSamsungConnect}
+              onDisconnect={handleSamsungConnect}
+              loading={loadingDevice === 'samsung'}
+            />
+          )}
+
+          {/* Waiting for user to return from Samsung Health */}
+          {waitingReturn && (
+            <View style={styles.waitingBanner}>
+              <ActivityIndicator color={Colors.primary} size="small" />
+              <Text style={styles.waitingText}>
+                Enable Health Connect in Samsung Health, then come back here…
+              </Text>
             </View>
           )}
 
@@ -454,6 +530,13 @@ const styles = StyleSheet.create({
     borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6,
   },
   setupBtnLabel: { color: Colors.blue, fontWeight: '700', fontSize: 13 },
+  waitingBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: Colors.primaryBg, borderRadius: 12,
+    padding: 12, marginBottom: 10,
+    borderWidth: 1, borderColor: Colors.primary + '40',
+  },
+  waitingText: { flex: 1, fontSize: 13, color: Colors.primary, lineHeight: 18 },
   autobadge: {
     backgroundColor: Colors.primaryBg,
     borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5,

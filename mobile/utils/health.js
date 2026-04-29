@@ -177,6 +177,26 @@ export async function fetchPhoneHealth() {
   return fetchAndroidData();
 }
 
+// Request Health Connect permissions — used by Samsung Health connect flow
+export async function requestAndroidHealthPermissions() {
+  if (!HealthConnect) throw new Error('Health Connect not available');
+  const status = await HealthConnect.getSdkStatus();
+  if (status !== HealthConnect.SdkAvailabilityStatus.SDK_AVAILABLE) {
+    throw new Error('Health Connect is not installed. Please install it from the Play Store.');
+  }
+  const result = await HealthConnect.requestPermission(ANDROID_PERMISSIONS);
+  return result;
+}
+
+// Check if Health Connect permissions are already granted
+export async function checkAndroidPermissions() {
+  if (!HealthConnect) return false;
+  try {
+    const granted = await HealthConnect.getGrantedPermissions();
+    return granted && granted.length > 0;
+  } catch { return false; }
+}
+
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
 
 function metersToFeetInches(m) {
