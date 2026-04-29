@@ -17,6 +17,7 @@ const communitiesRouter      = require('./routes/communities');
 const consultationsRouter    = require('./routes/consultations');
 const npiRouter              = require('./routes/npi');
 const chatRouter             = require('./routes/chat');
+const healthRouter           = require('./routes/health');
 
 const app  = express();
 const port = process.env.PORT || 5000;
@@ -119,6 +120,20 @@ async function runMigrations() {
             created_at      TIMESTAMPTZ DEFAULT NOW()
         )`,
         `CREATE INDEX IF NOT EXISTS idx_consult_messages_consult ON consultation_messages(consultation_id)`,
+
+        // ── Wearable health data columns ─────────────────────────────────────
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS steps INTEGER DEFAULT NULL`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS heart_rate INTEGER DEFAULT NULL`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS resting_heart_rate INTEGER DEFAULT NULL`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS hrv INTEGER DEFAULT NULL`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS spo2 NUMERIC(5,2) DEFAULT NULL`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS calories INTEGER DEFAULT NULL`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS sleep_hours NUMERIC(4,1) DEFAULT NULL`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS sleep_score INTEGER DEFAULT NULL`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS recovery_score INTEGER DEFAULT NULL`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS strain NUMERIC(4,1) DEFAULT NULL`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS health_synced_at TIMESTAMPTZ DEFAULT NULL`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS health_sources TEXT[] DEFAULT '{}'`,
     ];
 
     for (const sql of migrations) {
@@ -192,6 +207,7 @@ async function start() {
     app.use('/api/consultations',   consultationsRouter);  // doctor consultations
     app.use('/api/npi',             npiRouter);            // NPPES NPI verification
     app.use('/api/chat',            chatRouter);           // AI health assistant (streaming)
+    app.use('/api/health',          healthRouter);         // wearable health data sync
 
     // Backward-compat alias
     app.post('/login', (req, res, next) => {
