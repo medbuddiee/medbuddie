@@ -4,7 +4,7 @@ import Sidebar from '../Dashboard/Sidebar';
 import TopNav from '../Dashboard/TopNav';
 import UserAvatar from '../common/UserAvatar';
 import { useUser } from '../../context/UserContext';
-import { getSocket } from '../../../utils/socket';
+import { getSocket } from '../../utils/socket';
 import { FaUserPlus, FaUserCheck, FaSearch, FaUserMd } from 'react-icons/fa';
 import './MedBuddies.css';
 

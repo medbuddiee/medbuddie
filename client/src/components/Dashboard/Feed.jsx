@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { getSocket } from '../../../utils/socket';
+import { getSocket } from '../../utils/socket';
 import PostCard from './PostCard';
 import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
