@@ -6,6 +6,9 @@ import {
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Constants from 'expo-constants';
+
+const IS_EXPO_GO = Constants.appOwnership === 'expo';
 import {
   fetchPhoneHealth, isHealthAvailable,
   requestAndroidHealthPermissions, checkAndroidPermissions,
@@ -20,18 +23,22 @@ import { apiFetch } from '../utils/api';
 import { Colors } from '../constants/colors';
 
 /* ── Device card ─────────────────────────────────────────────────────────── */
-function DeviceCard({ icon, name, subtitle, connected, onConnect, onDisconnect, loading }) {
+function DeviceCard({ icon, name, subtitle, connected, onConnect, onDisconnect, loading, requiresBuild }) {
   return (
     <View style={styles.deviceCard}>
       <View style={styles.deviceLeft}>
         <View style={[styles.deviceIcon, connected && styles.deviceIconActive]}>{icon}</View>
-        <View>
+        <View style={{ flex: 1 }}>
           <Text style={styles.deviceName}>{name}</Text>
-          <Text style={styles.deviceSub}>{connected ? '● Connected' : subtitle}</Text>
+          <Text style={styles.deviceSub} numberOfLines={2}>{connected ? '● Connected' : subtitle}</Text>
         </View>
       </View>
       {loading ? (
         <ActivityIndicator color={Colors.primary} />
+      ) : requiresBuild ? (
+        <View style={styles.buildBadge}>
+          <Text style={styles.buildBadgeText}>Build req.</Text>
+        </View>
       ) : connected ? (
         <TouchableOpacity style={styles.disconnectBtn} onPress={onDisconnect}>
           <Text style={styles.disconnectLabel}>Disconnect</Text>
@@ -273,6 +280,21 @@ export default function HealthSyncScreen() {
             )}
           </View>
 
+          {/* ── Expo Go notice ── */}
+          {IS_EXPO_GO && (
+            <View style={styles.expoGoBanner}>
+              <MaterialCommunityIcons name="information-outline" size={18} color="#1565c0" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.expoGoBannerTitle}>Native health requires a build</Text>
+                <Text style={styles.expoGoBannerSub}>
+                  Apple Health, Samsung Health and Google Health Connect need a compiled app.
+                  Fitbit and Whoop work now.{'\n'}
+                  Run: <Text style={styles.expoGoBannerCode}>eas build --profile preview --platform android</Text>
+                </Text>
+              </View>
+            </View>
+          )}
+
           {/* ── Connected devices ── */}
           <Text style={styles.sectionTitle}>NATIVE HEALTH</Text>
 
@@ -285,6 +307,7 @@ export default function HealthSyncScreen() {
               connected={phoneEnabled}
               onConnect={() => setPhoneEnabled(true)}
               onDisconnect={() => setPhoneEnabled(false)}
+              requiresBuild={IS_EXPO_GO}
             />
           )}
 
@@ -313,6 +336,7 @@ export default function HealthSyncScreen() {
               connected={phoneEnabled}
               onConnect={() => setPhoneEnabled(true)}
               onDisconnect={() => setPhoneEnabled(false)}
+              requiresBuild={IS_EXPO_GO}
             />
           )}
 
@@ -334,6 +358,7 @@ export default function HealthSyncScreen() {
               onConnect={handleSamsungConnect}
               onDisconnect={handleSamsungConnect}
               loading={loadingDevice === 'samsung'}
+              requiresBuild={IS_EXPO_GO}
             />
           )}
 
@@ -530,6 +555,19 @@ const styles = StyleSheet.create({
     borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6,
   },
   setupBtnLabel: { color: Colors.blue, fontWeight: '700', fontSize: 13 },
+  expoGoBanner: {
+    flexDirection: 'row', gap: 10, backgroundColor: '#e3f2fd',
+    borderRadius: 14, padding: 14, marginBottom: 16, alignItems: 'flex-start',
+  },
+  expoGoBannerTitle: { fontSize: 13, fontWeight: '700', color: '#1565c0', marginBottom: 3 },
+  expoGoBannerSub: { fontSize: 12, color: '#1565c0', lineHeight: 18 },
+  expoGoBannerCode: { fontFamily: 'monospace', fontSize: 11, backgroundColor: '#bbdefb', borderRadius: 4 },
+  buildBadge: {
+    backgroundColor: '#f5f5f5', borderRadius: 12,
+    paddingHorizontal: 10, paddingVertical: 5,
+    borderWidth: 1, borderColor: Colors.border,
+  },
+  buildBadgeText: { fontSize: 11, color: Colors.textMuted, fontWeight: '600' },
   waitingBanner: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     backgroundColor: Colors.primaryBg, borderRadius: 12,
