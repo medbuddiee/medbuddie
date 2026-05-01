@@ -109,19 +109,32 @@ const ANDROID_PERMISSIONS = [
   { accessType: 'read', recordType: 'RestingHeartRate' },
 ];
 
+// Safe wrapper — returns null instead of crashing if a record type fails
+async function safeRead(recordType, options) {
+  try {
+    const result = await HealthConnect.readRecords(recordType, options);
+    return result?.records ?? [];
+  } catch { return []; }
+}
+
 async function initAndroidHealthConnect() {
   if (!HealthConnect) throw new Error('Health Connect requires a development build — not available in Expo Go.');
   try {
-    // v3 requires initialize() before any other call
-    const initialised = await HealthConnect.initialize();
-    if (!initialised) throw new Error('Health Connect could not be initialised on this device.');
+    await HealthConnect.initialize();
   } catch (e) {
-    if (e.message?.includes('initialised') || e.message?.includes('initialized')) throw e;
-    throw new Error('Health Connect native module not linked. Please build the app with EAS.');
+    throw new Error(`Health Connect could not be initialised: ${e?.message || e}`);
   }
-  const available = await HealthConnect.getSdkStatus();
-  if (available !== HealthConnect.SdkAvailabilityStatus.SDK_AVAILABLE) {
-    throw new Error('Health Connect is not installed on this device. Install it from the Play Store.');
+  // SDK status check — compare against numeric value 3 (SDK_AVAILABLE)
+  // avoids crashing if SdkAvailabilityStatus enum is not accessible
+  try {
+    const status = await HealthConnect.getSdkStatus();
+    const SDK_AVAILABLE = HealthConnect.SdkAvailabilityStatus?.SDK_AVAILABLE ?? 3;
+    if (status !== SDK_AVAILABLE) {
+      throw new Error('Health Connect is not installed on this device. Install it from the Play Store.');
+    }
+  } catch (e) {
+    if (e.message?.includes('Play Store')) throw e;
+    // getSdkStatus() crashed — device may still work, continue
   }
 }
 
@@ -129,54 +142,47 @@ async function fetchAndroidData() {
   await initAndroidHealthConnect();
   await HealthConnect.requestPermission(ANDROID_PERMISSIONS);
 
-  const now = new Date();
+  const now      = new Date();
   const startOfDay = new Date(now); startOfDay.setHours(0, 0, 0, 0);
-  const weekAgo = new Date(now - 7 * 86400000);
+  const weekAgo  = new Date(now - 7 * 86400000);
 
-  const timeRangeFilter = {
-    operator: 'between',
-    startTime: weekAgo.toISOString(),
-    endTime: now.toISOString(),
-  };
-  const todayFilter = {
-    operator: 'between',
-    startTime: startOfDay.toISOString(),
-    endTime: now.toISOString(),
-  };
+  const timeRange = { operator: 'between', startTime: weekAgo.toISOString(), endTime: now.toISOString() };
+  const today     = { operator: 'between', startTime: startOfDay.toISOString(), endTime: now.toISOString() };
 
+  // Fetch each record type independently so one failure never crashes the others
   const [steps, heartRate, weight, height, bp, glucose, restingHR, calories] = await Promise.all([
-    HealthConnect.readRecords('Steps', { timeRangeFilter: todayFilter }),
-    HealthConnect.readRecords('HeartRate', { timeRangeFilter, limit: 1 }),
-    HealthConnect.readRecords('Weight', { timeRangeFilter, limit: 1 }),
-    HealthConnect.readRecords('Height', { timeRangeFilter, limit: 1 }),
-    HealthConnect.readRecords('BloodPressure', { timeRangeFilter, limit: 1 }),
-    HealthConnect.readRecords('BloodGlucose', { timeRangeFilter, limit: 1 }),
-    HealthConnect.readRecords('RestingHeartRate', { timeRangeFilter, limit: 1 }),
-    HealthConnect.readRecords('ActiveCaloriesBurned', { timeRangeFilter: todayFilter }),
+    safeRead('Steps',                { timeRangeFilter: today }),
+    safeRead('HeartRate',            { timeRangeFilter: timeRange }),
+    safeRead('Weight',               { timeRangeFilter: timeRange }),
+    safeRead('Height',               { timeRangeFilter: timeRange }),
+    safeRead('BloodPressure',        { timeRangeFilter: timeRange }),
+    safeRead('BloodGlucose',         { timeRangeFilter: timeRange }),
+    safeRead('RestingHeartRate',     { timeRangeFilter: timeRange }),
+    safeRead('ActiveCaloriesBurned', { timeRangeFilter: today }),
   ]);
 
-  const totalSteps  = steps.records?.reduce((s, r) => s + (r.count || 0), 0) || null;
-  const latestHR    = heartRate.records?.[0]?.samples?.[0]?.beatsPerMinute;
-  const latestRestHR = restingHR.records?.[0]?.beatsPerMinute;
-  const latestWeight = weight.records?.[0]?.weight?.inKilograms;
-  const latestHeight = height.records?.[0]?.height?.inMeters;
-  const latestBP    = bp.records?.[0];
-  const latestGlucose = glucose.records?.[0]?.level?.inMillimolesPerLiter;
-  const totalCal    = calories.records?.reduce((s, r) => s + (r.energy?.inKilocalories || 0), 0) || null;
+  const totalSteps   = steps.reduce((s, r) => s + (r.count || 0), 0) || null;
+  const latestHR     = heartRate[0]?.samples?.[0]?.beatsPerMinute;
+  const latestRestHR = restingHR[0]?.beatsPerMinute;
+  const latestWeight = weight[0]?.weight?.inKilograms;
+  const latestHeight = height[0]?.height?.inMeters;
+  const latestBP     = bp[0];
+  const latestGluc   = glucose[0]?.level?.inMillimolesPerLiter;
+  const totalCal     = calories.reduce((s, r) => s + (r.energy?.inKilocalories || 0), 0) || null;
 
   return {
-    steps:          totalSteps,
-    heartRate:      latestHR ? Math.round(latestHR) : null,
-    restingHeartRate: latestRestHR ? Math.round(latestRestHR) : null,
-    weight:         latestWeight ? Math.round(latestWeight * 2.20462) : null,
-    height:         latestHeight ? metersToFeetInches(latestHeight) : null,
-    bloodPressure:  latestBP
-      ? `${Math.round(latestBP.systolic?.inMillimetersOfMercury)}/${Math.round(latestBP.diastolic?.inMillimetersOfMercury)}`
+    steps:           totalSteps,
+    heartRate:       latestHR     ? Math.round(latestHR)                   : null,
+    restingHeartRate:latestRestHR ? Math.round(latestRestHR)               : null,
+    weight:          latestWeight ? Math.round(latestWeight * 2.20462)     : null,
+    height:          latestHeight ? metersToFeetInches(latestHeight)       : null,
+    bloodPressure:   latestBP
+      ? `${Math.round(latestBP.systolic?.inMillimetersOfMercury ?? 0)}/${Math.round(latestBP.diastolic?.inMillimetersOfMercury ?? 0)}`
       : null,
-    bloodGlucose:   latestGlucose ? Math.round(latestGlucose * 18) : null,
-    hrv:            null,
-    calories:       totalCal ? Math.round(totalCal) : null,
-    source:         'Google Health Connect',
+    bloodGlucose:    latestGluc ? Math.round(latestGluc * 18)             : null,
+    hrv:             null,
+    calories:        totalCal,
+    source:          'Google Health Connect',
   };
 }
 
