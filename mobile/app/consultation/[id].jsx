@@ -41,6 +41,8 @@ export default function ConsultationDetailScreen() {
   const [msgText, setMsgText]           = useState('');
   const [sending, setSending]           = useState(false);
   const [updating, setUpdating]         = useState(false);
+  const [showLinkInput, setShowLinkInput] = useState(false);
+  const [customLink, setCustomLink]       = useState('');
 
   const fetchAll = useCallback(async () => {
     try {
@@ -102,11 +104,27 @@ export default function ConsultationDetailScreen() {
     const url = consultation?.meetingUrl;
     if (!url) return;
     const can = await Linking.canOpenURL(url);
-    if (can) {
-      await Linking.openURL(url);
-    } else {
-      Alert.alert('Cannot open', 'Could not open the video call link.');
-    }
+    if (can) await Linking.openURL(url);
+    else Alert.alert('Cannot open', 'Could not open the video call link.');
+  };
+
+  const saveMeetingLink = async () => {
+    const url = customLink.trim();
+    if (!url) return;
+    setUpdating(true);
+    try {
+      const res = await apiFetch(`/api/consultations/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ meetingUrl: url }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setConsultation(prev => ({ ...prev, ...updated }));
+        setShowLinkInput(false);
+        setCustomLink('');
+      }
+    } catch { Alert.alert('Error', 'Could not save link.'); }
+    finally { setUpdating(false); }
   };
 
   if (loading) {
@@ -159,10 +177,52 @@ export default function ConsultationDetailScreen() {
 
         {/* ── Video call button (when accepted + URL exists) ── */}
         {consultation.meetingUrl && consultation.status === 'accepted' && (
-          <TouchableOpacity style={styles.videoCallBtn} onPress={joinVideoCall}>
-            <Ionicons name="videocam" size={20} color="#fff" />
-            <Text style={styles.videoCallLabel}>Join Video Call</Text>
+          <View style={styles.videoRow}>
+            <TouchableOpacity style={[styles.videoCallBtn, { flex: 1 }]} onPress={joinVideoCall}>
+              <Ionicons name="videocam" size={20} color="#fff" />
+              <Text style={styles.videoCallLabel}>Join Video Call</Text>
+            </TouchableOpacity>
+            {isDoctor && (
+              <TouchableOpacity style={styles.editLinkBtn} onPress={() => { setCustomLink(consultation.meetingUrl || ''); setShowLinkInput(s => !s); }}>
+                <Ionicons name="create-outline" size={18} color={Colors.primary} />
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+
+        {/* ── Doctor: set custom meeting link ── */}
+        {isDoctor && consultation.status === 'accepted' && !consultation.meetingUrl && (
+          <TouchableOpacity style={styles.addLinkBtn} onPress={() => setShowLinkInput(s => !s)}>
+            <Ionicons name="link" size={16} color={Colors.primary} />
+            <Text style={styles.addLinkText}>Add video call link (Zoom / Google Meet / Jitsi)</Text>
           </TouchableOpacity>
+        )}
+
+        {isDoctor && showLinkInput && (
+          <View style={styles.linkInputBox}>
+            <Text style={styles.linkInputLabel}>Paste your meeting link</Text>
+            <Text style={styles.linkInputHint}>Works with Zoom, Google Meet, Microsoft Teams, Jitsi, or any URL</Text>
+            <TextInput
+              style={styles.linkInput}
+              placeholder="https://zoom.us/j/... or meet.google.com/..."
+              value={customLink}
+              onChangeText={setCustomLink}
+              autoCapitalize="none"
+              keyboardType="url"
+            />
+            <View style={styles.linkActions}>
+              <TouchableOpacity onPress={() => setShowLinkInput(false)}>
+                <Text style={styles.linkCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.linkSaveBtn, (!customLink.trim() || updating) && styles.sendBtnDisabled]}
+                onPress={saveMeetingLink}
+                disabled={!customLink.trim() || updating}
+              >
+                {updating ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.linkSaveBtnText}>Save link</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
         )}
 
         {/* ── Doctor actions (accept/decline) ── */}
@@ -267,12 +327,39 @@ const styles = StyleSheet.create({
   statusPill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
   statusPillText: { fontSize: 11, fontWeight: '700' },
 
+  videoRow: { flexDirection: 'row', alignItems: 'center', gap: 8, margin: 12 },
   videoCallBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 8, backgroundColor: Colors.primary,
-    margin: 12, borderRadius: 12, paddingVertical: 13,
+    borderRadius: 12, paddingVertical: 13,
   },
   videoCallLabel: { color: '#fff', fontWeight: '700', fontSize: 15 },
+  editLinkBtn: {
+    width: 44, height: 44, borderRadius: 12,
+    borderWidth: 1.5, borderColor: Colors.primary,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  addLinkBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    marginHorizontal: 12, marginBottom: 4,
+    padding: 12, borderRadius: 10,
+    borderWidth: 1, borderColor: Colors.border, borderStyle: 'dashed',
+  },
+  addLinkText: { color: Colors.primary, fontSize: 13, fontWeight: '600', flex: 1 },
+  linkInputBox: {
+    marginHorizontal: 12, marginBottom: 8,
+    backgroundColor: Colors.surface, borderRadius: 12, padding: 14,
+  },
+  linkInputLabel: { fontSize: 13, fontWeight: '700', color: Colors.textPrimary, marginBottom: 2 },
+  linkInputHint: { fontSize: 11, color: Colors.textMuted, marginBottom: 10 },
+  linkInput: {
+    borderWidth: 1, borderColor: Colors.border, borderRadius: 10,
+    paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, backgroundColor: '#fafafa',
+  },
+  linkActions: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 14, marginTop: 10 },
+  linkCancelText: { color: Colors.textMuted, fontSize: 13 },
+  linkSaveBtn: { backgroundColor: Colors.primary, borderRadius: 20, paddingHorizontal: 18, paddingVertical: 8 },
+  linkSaveBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },
 
   doctorActions: { flexDirection: 'row', gap: 10, margin: 12 },
   actionBtn: { flex: 1, borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
