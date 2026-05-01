@@ -137,21 +137,32 @@ export default function HealthSyncScreen() {
           if (v != null && k !== 'source' && merged[k] == null) merged[k] = v;
         });
       } catch (e) {
-        console.warn(`${label} sync failed:`, e.message);
+        console.warn(`${label} sync failed:`, e?.message ?? e);
+        // Show user-facing error for phone health so they know what failed
+        if (label !== 'Fitbit' && label !== 'Whoop') {
+          Alert.alert(
+            `${label} unavailable`,
+            e?.message || 'Could not read health data. Make sure Health Connect is installed and Samsung Health is synced.',
+            [{ text: 'OK' }]
+          );
+        }
       }
     };
 
-    if (phoneEnabled && isHealthAvailable()) {
-      await run(Platform.OS === 'ios' ? 'Apple Health' : 'Google Health Connect', fetchPhoneHealth);
+    try {
+      if (phoneEnabled && isHealthAvailable()) {
+        await run(Platform.OS === 'ios' ? 'Apple Health' : 'Google Health Connect', fetchPhoneHealth);
+      }
+      if (fitbitConnected) await run('Fitbit', fetchFitbitData);
+      if (whoopConnected)  await run('Whoop',  fetchWhoopData);
+    } catch (e) {
+      // Top-level catch for any unexpected native crash
+      Alert.alert('Sync error', `An unexpected error occurred: ${e?.message ?? 'Unknown error'}. Please try again.`);
+    } finally {
+      setSyncing(false);
     }
-    if (fitbitConnected) await run('Fitbit', fetchFitbitData);
-    if (whoopConnected)  await run('Whoop',  fetchWhoopData);
 
-    setSyncing(false);
-    if (Object.keys(merged).length === 0) {
-      Alert.alert('No data', 'No health data was found. Make sure your devices are synced.');
-      return;
-    }
+    if (Object.keys(merged).length === 0) return;
     setPreview({ data: merged, sources });
   };
 
