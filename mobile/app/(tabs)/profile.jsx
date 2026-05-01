@@ -95,6 +95,16 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Consultations banner */}
+        <TouchableOpacity style={styles.syncBanner} onPress={() => router.push('/consultations')}>
+          <Ionicons name="videocam-outline" size={18} color={Colors.primary} />
+          <View style={styles.syncBannerText}>
+            <Text style={styles.syncBannerTitle}>My Consultations</Text>
+            <Text style={styles.syncBannerSub}>Video calls with verified doctors</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+        </TouchableOpacity>
+
         {/* Health sync banner */}
         <TouchableOpacity style={styles.syncBanner} onPress={() => router.push('/health-sync')}>
           <MaterialCommunityIcons name="heart-pulse" size={18} color={Colors.primary} />
