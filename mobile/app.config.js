@@ -12,7 +12,7 @@ export default {
     splash: {
       image: './assets/splash.png',
       resizeMode: 'contain',
-      backgroundColor: '#ffffff',
+      backgroundColor: '#f9f9f9',
     },
     ios: {
       supportsTablet: false,
@@ -28,7 +28,7 @@ export default {
     android: {
       adaptiveIcon: {
         foregroundImage: './assets/adaptive-icon.png',
-        backgroundColor: '#005c55',
+        backgroundColor: '#f0f0f0',
       },
       package: 'com.medbuddie.app',
       softwareKeyboardLayoutMode: 'resize',
