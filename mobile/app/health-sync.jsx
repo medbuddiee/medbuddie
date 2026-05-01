@@ -11,7 +11,7 @@ import Constants from 'expo-constants';
 const IS_EXPO_GO = Constants.appOwnership === 'expo';
 import {
   fetchPhoneHealth, isHealthAvailable,
-  requestAndroidHealthPermissions, checkAndroidPermissions,
+  openHealthConnectPermissions, checkAndroidPermissions,
 } from '../utils/health';
 import {
   connectFitbit, disconnectFitbit, isFitbitConnected, fetchFitbitData,
@@ -109,12 +109,17 @@ export default function HealthSyncScreen() {
         // Give Samsung Health a moment to register the sync setting
         await new Promise(r => setTimeout(r, 800));
         try {
-          await requestAndroidHealthPermissions();
+          // Open Health Connect app so user can grant permissions — never call
+          // requestPermission() from JS (crashes: UninitializedPropertyAccessException)
+          await openHealthConnectPermissions();
           setSamsungConnected(true);
           setPhoneEnabled(true);
-          Alert.alert('Connected!', 'Samsung Health is now connected. Tap "Pull Latest Data" to sync.');
+          Alert.alert(
+            'Grant permissions in Health Connect',
+            'Health Connect is now open. Go to Permissions → MedBuddie → grant all permissions, then come back and tap "Pull Latest Data".'
+          );
         } catch (e) {
-          Alert.alert('Permission denied', e.message);
+          Alert.alert('Error', e.message);
         }
       }
       appStateRef.current = nextState;

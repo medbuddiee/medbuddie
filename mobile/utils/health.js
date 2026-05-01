@@ -141,17 +141,23 @@ async function initAndroidHealthConnect() {
 async function fetchAndroidData() {
   await initAndroidHealthConnect();
 
-  // Only request permissions if not already granted — avoids repeated dialog
+  // NEVER call requestPermission() from JS — crashes with UninitializedPropertyAccessException
+  // because the ActivityResultLauncher isn't registered in MainActivity in time.
+  // Users must grant permissions via the Health Connect app directly.
+  // We check what's granted and read only those record types.
+  let grantedTypes = new Set();
   try {
     const granted = await HealthConnect.getGrantedPermissions();
-    const grantedTypes = new Set((granted || []).map(p => p.recordType));
-    const needsPermission = ANDROID_PERMISSIONS.some(p => !grantedTypes.has(p.recordType));
-    if (needsPermission) {
-      await HealthConnect.requestPermission(ANDROID_PERMISSIONS);
-    }
+    grantedTypes = new Set((granted || []).map(p => p.recordType));
   } catch {
-    // If getGrantedPermissions fails, request anyway
-    await HealthConnect.requestPermission(ANDROID_PERMISSIONS);
+    // If we can't check, attempt reads anyway — safeRead() handles failures
+  }
+
+  if (grantedTypes.size === 0) {
+    throw new Error(
+      'No Health Connect permissions granted yet.\n\n' +
+      'Open the Health Connect app → Permissions → MedBuddie → grant all permissions, then try syncing again.'
+    );
   }
 
   const now      = new Date();
@@ -208,10 +214,18 @@ export async function fetchPhoneHealth() {
   return fetchAndroidData();
 }
 
-// Request Health Connect permissions — used by Samsung Health connect flow
-export async function requestAndroidHealthPermissions() {
-  await initAndroidHealthConnect();
-  return HealthConnect.requestPermission(ANDROID_PERMISSIONS);
+// Open Health Connect app so user can grant permissions manually
+// DO NOT call HealthConnect.requestPermission() — it crashes (UninitializedPropertyAccessException)
+export async function openHealthConnectPermissions() {
+  const { Linking } = require('react-native');
+  // Try Health Connect deep link, fall back to Play Store
+  const url = 'healthconnect://';
+  const canOpen = await Linking.canOpenURL(url);
+  if (canOpen) {
+    await Linking.openURL(url);
+  } else {
+    await Linking.openURL('https://play.google.com/store/apps/details?id=com.google.android.apps.healthdata');
+  }
 }
 
 // Check if Health Connect permissions are already granted
