@@ -1,24 +1,19 @@
+import * as Sentry from '@sentry/react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { View, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { UserProvider } from '../context/UserContext';
 import UpdateBanner from '../components/UpdateBanner';
 
-// Global error handler — shows crash message on screen instead of killing the app
-if (global.ErrorUtils) {
-  const prev = global.ErrorUtils.getGlobalHandler();
-  global.ErrorUtils.setGlobalHandler((error, isFatal) => {
-    Alert.alert(
-      isFatal ? '💥 Fatal Error' : '⚠️ Error',
-      `${error?.message ?? error}\n\n${error?.stack?.split('\n').slice(0, 4).join('\n') ?? ''}`,
-      [{ text: 'OK' }]
-    );
-    if (!isFatal) prev(error, isFatal);
-  });
-}
+Sentry.init({
+  dsn: 'https://2b0337610748ec812fd6dfcb6794b2ae@o4511312834658304.ingest.us.sentry.io/4511312836362240',
+  tracesSampleRate: 1.0,
+  enableNative: true,
+  attachStacktrace: true,
+});
 
-export default function RootLayout() {
+function RootLayout() {
   return (
     <SafeAreaProvider>
       <UserProvider>
@@ -31,6 +26,8 @@ export default function RootLayout() {
     </SafeAreaProvider>
   );
 }
+
+export default Sentry.wrap(RootLayout);
 
 const styles = StyleSheet.create({
   root: { flex: 1 },

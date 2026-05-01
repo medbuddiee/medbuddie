@@ -48,6 +48,7 @@ export default {
       'expo-router',
       'expo-secure-store',
       'expo-font',
+      '@sentry/react-native/expo',
       [
         'expo-build-properties',
         {
