@@ -140,7 +140,19 @@ async function initAndroidHealthConnect() {
 
 async function fetchAndroidData() {
   await initAndroidHealthConnect();
-  await HealthConnect.requestPermission(ANDROID_PERMISSIONS);
+
+  // Only request permissions if not already granted — avoids repeated dialog
+  try {
+    const granted = await HealthConnect.getGrantedPermissions();
+    const grantedTypes = new Set((granted || []).map(p => p.recordType));
+    const needsPermission = ANDROID_PERMISSIONS.some(p => !grantedTypes.has(p.recordType));
+    if (needsPermission) {
+      await HealthConnect.requestPermission(ANDROID_PERMISSIONS);
+    }
+  } catch {
+    // If getGrantedPermissions fails, request anyway
+    await HealthConnect.requestPermission(ANDROID_PERMISSIONS);
+  }
 
   const now      = new Date();
   const startOfDay = new Date(now); startOfDay.setHours(0, 0, 0, 0);
