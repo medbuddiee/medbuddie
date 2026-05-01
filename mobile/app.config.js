@@ -48,14 +48,8 @@ export default {
       'expo-router',
       'expo-secure-store',
       'expo-font',
-      [
-        '@sentry/react-native/expo',
-        {
-          url: 'https://sentry.io/',
-          project: 'react-native',
-          organization: 'a0122529',
-        },
-      ],
+      // Sentry plugin disabled — source map upload requires auth token setup
+      // Crash reporting still works via Sentry.init() in _layout.jsx
       [
         'expo-build-properties',
         {
