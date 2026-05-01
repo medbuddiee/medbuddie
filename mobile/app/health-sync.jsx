@@ -90,7 +90,7 @@ export default function HealthSyncScreen() {
   useEffect(() => {
     isFitbitConnected().then(setFitbitConnected);
     isWhoopConnected().then(setWhoopConnected);
-    if (Platform.OS === 'android') checkAndroidPermissions().then(setSamsungConnected);
+    // Android native health connect disabled — skip permission check
     apiFetch('/api/health/summary').then(async (r) => {
       if (r.ok) {
         const d = await r.json();
@@ -150,14 +150,14 @@ export default function HealthSyncScreen() {
     };
 
     try {
-      if (phoneEnabled && isHealthAvailable()) {
-        await run(Platform.OS === 'ios' ? 'Apple Health' : 'Google Health Connect', fetchPhoneHealth);
+      // iOS only — Android native health connect disabled (native JVM crash)
+      if (Platform.OS === 'ios' && phoneEnabled && isHealthAvailable()) {
+        await run('Apple Health', fetchPhoneHealth);
       }
       if (fitbitConnected) await run('Fitbit', fetchFitbitData);
       if (whoopConnected)  await run('Whoop',  fetchWhoopData);
     } catch (e) {
-      // Top-level catch for any unexpected native crash
-      Alert.alert('Sync error', `An unexpected error occurred: ${e?.message ?? 'Unknown error'}. Please try again.`);
+      Alert.alert('Sync error', `An unexpected error occurred: ${e?.message ?? 'Unknown error'}.`);
     } finally {
       setSyncing(false);
     }
@@ -338,17 +338,22 @@ export default function HealthSyncScreen() {
             </View>
           )}
 
-          {/* Google Health Connect (Android) */}
+          {/* Google Health Connect (Android) — native module disabled, show guide instead */}
           {Platform.OS === 'android' && (
-            <DeviceCard
-              name="Google Health Connect"
-              subtitle="Steps, heart rate, weight, blood pressure, sleep"
-              icon={<Ionicons name="fitness" size={20} color={phoneEnabled ? '#fff' : Colors.textMuted} />}
-              connected={phoneEnabled}
-              onConnect={() => setPhoneEnabled(true)}
-              onDisconnect={() => setPhoneEnabled(false)}
-              requiresBuild={IS_EXPO_GO}
-            />
+            <View style={styles.setupCard}>
+              <View style={styles.setupCardLeft}>
+                <View style={[styles.setupIcon, { backgroundColor: '#4285F4' }]}>
+                  <Ionicons name="fitness" size={18} color="#fff" />
+                </View>
+                <View style={styles.setupInfo}>
+                  <Text style={styles.setupName}>Google Health Connect</Text>
+                  <Text style={styles.setupStatus}>Auto-syncs via Samsung Health</Text>
+                </View>
+              </View>
+              <View style={[styles.autobadge, { backgroundColor: '#e8f0fe' }]}>
+                <Text style={[styles.autobadgeText, { color: '#4285F4' }]}>Auto</Text>
+              </View>
+            </View>
           )}
 
           {/* Samsung Health (Android only) */}

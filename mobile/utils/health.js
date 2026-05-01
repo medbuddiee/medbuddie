@@ -1,20 +1,19 @@
 import { Platform } from 'react-native';
 
-// These native modules only exist in a development/production build, not Expo Go.
-// We guard every call so the app doesn't crash in Expo Go.
+// react-native-health-connect causes a native JVM crash on some Android devices.
+// Native health sync is disabled until the root cause is resolved.
+// Fitbit and Whoop APIs (pure JS) are unaffected and still work.
 
 let AppleHealth = null;
-let HealthConnect = null;
 
 try {
   if (Platform.OS === 'ios') {
     AppleHealth = require('react-native-health').default;
-  } else {
-    HealthConnect = require('react-native-health-connect');
   }
-} catch { /* running in Expo Go — health unavailable */ }
+  // Android: react-native-health-connect NOT loaded — crashes native bridge
+} catch { /* Expo Go or unavailable */ }
 
-export const isHealthAvailable = () => AppleHealth !== null || HealthConnect !== null;
+export const isHealthAvailable = () => Platform.OS === 'ios' && AppleHealth !== null;
 
 /* ── iOS HealthKit ──────────────────────────────────────────────────────── */
 
