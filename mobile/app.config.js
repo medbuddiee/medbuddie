@@ -1,6 +1,31 @@
 const IS_IOS = process.env.EAS_BUILD_PLATFORM === 'ios';
 
-export default {
+// Custom plugin: ensures HealthConnectManager.onCreateCallback(this) is in MainActivity.kt
+// This registers the ActivityResultLauncher so requestPermission() doesn't crash.
+const withHealthConnectMainActivity = (config) => {
+  const { withMainActivity } = require('@expo/config-plugins');
+  return withMainActivity(config, (mod) => {
+    const src = mod.modResults.contents;
+    if (!src.includes('HealthConnectManager')) {
+      mod.modResults.contents = src
+        .replace(
+          /(import com\.facebook\.react\.ReactActivity)/,
+          '$1\nimport dev.matinzd.healthconnect.HealthConnectManager'
+        )
+        .replace(
+          /(super\.onCreate\(savedInstanceState\))/,
+          '$1\n    HealthConnectManager.onCreateCallback(this)'
+        );
+    }
+    return mod;
+  });
+};
+
+export default (config) => {
+  if (!IS_IOS) {
+    config = withHealthConnectMainActivity(config);
+  }
+  return {
   expo: {
     name: 'MedBuddie',
     slug: 'medbuddie',
@@ -87,4 +112,5 @@ export default {
       url: 'https://u.expo.dev/6e87e0a3-465e-4113-b660-815db6abb27c',
     },
   },
+  };
 };

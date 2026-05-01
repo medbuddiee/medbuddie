@@ -11,7 +11,7 @@ import Constants from 'expo-constants';
 const IS_EXPO_GO = Constants.appOwnership === 'expo';
 import {
   fetchPhoneHealth, isHealthAvailable,
-  openHealthConnectPermissions, checkAndroidPermissions,
+  requestAndroidHealthPermissions, checkAndroidPermissions,
 } from '../utils/health';
 import {
   connectFitbit, disconnectFitbit, isFitbitConnected, fetchFitbitData,
@@ -109,15 +109,10 @@ export default function HealthSyncScreen() {
         // Give Samsung Health a moment to register the sync setting
         await new Promise(r => setTimeout(r, 800));
         try {
-          // Open Health Connect app so user can grant permissions — never call
-          // requestPermission() from JS (crashes: UninitializedPropertyAccessException)
-          await openHealthConnectPermissions();
+          await requestAndroidHealthPermissions();
           setSamsungConnected(true);
           setPhoneEnabled(true);
-          Alert.alert(
-            'Grant permissions in Health Connect',
-            'Health Connect is now open. Go to Permissions → MedBuddie → grant all permissions, then come back and tap "Pull Latest Data".'
-          );
+          Alert.alert('Connected!', 'Samsung Health is now connected. Tap "Pull Latest Data" to sync.');
         } catch (e) {
           Alert.alert('Error', e.message);
         }
@@ -221,11 +216,10 @@ export default function HealthSyncScreen() {
         await Linking.openURL(fallbackLink);
         setWaitingReturn(true);
       } else {
-        // Samsung Health not installed — open Health Connect directly
-        await openHealthConnectPermissions();
+        await requestAndroidHealthPermissions();
         setSamsungConnected(true);
         setPhoneEnabled(true);
-        Alert.alert('Grant permissions', 'Grant MedBuddie permissions in Health Connect, then tap "Pull Latest Data".');
+        Alert.alert('Connected!', 'Health Connect permissions granted. Tap "Pull Latest Data" to sync.');
       }
     } catch (e) {
       Alert.alert('Error', e.message);

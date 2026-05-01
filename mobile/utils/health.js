@@ -141,23 +141,17 @@ async function initAndroidHealthConnect() {
 async function fetchAndroidData() {
   await initAndroidHealthConnect();
 
-  // NEVER call requestPermission() from JS — crashes with UninitializedPropertyAccessException
-  // because the ActivityResultLauncher isn't registered in MainActivity in time.
-  // Users must grant permissions via the Health Connect app directly.
-  // We check what's granted and read only those record types.
-  let grantedTypes = new Set();
+  // Request permissions — safe now that MainActivity registers the launcher via
+  // HealthConnectManager.onCreateCallback(this) in the custom config plugin
   try {
     const granted = await HealthConnect.getGrantedPermissions();
-    grantedTypes = new Set((granted || []).map(p => p.recordType));
+    const grantedTypes = new Set((granted || []).map(p => p.recordType));
+    const needsPermission = ANDROID_PERMISSIONS.some(p => !grantedTypes.has(p.recordType));
+    if (needsPermission) {
+      await HealthConnect.requestPermission(ANDROID_PERMISSIONS);
+    }
   } catch {
-    // If we can't check, attempt reads anyway — safeRead() handles failures
-  }
-
-  if (grantedTypes.size === 0) {
-    throw new Error(
-      'No Health Connect permissions granted yet.\n\n' +
-      'Open the Health Connect app → Permissions → MedBuddie → grant all permissions, then try syncing again.'
-    );
+    await HealthConnect.requestPermission(ANDROID_PERMISSIONS);
   }
 
   const now      = new Date();
@@ -214,18 +208,11 @@ export async function fetchPhoneHealth() {
   return fetchAndroidData();
 }
 
-// Open Health Connect app so user can grant permissions manually
-// DO NOT call HealthConnect.requestPermission() — it crashes (UninitializedPropertyAccessException)
-export async function openHealthConnectPermissions() {
-  const { Linking } = require('react-native');
-  // Try Health Connect deep link, fall back to Play Store
-  const url = 'healthconnect://';
-  const canOpen = await Linking.canOpenURL(url);
-  if (canOpen) {
-    await Linking.openURL(url);
-  } else {
-    await Linking.openURL('https://play.google.com/store/apps/details?id=com.google.android.apps.healthdata');
-  }
+// Request Health Connect permissions — works once MainActivity registers the launcher
+// via HealthConnectManager.onCreateCallback(this) (added by withHealthConnectMainActivity plugin)
+export async function requestAndroidHealthPermissions() {
+  await initAndroidHealthConnect();
+  return HealthConnect.requestPermission(ANDROID_PERMISSIONS);
 }
 
 // Check if Health Connect permissions are already granted
