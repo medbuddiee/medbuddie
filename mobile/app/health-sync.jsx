@@ -90,7 +90,7 @@ export default function HealthSyncScreen() {
   useEffect(() => {
     isFitbitConnected().then(setFitbitConnected);
     isWhoopConnected().then(setWhoopConnected);
-    // Android native health connect disabled — skip permission check
+    if (Platform.OS === 'android') checkAndroidPermissions().then(setSamsungConnected);
     apiFetch('/api/health/summary').then(async (r) => {
       if (r.ok) {
         const d = await r.json();
@@ -150,9 +150,8 @@ export default function HealthSyncScreen() {
     };
 
     try {
-      // iOS only — Android native health connect disabled (native JVM crash)
-      if (Platform.OS === 'ios' && phoneEnabled && isHealthAvailable()) {
-        await run('Apple Health', fetchPhoneHealth);
+      if (phoneEnabled && isHealthAvailable()) {
+        await run(Platform.OS === 'ios' ? 'Apple Health' : 'Google Health Connect', fetchPhoneHealth);
       }
       if (fitbitConnected) await run('Fitbit', fetchFitbitData);
       if (whoopConnected)  await run('Whoop',  fetchWhoopData);
