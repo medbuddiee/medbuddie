@@ -78,7 +78,9 @@ export default {
       },
     },
     owner: 'a0122529',
-    runtimeVersion: '1.0.0',
+    runtimeVersion: {
+      policy: 'appVersion',
+    },
     updates: {
       url: 'https://u.expo.dev/6e87e0a3-465e-4113-b660-815db6abb27c',
     },
