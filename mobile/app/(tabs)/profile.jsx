@@ -4,7 +4,7 @@ import {
   ActivityIndicator, Alert, RefreshControl,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import UserAvatar from '../../components/UserAvatar';
 import { apiFetch } from '../../utils/api';
@@ -94,6 +94,21 @@ export default function ProfileScreen() {
             <Text style={styles.logoutBtnLabel}> Sign out</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Doctor Workspace — only for physicians */}
+        {(display.isDoctor || display.isVerifiedDoctor) && (
+          <TouchableOpacity
+            style={[styles.syncBanner, styles.doctorBanner]}
+            onPress={() => router.push('/doctor-dashboard')}
+          >
+            <MaterialIcons name="local-hospital" size={18} color="#1a3a5c" />
+            <View style={styles.syncBannerText}>
+              <Text style={[styles.syncBannerTitle, { color: '#1a3a5c' }]}>Doctor Workspace</Text>
+              <Text style={styles.syncBannerSub}>Manage consultations · Accept patients · Video calls</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color="#1a3a5c" />
+          </TouchableOpacity>
+        )}
 
         {/* Consultations banner */}
         <TouchableOpacity style={styles.syncBanner} onPress={() => router.push('/consultations')}>
@@ -230,6 +245,7 @@ const styles = StyleSheet.create({
   syncBannerText: { flex: 1 },
   syncBannerTitle: { fontSize: 14, fontWeight: '700', color: Colors.primary },
   syncBannerSub: { fontSize: 11, color: Colors.textMuted, marginTop: 1 },
+  doctorBanner: { backgroundColor: '#e8eef7', borderColor: '#1a3a5c' + '30', borderWidth: 1 },
   tabRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: Colors.border, marginBottom: 16 },
   tab: { flex: 1, paddingVertical: 10, alignItems: 'center' },
   tabActive: { borderBottomWidth: 2, borderBottomColor: Colors.primary },
