@@ -221,11 +221,11 @@ export default function HealthSyncScreen() {
         await Linking.openURL(fallbackLink);
         setWaitingReturn(true);
       } else {
-        // Samsung Health not installed — go straight to Health Connect permissions
-        await requestAndroidHealthPermissions();
+        // Samsung Health not installed — open Health Connect directly
+        await openHealthConnectPermissions();
         setSamsungConnected(true);
         setPhoneEnabled(true);
-        Alert.alert('Connected!', 'Health Connect permissions granted. Tap "Pull Latest Data" to sync.');
+        Alert.alert('Grant permissions', 'Grant MedBuddie permissions in Health Connect, then tap "Pull Latest Data".');
       }
     } catch (e) {
       Alert.alert('Error', e.message);
