@@ -109,14 +109,24 @@ const ANDROID_PERMISSIONS = [
   { accessType: 'read', recordType: 'RestingHeartRate' },
 ];
 
-async function fetchAndroidData() {
+async function initAndroidHealthConnect() {
   if (!HealthConnect) throw new Error('Health Connect requires a development build — not available in Expo Go.');
-  let available;
-  try { available = await HealthConnect.getSdkStatus(); }
-  catch { throw new Error('Health Connect native module not linked. Please build the app with EAS.'); }
+  try {
+    // v3 requires initialize() before any other call
+    const initialised = await HealthConnect.initialize();
+    if (!initialised) throw new Error('Health Connect could not be initialised on this device.');
+  } catch (e) {
+    if (e.message?.includes('initialised') || e.message?.includes('initialized')) throw e;
+    throw new Error('Health Connect native module not linked. Please build the app with EAS.');
+  }
+  const available = await HealthConnect.getSdkStatus();
   if (available !== HealthConnect.SdkAvailabilityStatus.SDK_AVAILABLE) {
     throw new Error('Health Connect is not installed on this device. Install it from the Play Store.');
   }
+}
+
+async function fetchAndroidData() {
+  await initAndroidHealthConnect();
   await HealthConnect.requestPermission(ANDROID_PERMISSIONS);
 
   const now = new Date();
@@ -182,13 +192,7 @@ export async function fetchPhoneHealth() {
 
 // Request Health Connect permissions — used by Samsung Health connect flow
 export async function requestAndroidHealthPermissions() {
-  if (!HealthConnect) throw new Error('Health Connect requires a development build — not available in Expo Go.');
-  let status;
-  try { status = await HealthConnect.getSdkStatus(); }
-  catch { throw new Error('Health Connect native module not linked. Please build the app with EAS.'); }
-  if (status !== HealthConnect.SdkAvailabilityStatus.SDK_AVAILABLE) {
-    throw new Error('Health Connect is not installed. Please install it from the Play Store.');
-  }
+  await initAndroidHealthConnect();
   return HealthConnect.requestPermission(ANDROID_PERMISSIONS);
 }
 
@@ -196,6 +200,7 @@ export async function requestAndroidHealthPermissions() {
 export async function checkAndroidPermissions() {
   if (!HealthConnect) return false;
   try {
+    await HealthConnect.initialize();
     const granted = await HealthConnect.getGrantedPermissions();
     return granted && granted.length > 0;
   } catch { return false; }
