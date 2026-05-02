@@ -1,7 +1,7 @@
 const IS_IOS = process.env.EAS_BUILD_PLATFORM === 'ios';
 
-// Custom plugin: ensures HealthConnectManager.onCreateCallback(this) is in MainActivity.kt
-// This registers the ActivityResultLauncher so requestPermission() doesn't crash.
+// Injects HealthConnectPermissionDelegate.setPermissionDelegate(this) into MainActivity.kt
+// so the ActivityResultLauncher is registered before requestPermission() is called.
 const withHealthConnectMainActivity = (config) => {
   const { withMainActivity } = require('@expo/config-plugins');
   return withMainActivity(config, (mod) => {
@@ -21,11 +21,8 @@ const withHealthConnectMainActivity = (config) => {
   });
 };
 
-export default (config) => {
-  if (!IS_IOS) {
-    config = withHealthConnectMainActivity(config);
-  }
-  return {
+// Base Expo config
+const expoConfig = {
   expo: {
     name: 'MedBuddie',
     slug: 'medbuddie',
@@ -73,8 +70,6 @@ export default (config) => {
       'expo-router',
       'expo-secure-store',
       'expo-font',
-      // Sentry plugin disabled — source map upload requires auth token setup
-      // Crash reporting still works via Sentry.init() in _layout.jsx
       [
         'expo-build-properties',
         {
@@ -88,9 +83,7 @@ export default (config) => {
             'MedBuddie needs access to your photos to update your profile picture.',
         },
       ],
-      // react-native-health is iOS (HealthKit) only — skip on Android builds
       ...(IS_IOS ? [['react-native-health', { isClinicalDataEnabled: false }]] : []),
-      // react-native-health-connect is Android (Health Connect) only
       ...(!IS_IOS ? ['react-native-health-connect'] : []),
     ],
     experiments: {
@@ -112,5 +105,7 @@ export default (config) => {
       url: 'https://u.expo.dev/6e87e0a3-465e-4113-b660-815db6abb27c',
     },
   },
-  };
 };
+
+// Apply the MainActivity plugin and export — mods are preserved in the returned config
+export default !IS_IOS ? withHealthConnectMainActivity(expoConfig) : expoConfig;
