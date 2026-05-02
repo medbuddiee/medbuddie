@@ -6,15 +6,15 @@ const withHealthConnectMainActivity = (config) => {
   const { withMainActivity } = require('@expo/config-plugins');
   return withMainActivity(config, (mod) => {
     const src = mod.modResults.contents;
-    if (!src.includes('HealthConnectManager')) {
+    if (!src.includes('HealthConnectPermissionDelegate')) {
       mod.modResults.contents = src
         .replace(
           /(import com\.facebook\.react\.ReactActivity)/,
-          '$1\nimport dev.matinzd.healthconnect.HealthConnectManager'
+          '$1\nimport dev.matinzd.healthconnect.permissions.HealthConnectPermissionDelegate'
         )
         .replace(
           /(super\.onCreate\(savedInstanceState\))/,
-          '$1\n    HealthConnectManager.onCreateCallback(this)'
+          '$1\n    HealthConnectPermissionDelegate.setPermissionDelegate(this)'
         );
     }
     return mod;
