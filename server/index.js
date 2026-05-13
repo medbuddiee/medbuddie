@@ -18,8 +18,9 @@ const usersRouter            = require('./routes/users');
 const communitiesRouter      = require('./routes/communities');
 const consultationsRouter    = require('./routes/consultations');
 const npiRouter              = require('./routes/npi');
-const chatRouter             = require('./routes/chat');
-const healthRouter           = require('./routes/health');
+const chatRouter                   = require('./routes/chat');
+const healthRouter                 = require('./routes/health');
+const physicianApplicationsRouter  = require('./routes/physicianApplications');
 
 const app        = express();
 const httpServer = http.createServer(app);
@@ -137,6 +138,57 @@ async function runMigrations() {
         `ALTER TABLE users ADD COLUMN IF NOT EXISTS strain NUMERIC(4,1) DEFAULT NULL`,
         `ALTER TABLE users ADD COLUMN IF NOT EXISTS health_synced_at TIMESTAMPTZ DEFAULT NULL`,
         `ALTER TABLE users ADD COLUMN IF NOT EXISTS health_sources TEXT[] DEFAULT '{}'`,
+
+        // ── Physician verification columns on users ──────────────────────────
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS verified_at TIMESTAMPTZ DEFAULT NULL`,
+
+        // ── Physician applications table ─────────────────────────────────────
+        `CREATE TABLE IF NOT EXISTS physician_applications (
+            id                     SERIAL PRIMARY KEY,
+            user_id                INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            full_legal_name        TEXT NOT NULL,
+            date_of_birth          DATE NOT NULL,
+            medical_school         TEXT,
+            graduation_year        SMALLINT,
+            npi_number             VARCHAR(10) NOT NULL,
+            primary_specialty      VARCHAR(100) NOT NULL,
+            licensure_states       JSONB DEFAULT '[]',
+            government_id_path     TEXT,
+            status                 VARCHAR(30) DEFAULT 'pending',
+            npi_check_passed       BOOLEAN,
+            npi_check_result       JSONB,
+            identity_check_status  VARCHAR(30) DEFAULT 'pending',
+            identity_check_result  JSONB,
+            identity_verification_id TEXT,
+            oig_check_passed       BOOLEAN,
+            oig_check_result       JSONB,
+            fsmb_check_passed      BOOLEAN,
+            fsmb_check_result      JSONB,
+            fsmb_check_status      VARCHAR(30),
+            reviewer_id            INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            reviewer_notes         TEXT,
+            rejection_reason       TEXT,
+            approved_at            TIMESTAMPTZ,
+            rejected_at            TIMESTAMPTZ,
+            created_at             TIMESTAMPTZ DEFAULT NOW(),
+            updated_at             TIMESTAMPTZ DEFAULT NOW()
+        )`,
+        `CREATE INDEX IF NOT EXISTS idx_physician_apps_user   ON physician_applications(user_id)`,
+        `CREATE INDEX IF NOT EXISTS idx_physician_apps_status ON physician_applications(status)`,
+
+        // ── OIG exclusion list (LEIE) ────────────────────────────────────────
+        `CREATE TABLE IF NOT EXISTS oig_exclusions (
+            id            SERIAL PRIMARY KEY,
+            full_name     TEXT NOT NULL,
+            npi           VARCHAR(10),
+            specialty     TEXT,
+            exclusion_date DATE,
+            state         VARCHAR(2),
+            snapshot_date DATE NOT NULL DEFAULT CURRENT_DATE,
+            created_at    TIMESTAMPTZ DEFAULT NOW()
+        )`,
+        `CREATE INDEX IF NOT EXISTS idx_oig_name ON oig_exclusions(LOWER(full_name))`,
+        `CREATE INDEX IF NOT EXISTS idx_oig_npi  ON oig_exclusions(npi)`,
     ];
 
     for (const sql of migrations) {
@@ -214,7 +266,8 @@ async function start() {
     app.use('/api/consultations',   consultationsRouter);  // doctor consultations
     app.use('/api/npi',             npiRouter);            // NPPES NPI verification
     app.use('/api/chat',            chatRouter);           // AI health assistant (streaming)
-    app.use('/api/health',          healthRouter);         // wearable health data sync
+    app.use('/api/health',                  healthRouter);                // wearable health data sync
+    app.use('/api/physician-applications',  physicianApplicationsRouter); // Tier 1 verification
 
     // Backward-compat alias
     app.post('/login', (req, res, next) => {

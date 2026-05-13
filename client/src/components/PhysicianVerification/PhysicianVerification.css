@@ -1,0 +1,331 @@
+/* ── Apply page layout ─────────────────────────────────────────────────── */
+.pv-apply-shell {
+  display: flex; gap: 32px; padding: 32px; max-width: 1200px;
+  margin: 0 auto; flex: 1; min-height: 0;
+  overflow-y: auto;
+}
+.pv-apply-main  { flex: 1; min-width: 0; }
+.pv-apply-title { font-size: 24px; font-weight: 800; color: #1a1a1a; margin: 0 0 4px; }
+.pv-apply-sub   { color: #666; font-size: 14px; margin: 0 0 28px; }
+
+.pv-section {
+  background: #fff; border-radius: 12px; padding: 24px;
+  margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+.pv-section-title { font-size: 16px; font-weight: 700; color: #1a1a1a; margin: 0 0 4px; }
+.pv-section-sub   { font-size: 13px; color: #777; margin: 0 0 18px; }
+
+.pv-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.pv-field  { display: flex; flex-direction: column; gap: 6px; }
+.pv-field-full { grid-column: 1 / -1; margin-top: 4px; }
+.pv-field label { font-size: 12px; font-weight: 600; color: #555; }
+.pv-field input, .pv-field select {
+  border: 1px solid #ddd; border-radius: 8px; padding: 10px 12px;
+  font-size: 14px; color: #1a1a1a; background: #fafafa;
+  outline: none; transition: border-color .15s;
+}
+.pv-field input:focus, .pv-field select:focus { border-color: #005c55; }
+.pv-input-verified { border-color: #2e7d32 !important; }
+.pv-input-error    { border-color: #c62828 !important; }
+
+.pv-npi-row { display: flex; gap: 8px; }
+.pv-npi-row input { flex: 1; }
+.pv-verify-btn {
+  background: #005c55; color: #fff; border: none; border-radius: 8px;
+  padding: 0 18px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.pv-verify-btn:disabled { opacity: .5; cursor: default; }
+.pv-npi-msg   { font-size: 12px; margin: 4px 0 0; }
+.pv-msg-ok    { color: #2e7d32; }
+.pv-msg-err   { color: #c62828; }
+
+.pv-state-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.pv-state-chip  {
+  padding: 4px 10px; border: 1px solid #ddd; border-radius: 20px;
+  font-size: 12px; cursor: pointer; background: #fafafa; transition: all .15s;
+}
+.pv-state-chip-active { background: #005c55; border-color: #005c55; color: #fff; }
+.pv-selected-states { font-size: 12px; color: #005c55; margin-top: 6px; font-weight: 500; }
+.pv-info-note {
+  display: flex; align-items: center; gap: 8px; margin-top: 12px;
+  background: #e8f5f4; border-radius: 8px; padding: 10px 14px;
+  font-size: 12px; color: #005c55;
+}
+.pv-info-icon { font-size: 14px; }
+
+/* Dropzone */
+.pv-dropzone {
+  border: 2px dashed #005c55; border-radius: 10px; padding: 40px 20px;
+  text-align: center; cursor: pointer; transition: background .15s;
+  background: #f9fffe;
+}
+.pv-dropzone:hover, .pv-dropzone-active { background: #e8f5f4; }
+.pv-dropzone-filled { background: #e8f5f4; border-style: solid; }
+.pv-dropzone-icon  { font-size: 28px; color: #005c55; margin-bottom: 8px; }
+.pv-dropzone-label { font-size: 15px; font-weight: 600; color: #1a1a1a; margin: 0; }
+.pv-dropzone-hint  { font-size: 12px; color: #888; margin: 4px 0 0; }
+.pv-dropzone-file  { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.pv-dropzone-remove { background: none; border: none; color: #c62828; cursor: pointer; font-size: 16px; }
+
+/* Attestation */
+.pv-attestation-label {
+  display: flex; gap: 12px; align-items: flex-start;
+  background: #f4f6f8; border-radius: 8px; padding: 14px 16px;
+  font-size: 13px; color: #333; cursor: pointer; line-height: 1.5;
+}
+.pv-attestation-label input { margin-top: 2px; accent-color: #005c55; }
+
+.pv-error     { color: #c62828; font-size: 13px; margin: 8px 0; }
+.pv-submit-btn {
+  width: 100%; background: #005c55; color: #fff; border: none;
+  border-radius: 10px; padding: 15px; font-size: 15px; font-weight: 700;
+  cursor: pointer; margin-top: 8px; transition: background .15s;
+}
+.pv-submit-btn:hover:not(:disabled) { background: #00897b; }
+.pv-submit-btn:disabled { opacity: .5; cursor: default; }
+
+/* ── Right sidebar ─────────────────────────────────────────────────────── */
+.pv-sidebar { width: 300px; flex-shrink: 0; }
+.pv-sidebar-card {
+  background: #fff; border-radius: 12px; padding: 24px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06); position: sticky; top: 24px;
+}
+.pv-sidebar-title { font-size: 16px; font-weight: 700; margin: 0 0 6px; }
+.pv-sidebar-sub   { font-size: 13px; color: #777; margin: 0 0 20px; line-height: 1.5; }
+.pv-steps-list    { list-style: none; margin: 0 0 20px; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.pv-step-item     { display: flex; gap: 12px; align-items: flex-start; }
+.pv-step-num {
+  width: 24px; height: 24px; border-radius: 50%; background: #e8eef7;
+  color: #1a3a5c; font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.pv-step-text     { display: flex; flex-direction: column; gap: 2px; }
+.pv-step-text strong { font-size: 13px; color: #1a1a1a; }
+.pv-step-text span   { font-size: 12px; color: #777; }
+.pv-privacy-note {
+  background: #e8f5f4; border-radius: 8px; padding: 12px 14px; font-size: 12px;
+}
+.pv-privacy-note strong { display: block; color: #005c55; margin-bottom: 4px; }
+.pv-privacy-note p { color: #555; margin: 0; line-height: 1.5; }
+
+/* ── Status page ───────────────────────────────────────────────────────── */
+.pv-status-shell  { flex: 1; padding: 32px; max-width: 800px; overflow-y: auto; }
+.pv-status-banner {
+  display: flex; justify-content: space-between; align-items: center;
+  background: #fff; border-radius: 10px; padding: 16px 20px;
+  margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+.pv-status-banner-title { font-size: 14px; font-weight: 600; color: #1a1a1a; }
+.pv-status-banner-sub   { font-size: 12px; color: #777; }
+.pv-contact-btn {
+  border: 1px solid #ddd; border-radius: 8px; padding: 8px 16px;
+  font-size: 13px; background: #fff; cursor: pointer; white-space: nowrap;
+}
+.pv-approved-banner {
+  display: flex; gap: 14px; align-items: center;
+  background: #e8f5e9; border-radius: 10px; padding: 16px 20px;
+  margin-bottom: 20px; font-size: 14px;
+}
+.pv-approved-banner button {
+  margin-left: auto; background: #005c55; color: #fff;
+  border: none; border-radius: 8px; padding: 8px 16px; cursor: pointer;
+}
+.pv-rejected-banner {
+  display: flex; gap: 14px; align-items: center;
+  background: #ffebee; border-radius: 10px; padding: 16px 20px; margin-bottom: 20px;
+}
+.pv-checks-list { display: flex; flex-direction: column; gap: 12px; }
+.pv-check-row {
+  display: flex; gap: 16px; align-items: flex-start;
+  background: #fff; border-radius: 12px; padding: 18px 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.05);
+}
+.pv-check-icon {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.pv-check-passed  .pv-check-icon { background: #e8f5e9; color: #2e7d32; }
+.pv-check-failed  .pv-check-icon { background: #ffebee; color: #c62828; }
+.pv-check-flagged .pv-check-icon { background: #fff8e1; color: #f57f17; }
+.pv-check-pending .pv-check-icon { background: #f4f6f8; color: #777; }
+.pv-check-body    { flex: 1; }
+.pv-check-header  { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.pv-check-label   { font-size: 15px; font-weight: 600; color: #1a1a1a; }
+.pv-badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+.pv-badge-passed      { background: #e8f5e9; color: #2e7d32; }
+.pv-badge-failed      { background: #ffebee; color: #c62828; }
+.pv-badge-in_progress { background: #e3f2fd; color: #1565c0; }
+.pv-badge-pending     { background: #f4f6f8; color: #777; }
+.pv-badge-flagged     { background: #fff8e1; color: #f57f17; }
+.pv-check-detail    { font-size: 13px; color: #555; margin: 0; }
+.pv-check-subdetail { font-size: 12px; color: #888; margin: 3px 0 0; }
+
+/* ── Admin dashboard ───────────────────────────────────────────────────── */
+.pv-admin-shell { display: flex; min-height: 100vh; background: #f4f6f8; }
+.pv-admin-nav {
+  width: 220px; background: #1a1a1a; color: #fff; flex-shrink: 0;
+  display: flex; flex-direction: column; padding: 24px 0;
+}
+.pv-admin-brand { font-size: 16px; font-weight: 800; padding: 0 20px 24px; border-bottom: 1px solid #333; }
+.pv-admin-nav-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 20px; font-size: 13px; cursor: pointer; color: #ccc;
+  transition: background .15s;
+}
+.pv-admin-nav-item:hover { background: #2a2a2a; color: #fff; }
+.pv-admin-nav-badge {
+  background: #005c55; color: #fff; border-radius: 20px;
+  padding: 2px 8px; font-size: 11px; font-weight: 700;
+}
+.pv-admin-reviewer {
+  margin-top: auto; padding: 16px 20px; display: flex; gap: 10px; align-items: center;
+  border-top: 1px solid #333;
+}
+.pv-admin-reviewer-avatar {
+  width: 36px; height: 36px; border-radius: 50%; background: #005c55;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #fff;
+}
+.pv-admin-reviewer-name { font-size: 13px; font-weight: 600; color: #fff; margin: 0; }
+.pv-admin-reviewer-role { font-size: 11px; color: #888; margin: 0; }
+
+.pv-admin-main   { flex: 1; padding: 32px; overflow-y: auto; }
+.pv-admin-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+.pv-admin-title  { font-size: 26px; font-weight: 800; color: #1a1a1a; margin: 0 0 4px; }
+.pv-admin-sub    { font-size: 13px; color: #777; margin: 0; }
+.pv-admin-search {
+  border: 1px solid #ddd; border-radius: 8px; padding: 10px 16px;
+  font-size: 13px; width: 260px; background: #fff;
+}
+
+.pv-admin-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px; }
+.pv-admin-stat-card {
+  background: #fff; border-radius: 10px; padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+.pv-admin-stat-label { font-size: 12px; color: #777; margin: 0 0 6px; }
+.pv-admin-stat-value { font-size: 28px; font-weight: 800; color: #1a1a1a; margin: 0; }
+.pv-admin-stat-sub   { font-size: 11px; color: #999; margin: 4px 0 0; }
+.pv-stat-green { color: #2e7d32 !important; }
+.pv-stat-red   { color: #c62828 !important; }
+
+.pv-admin-filter-row { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+.pv-admin-filter-btn {
+  padding: 8px 16px; border-radius: 20px; border: 1px solid #ddd;
+  background: #fff; font-size: 13px; cursor: pointer; transition: all .15s;
+}
+.pv-admin-filter-active { background: #005c55; border-color: #005c55; color: #fff; }
+
+.pv-admin-table { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+.pv-admin-table-head {
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr 0.7fr 1fr;
+  padding: 12px 20px; background: #f8f9fa;
+  font-size: 12px; font-weight: 600; color: #777; border-bottom: 1px solid #eee;
+}
+.pv-admin-table-row {
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr 0.7fr 1fr;
+  padding: 14px 20px; border-bottom: 1px solid #f0f0f0;
+  align-items: center; cursor: pointer; transition: background .1s;
+}
+.pv-admin-table-row:hover { background: #f8fffe; }
+.pv-admin-table-row:last-child { border-bottom: none; }
+.pv-admin-applicant { display: flex; gap: 10px; align-items: center; }
+.pv-admin-avatar {
+  width: 36px; height: 36px; border-radius: 50%; background: #e8eef7;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: #1a3a5c; flex-shrink: 0;
+}
+.pv-admin-applicant-name { font-size: 14px; font-weight: 600; color: #1a1a1a; margin: 0; }
+.pv-admin-applicant-sub  { font-size: 12px; color: #888; margin: 0; }
+.pv-admin-npi    { font-size: 13px; color: #555; font-family: monospace; }
+.pv-admin-checks { display: flex; flex-wrap: wrap; gap: 4px; }
+.pv-admin-check-badge {
+  padding: 2px 7px; border-radius: 12px; font-size: 11px; font-weight: 600;
+}
+.pv-admin-check-ok   { background: #e8f5e9; color: #2e7d32; }
+.pv-admin-check-fail { background: #ffebee; color: #c62828; }
+.pv-admin-check-warn { background: #fff8e1; color: #f57f17; }
+.pv-admin-sla        { font-size: 13px; font-weight: 600; color: #555; }
+.pv-sla-urgent       { color: #c62828 !important; }
+
+.pv-admin-status-badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.pv-status-ready    { background: #e8f5e9; color: #2e7d32; }
+.pv-status-info     { background: #fff8e1; color: #f57f17; }
+.pv-status-approved { background: #e8f5e9; color: #2e7d32; }
+.pv-status-rejected { background: #ffebee; color: #c62828; }
+.pv-status-running  { background: #e3f2fd; color: #1565c0; }
+.pv-status-pending  { background: #f4f6f8; color: #777; }
+.pv-status-urgent   { animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+.pv-admin-empty  { padding: 40px; text-align: center; color: #999; }
+.pv-admin-loading { padding: 40px; text-align: center; color: #777; }
+
+/* ── Admin detail page ─────────────────────────────────────────────────── */
+.pv-detail-main   { padding: 32px; }
+.pv-detail-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; }
+.pv-detail-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.pv-detail-card {
+  background: #fff; border-radius: 12px; padding: 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+.pv-detail-card h3 { font-size: 14px; font-weight: 700; color: #1a1a1a; margin: 0 0 14px; }
+.pv-detail-rows > div {
+  display: flex; justify-content: space-between; padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0; font-size: 13px;
+}
+.pv-detail-rows > div:last-child { border-bottom: none; }
+.pv-detail-rows span { color: #777; }
+.pv-detail-rows strong { color: #1a1a1a; }
+.pv-detail-checks { display: flex; flex-direction: column; gap: 14px; }
+.pv-detail-check  { display: flex; gap: 12px; padding: 12px; border-radius: 8px; background: #f8f9fa; }
+.pv-detail-check-icon {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;
+}
+.pv-detail-ok   .pv-detail-check-icon { background: #e8f5e9; color: #2e7d32; }
+.pv-detail-fail .pv-detail-check-icon { background: #ffebee; color: #c62828; }
+.pv-detail-pending .pv-detail-check-icon { background: #f4f6f8; color: #777; }
+.pv-detail-check strong { font-size: 13px; font-weight: 600; display: block; margin-bottom: 3px; }
+.pv-detail-check p { font-size: 12px; color: #666; margin: 2px 0; }
+.pv-detail-fail-reason { color: #c62828 !important; }
+.pv-detail-warn { color: #f57f17 !important; }
+.pv-detail-id   { font-family: monospace; font-size: 11px; }
+.pv-detail-id-card { grid-column: 1 / -1; }
+.pv-detail-secure-note { font-size: 11px; color: #777; font-weight: 400; margin-left: 8px; }
+.pv-id-viewer  { display: flex; flex-direction: column; gap: 10px; }
+.pv-id-img     { max-width: 100%; border-radius: 8px; border: 1px solid #eee; }
+.pv-id-hint    { font-size: 12px; color: #888; margin: 0; }
+.pv-detail-pending { color: #777; font-size: 13px; }
+.pv-detail-actions-card { grid-column: 1 / -1; }
+.pv-detail-notes-label { font-size: 12px; font-weight: 600; color: #555; display: block; margin-bottom: 6px; }
+.pv-detail-notes {
+  width: 100%; border: 1px solid #ddd; border-radius: 8px;
+  padding: 10px 12px; font-size: 13px; resize: vertical; box-sizing: border-box; margin-bottom: 14px;
+}
+.pv-detail-action-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+.pv-action-approve {
+  background: #005c55; color: #fff; border: none; border-radius: 8px;
+  padding: 11px 20px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.pv-action-info {
+  background: #fff; color: #1a1a1a; border: 1px solid #ddd; border-radius: 8px;
+  padding: 11px 20px; font-size: 13px; cursor: pointer;
+}
+.pv-action-reject-toggle {
+  background: #ffebee; color: #c62828; border: none; border-radius: 8px;
+  padding: 11px 20px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.pv-reject-panel {
+  margin-top: 16px; padding: 16px; background: #fff8f8; border-radius: 8px;
+  border: 1px solid #ffcdd2; display: flex; flex-direction: column; gap: 10px;
+}
+.pv-reject-panel label { font-size: 12px; font-weight: 600; color: #c62828; }
+.pv-reject-panel select {
+  border: 1px solid #ffcdd2; border-radius: 6px; padding: 8px 10px; font-size: 13px;
+}
+.pv-action-reject {
+  background: #c62828; color: #fff; border: none; border-radius: 8px;
+  padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.pv-action-reject:disabled { opacity: .5; cursor: default; }

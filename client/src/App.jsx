@@ -19,6 +19,10 @@ import CommunityDetailPage from './components/Communities/CommunityDetailPage';
 import TopArticlesPage from './components/TopArticles/TopArticlesPage';
 import PhysicianPortalPage from './components/PhysicianPortal/PhysicianPortalPage';
 import DoctorDashboard from './components/DoctorDashboard/DoctorDashboard';
+import ApplyPage from './components/PhysicianVerification/ApplyPage';
+import StatusPage from './components/PhysicianVerification/StatusPage';
+import AdminDashboard from './components/PhysicianVerification/AdminDashboard';
+import AdminDetail from './components/PhysicianVerification/AdminDetail';
 import { UserProvider, useUser } from './context/UserContext.jsx';
 
 function PrivateRoute({ element }) {
@@ -77,6 +81,14 @@ function AppRoutes() {
             <Route path="/activity"    element={<PrivateRoute element={<HealthMetricsPage />} />} />
             <Route path="/diet"        element={<PrivateRoute element={<HealthMetricsPage />} />} />
             <Route path="/medications" element={<PrivateRoute element={<HealthMetricsPage />} />} />
+
+            {/* Physician verification */}
+            <Route path="/apply-for-verification"      element={<PrivateRoute element={<ApplyPage />} />} />
+            <Route path="/physician-verification/status" element={<PrivateRoute element={<StatusPage />} />} />
+
+            {/* Admin */}
+            <Route path="/admin/verification"          element={<PrivateRoute element={<AdminDashboard />} />} />
+            <Route path="/admin/verification/:id"      element={<PrivateRoute element={<AdminDetail />} />} />
 
             {/* Recommended → Guidelines */}
             <Route path="/recommended" element={<PrivateRoute element={<GuidelinesPage />} />} />
