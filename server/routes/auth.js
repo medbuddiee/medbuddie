@@ -94,6 +94,7 @@ router.post('/login', authLimiter, async (req, res) => {
                     medications,
                     avatar_url     AS "avatarUrl",
                     is_doctor      AS "isDoctor",
+                    is_admin       AS "isAdmin",
                     is_verified_doctor AS "isVerifiedDoctor",
                     doctor_specialties AS "doctorSpecialties",
                     doctor_bio     AS "doctorBio",
@@ -145,6 +146,7 @@ router.post('/doctor-signup', authLimiter, async (req, res) => {
                        lipid_panel    AS "lipidPanel", medications,
                        avatar_url     AS "avatarUrl",
                        is_doctor      AS "isDoctor",
+                    is_admin       AS "isAdmin",
                        is_verified_doctor AS "isVerifiedDoctor",
                        doctor_specialties AS "doctorSpecialties",
                        doctor_bio     AS "doctorBio",
@@ -188,6 +190,7 @@ router.post('/google-login', async (req, res) => {
                        hba1c, medications,
                        avatar_url AS "avatarUrl",
                        is_doctor AS "isDoctor",
+                       is_admin  AS "isAdmin",
                        is_verified_doctor AS "isVerifiedDoctor",
                        doctor_specialties AS "doctorSpecialties"`,
             [name, email, email.split('@')[0]]
@@ -231,6 +234,7 @@ router.post('/facebook', async (req, res) => {
                        hba1c, medications,
                        avatar_url AS "avatarUrl",
                        is_doctor AS "isDoctor",
+                       is_admin  AS "isAdmin",
                        is_verified_doctor AS "isVerifiedDoctor",
                        doctor_specialties AS "doctorSpecialties"`,
             [fbProfile.name, fbProfile.email, fbProfile.email.split('@')[0]]

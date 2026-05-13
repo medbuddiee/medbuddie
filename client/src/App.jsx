@@ -40,6 +40,14 @@ function DoctorRoute({ element }) {
     return element;
 }
 
+function AdminRoute({ element }) {
+    const { user, loading } = useUser();
+    if (loading) return null;
+    if (!user) return <Navigate to="/signin" replace />;
+    if (!user.isAdmin) return <Navigate to="/dashboard" replace />;
+    return element;
+}
+
 function SmartRedirect() {
     const { user, loading } = useUser();
     if (loading) return null;
@@ -86,9 +94,9 @@ function AppRoutes() {
             <Route path="/apply-for-verification"      element={<PrivateRoute element={<ApplyPage />} />} />
             <Route path="/physician-verification/status" element={<PrivateRoute element={<StatusPage />} />} />
 
-            {/* Admin */}
-            <Route path="/admin/verification"          element={<PrivateRoute element={<AdminDashboard />} />} />
-            <Route path="/admin/verification/:id"      element={<PrivateRoute element={<AdminDetail />} />} />
+            {/* Admin — only accessible if user.isAdmin */}
+            <Route path="/admin/verification"          element={<AdminRoute element={<AdminDashboard />} />} />
+            <Route path="/admin/verification/:id"      element={<AdminRoute element={<AdminDetail />} />} />
 
             {/* Recommended → Guidelines */}
             <Route path="/recommended" element={<PrivateRoute element={<GuidelinesPage />} />} />

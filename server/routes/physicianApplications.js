@@ -4,6 +4,7 @@ const path     = require('path');
 const fs       = require('fs');
 const pool     = require('../config/db');
 const { authenticate, softAuthenticate } = require('../middleware/auth');
+const { requireAdmin } = require('../middleware/admin');
 
 const router = express.Router();
 
@@ -253,7 +254,7 @@ router.get('/status', authenticate, async (req, res) => {
 });
 
 /* ── GET /api/physician-applications/admin — admin queue ─────────────────── */
-router.get('/admin', authenticate, async (req, res) => {
+router.get('/admin', authenticate, requireAdmin, async (req, res) => {
   // In production: check req.user.isAdmin
   const { status, q, limit = 50, offset = 0 } = req.query;
   try {
@@ -302,7 +303,7 @@ router.get('/admin', authenticate, async (req, res) => {
 });
 
 /* ── GET /api/physician-applications/admin/:id — single application ─────── */
-router.get('/admin/:id', authenticate, async (req, res) => {
+router.get('/admin/:id', authenticate, requireAdmin, async (req, res) => {
   try {
     const { rows } = await pool.query(
       `SELECT pa.*, u.email, u.name AS user_name, u.avatar_url AS "avatarUrl"
@@ -319,7 +320,7 @@ router.get('/admin/:id', authenticate, async (req, res) => {
 });
 
 /* ── PUT /api/physician-applications/admin/:id — approve / reject ────────── */
-router.put('/admin/:id', authenticate, async (req, res) => {
+router.put('/admin/:id', authenticate, requireAdmin, async (req, res) => {
   const { action, notes, rejectionReason } = req.body;
   if (!['approve', 'reject', 'request_info'].includes(action)) {
     return res.status(400).json({ error: 'action must be approve, reject, or request_info' });
@@ -380,7 +381,7 @@ router.put('/admin/:id', authenticate, async (req, res) => {
 });
 
 /* ── GET /api/physician-applications/admin/:id/id-document — serve ID ───── */
-router.get('/admin/:id/id-document', authenticate, async (req, res) => {
+router.get('/admin/:id/id-document', authenticate, requireAdmin, async (req, res) => {
   try {
     const { rows } = await pool.query(
       `SELECT government_id_path FROM physician_applications WHERE id = $1`, [req.params.id]

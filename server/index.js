@@ -139,7 +139,8 @@ async function runMigrations() {
         `ALTER TABLE users ADD COLUMN IF NOT EXISTS health_synced_at TIMESTAMPTZ DEFAULT NULL`,
         `ALTER TABLE users ADD COLUMN IF NOT EXISTS health_sources TEXT[] DEFAULT '{}'`,
 
-        // ── Physician verification columns on users ──────────────────────────
+        // ── Admin + physician verification columns on users ──────────────────
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE`,
         `ALTER TABLE users ADD COLUMN IF NOT EXISTS verified_at TIMESTAMPTZ DEFAULT NULL`,
 
         // ── Physician applications table ─────────────────────────────────────
